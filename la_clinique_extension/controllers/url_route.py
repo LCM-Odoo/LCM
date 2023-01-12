@@ -8,7 +8,7 @@ from odoo.http import request
 class Authorize2(http.Controller):
     @http.route('/auth', type='json', auth='none', website=True)
     def get_authorized_url(self, **kw):
-        print(kw,'heloooooooooooooooooooooo')
+        _logger.info("Api Status=====================(Success)====================================> {x}".format(x=str(kw)))
         if kw.get('name'):
             return{'Success': 200}
         # res = request.env['qb.backend'].sudo().search([])
