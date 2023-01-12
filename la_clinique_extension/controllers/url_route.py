@@ -3,6 +3,8 @@
 # import werkzeug
 from odoo import http
 from odoo.http import request
+import logging, requests
+_logger = logging.getLogger(__name__)
 # from requests_oauthlib import OAuth2Session
 
 class Authorize2(http.Controller):
