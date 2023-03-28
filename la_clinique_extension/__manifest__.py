@@ -8,10 +8,11 @@
     'website': '',
     'maintainer': '',
 
-    'depends': ['base'],
+    'depends': ['base','product'],
     'data': [
         # 'security/ir.model.access.csv',
         'views/partner.xml',
+        'views/product.xml',
     ],
     'installable': True,
     'auto_install': False,
