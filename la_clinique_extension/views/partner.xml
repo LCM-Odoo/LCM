@@ -14,8 +14,8 @@
                 <field name="moc_doc_id" readonly="1"/>
             </field>
             <field name="category_id" position="after">
-                <field name="doctor"/>
-                <field name="diagnosis"/>
+                <field name="doctor" attrs="{'invisible': [('supplier_rank', '>', 0)]}"/>
+                <field name="diagnosis" attrs="{'invisible': [('supplier_rank', '>', 0)]}"/>
             </field>
             <xpath expr="//page[@name='internal_notes']" position="after">
                 <page name="Api_Details" string="API Details">
