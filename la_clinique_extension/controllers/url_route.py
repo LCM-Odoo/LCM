@@ -69,6 +69,9 @@ class Authorize2(http.Controller):
     @http.route('/create_customer', type='json', auth='none', website=True)
     def create_customer(self, **kw):
         _logger.info("==============================================>Entering Customer Creation=========================================================>")
+        _logger.info("name=========================================================>"+ str(kw.get('name')))
+        _logger.info("mobile=========================================================>"+ str(kw.get('mobile')))
+        _logger.info("moc_doc_id=========================================================>"+ str(kw.get('moc_doc_id')))
         if kw.get('name') and kw.get('mobile') and kw.get('moc_doc_id'):
             if not self.customer_mobile_validation(mobile_no=kw.get('mobile')):
                 _logger.info("Mobile No Already Exist==============================================>")
