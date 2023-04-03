@@ -87,7 +87,7 @@ class Authorize2(http.Controller):
     def create_customer(self, **kw):
         _logger.info("==============================================>Entering Customer Creation=========================================================>")
         if kw.get('name') and kw.get('mobile') and kw.get('moc_doc_id') and kw.get('type'):
-            if kw.get('type') not in ('partner_type','ven'):
+            if kw.get('type') not in ('cus','ven'):
                 _logger.info("Type Not In Cus Or Ven==============================================>" + str(kw.get('type')))
                 return {'Staus': 506,'Reason':'Type Not In Cus Or Ven.'}
 
