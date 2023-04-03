@@ -3,11 +3,8 @@ import logging
 _logger = logging.getLogger(__name__)
 
 
-class ProductTemplate(models.Model):
-    _inherit = 'product.template'
+class PurchaseOrder(models.Model):
+    _inherit = 'purchase.order'
 
     create_api_values = fields.Char(string='Create API Values',copy=False)
-    write_api_values = fields.Char(string='Write API Values',copy=False)
-
-
 

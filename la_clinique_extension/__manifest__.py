@@ -8,11 +8,13 @@
     'website': '',
     'maintainer': '',
 
-    'depends': ['base','product'],
+    'depends': ['base','sale','product','purchase'],
     'data': [
         # 'security/ir.model.access.csv',
         'views/partner.xml',
         'views/product.xml',
+        'views/sale_view.xml',
+        'views/purchase.xml',
     ],
     'installable': True,
     'auto_install': False,
