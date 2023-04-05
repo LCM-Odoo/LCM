@@ -294,19 +294,25 @@ class Authorize2(http.Controller):
             update_list =[]
             try:
 
-                customer_tax_list = self.get_tax_ids(kw.get('customer_taxes_id'),tax_type='sale')
-                if not customer_tax_list[1]:
-                    return {'Staus': 608,'Reason':'Customer Tax Not available in odoo, Kinldy find the List of Sale Taxes in odoo','List':customer_tax_list[0]}
-                vendor_tax_list = self.get_tax_ids(kw.get('vendor_taxes_id'),tax_type='purchase')
-                if not vendor_tax_list[1]:
-                    return {'Staus': 609,'Reason':'Vendor Tax Not available in odoo, Kinldy find the List of Purchase Taxes in odoo','List':vendor_tax_list[0]}
+                if kw.get('customer_taxes_id'):
+                    customer_tax_list = self.get_tax_ids(kw.get('customer_taxes_id'),tax_type='sale')
+                    if not customer_tax_list[1]:
+                        return {'Staus': 608,'Reason':'Customer Tax Not available in odoo, Kinldy find the List of Sale Taxes in odoo','List':customer_tax_list[0]}
 
-                uom_id = self.get_uom_id(kw.get('uom_id'))
-                if not uom_id[1]:
-                    return {'Staus': 610,'Reason':'Uom Not available in odoo, Kinldy find the List of UOM in odoo','List':uom_id[0]}
-                uom_po_id = self.get_uom_id(kw.get('uom_po_id'))
-                if not uom_po_id[1]:
-                    return {'Staus': 611,'Reason':' Purchase Uom Not available in odoo, Kinldy find the List of UOM in odoo','List':uom_po_id[0]}
+                if kw.get('vendor_taxes_id'):
+                    vendor_tax_list = self.get_tax_ids(kw.get('vendor_taxes_id'),tax_type='purchase')
+                    if not vendor_tax_list[1]:
+                        return {'Staus': 609,'Reason':'Vendor Tax Not available in odoo, Kinldy find the List of Purchase Taxes in odoo','List':vendor_tax_list[0]}
+
+                if kw.get('uom_id'):
+                    uom_id = self.get_uom_id(kw.get('uom_id'))
+                    if not uom_id[1]:
+                        return {'Staus': 610,'Reason':'Uom Not available in odoo, Kinldy find the List of UOM in odoo','List':uom_id[0]}
+
+                if kw.get('uom_po_id'):
+                    uom_po_id = self.get_uom_id(kw.get('uom_po_id'))
+                    if not uom_po_id[1]:
+                        return {'Staus': 611,'Reason':' Purchase Uom Not available in odoo, Kinldy find the List of UOM in odoo','List':uom_po_id[0]}
 
                 if kw.get('name'):
                     update_list.append(kw.get('name'))
@@ -360,6 +366,8 @@ class Authorize2(http.Controller):
                 sale_order_id = request.env["sale.order"].with_user(2).create(
                         {
                             'partner_id': partner_id.id,
+                            'create_api_values':kw,
+                            'make_so_readonly':True
                         })
                 if sale_order_id:
                     _logger.info("Sale Order Created==============================================> " + str(sale_order_id))
@@ -369,7 +377,6 @@ class Authorize2(http.Controller):
                                 'product_id': i.get('product_id'),
                                 'order_id':sale_order_id.id,
                                 'product_uom_qty':i.get('qty'),
-                                'create_api_values':kw
                             })
                         _logger.info("Sale Order Line Created==============================================> " + str(sale_order_line_id))
 
@@ -403,6 +410,8 @@ class Authorize2(http.Controller):
                 purchase_order_id = request.env["purchase.order"].with_user(2).create(
                         {
                             'partner_id': partner_id.id,
+                            'create_api_values':kw,
+                            'make_po_readonly':True
                         })
                 if purchase_order_id:
                     _logger.info("Purchase Order Created==============================================> " + str(purchase_order_id))
@@ -418,7 +427,6 @@ class Authorize2(http.Controller):
                     purchase_order_id.sudo().button_confirm()
 
                     # picking_id = request.env["stock.picking"].with_user(2).search([('origin','=',purchase_order_id.name)])
-
                     # picking_id.action_set_quantities_to_reservation()
                     # picking_id.button_validate()
 
@@ -427,7 +435,7 @@ class Authorize2(http.Controller):
             except Exception as e:
                 _logger.error("Error==============================================> " + str(e))
                 return {'Staus': 503,'Reason':str(e)}
-        # else:
-        #     _logger.info("partner_id or product_list Is Missing==============================================>")
-        #     return{'Staus': 800,'Reason':'customer_id or product_list Is Missing'}
+        else:
+            _logger.info("partner_id or product_list Is Missing==============================================>")
+            return{'Staus': 800,'Reason':'customer_id or product_list Is Missing'}
 

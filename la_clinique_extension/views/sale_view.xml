@@ -10,7 +10,12 @@
         <field name="arch" type="xml">
             <field name="tag_ids" position="after">
                 <field name="create_api_values" readonly="1"/>
+                <field name="make_so_readonly" groups="base.group_erp_manager"/>
             </field>
+            <xpath expr="//field[@name='order_line']" position="attributes">
+                <attribute name="attrs">{'readonly': ['|',('state', 'in', ('done','cancel')),('make_so_readonly','=',True)]}</attribute>
+            </xpath>
+
         </field>
     </record>
 

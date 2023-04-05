@@ -7,4 +7,6 @@ class PurchaseOrder(models.Model):
     _inherit = 'purchase.order'
 
     create_api_values = fields.Char(string='Create API Values',copy=False)
+    make_po_readonly = fields.Boolean(string='Make PO Readonly',copy=False)
+
 
