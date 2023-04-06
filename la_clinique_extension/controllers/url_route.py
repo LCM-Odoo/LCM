@@ -211,65 +211,91 @@ class Authorize2(http.Controller):
     @http.route('/create_product_template', type='json', auth='none', website=True)
     def create_product_template(self, **kw):
         _logger.info("==============================================>Entering Product Creation===============>" + str(kw))
-        if kw.get('name') and kw.get('detailed_type') and kw.get('invoice_policy') and kw.get('list_price') and kw.get('standard_price') and kw.get('categ_id') and kw.get('default_code') and kw.get('purchase_method') and kw.get('sale_ok') and kw.get('purchase_ok') and kw.get('uom_id') and kw.get('uom_po_id') :
+        if kw.get('name') and kw.get('detailed_type') and kw.get('invoice_policy') and kw.get('categ_id') and kw.get('default_code') and kw.get('purchase_method') and kw.get('customer_taxes_id') and kw.get('vendor_taxes_id'):
             if not self.product_internal_ref_validation(default_code=kw.get('default_code')):
                 _logger.info("Internal Ref Already Exist==============================================>")
                 return {'Staus': 601,'Reason':'Internal Ref Already Exist.'}
+
             if kw.get('detailed_type') not in ('consu','service','product'):
                 _logger.info("Detailed Type Not Exist, It Must be consu or service or product==============================================>")
                 return {'Staus': 602,'Reason':'Detailed Type Not Exist, It Must be consu or service or product.'}
+
             if kw.get('invoice_policy') not in ('order','delivery'):
                 _logger.info("Invoice Policy Not Exist, It Must be order or delivery==============================================>")
-                return {'Staus': 603,'Reason':'Detailed Type Not Exist, It Must be order or delivery.'}
+                return {'Staus': 603,'Reason':'Invoice Policy Not Exist, It Must be order or delivery.'}
+
             if kw.get('purchase_method') not in ('purchase','receive'):
                 _logger.info("Purchase Method Not Exist, It Must be purchase or receive==============================================>")
-                return {'Staus': 604,'Reason':'Detailed Type Not Exist, It Must be purchase,or receive.'}
-            if not isinstance(kw.get('sale_ok'),bool):
-                _logger.info("Sale Ok Must be True or False ==============================================>")
-                return {'Staus': 605,'Reason':'Sale Ok Must be True or False.'}
-            if not isinstance(kw.get('purchase_ok'),bool):
-                _logger.info("Purchase Ok Must be True or False ==============================================>")
-                return {'Staus': 606,'Reason':'Purchase Ok Must be True or False.'}
+                return {'Staus': 604,'Reason':'Purchase Method Not Exist, It Must be purchase,or receive.'}
+
+            if kw.get('sale_ok') not in (1,0):
+                _logger.info("Sale Ok Must be 1 or 0 ==============================================>")
+                return {'Staus': 605,'Reason':'Sale Ok Must be 1 or 0.'}
+
+            if kw.get('purchase_ok') not in (1,0):
+                _logger.info("Purchase Ok Must be 1 or 0 ==============================================>")
+                return {'Staus': 606,'Reason':'Purchase Ok Must be 1 or 0.'}
+
             try:
                 categ_id = self.get_product_category(kw.get('categ_id'))
                 if not categ_id[1]:
                     return {'Staus': 607,'Reason':'Categ not available in odoo, Kinldy find the List of category in odoo','List':categ_id[0]}
+
                 customer_tax_list = self.get_tax_ids(kw.get('customer_taxes_id'),tax_type='sale')
                 if not customer_tax_list[1]:
                     return {'Staus': 608,'Reason':'Customer Tax Not available in odoo, Kinldy find the List of Sale Taxes in odoo','List':customer_tax_list[0]}
+
                 vendor_tax_list = self.get_tax_ids(kw.get('vendor_taxes_id'),tax_type='purchase')
                 if not vendor_tax_list[1]:
                     return {'Staus': 609,'Reason':'Vendor Tax Not available in odoo, Kinldy find the List of Purchase Taxes in odoo','List':vendor_tax_list[0]}
-                uom_id = self.get_uom_id(kw.get('uom_id'))
-                if not uom_id[1]:
-                    return {'Staus': 610,'Reason':'Uom Not available in odoo, Kinldy find the List of UOM in odoo','List':uom_id[0]}
-                uom_po_id = self.get_uom_id(kw.get('uom_po_id'))
-                if not uom_po_id[1]:
-                    return {'Staus': 611,'Reason':' Purchase Uom Not available in odoo, Kinldy find the List of UOM in odoo','List':uom_po_id[0]}
+
+                is_uom_available = False
+                if kw.get('uom_id'):
+                    uom_id = self.get_uom_id(kw.get('uom_id'))
+                    if uom_id[1]:
+                        is_uom_available = True
+                    if not uom_id[1]:
+                        return {'Staus': 610,'Reason':'Uom Not available in odoo, Kinldy find the List of UOM in odoo','List':uom_id[0]}
+
+                is_po_uom_available = False
+                if kw.get('uom_po_id'):    
+                    uom_po_id = self.get_uom_id(kw.get('uom_po_id'))
+                    if uom_po_id[1]:
+                        is_po_uom_available = True
+                    if not uom_po_id[1]:
+                        return {'Staus': 611,'Reason':' Purchase Uom Not available in odoo, Kinldy find the List of UOM in odoo','List':uom_po_id[0]}
+
+
+                create_vals = {
+                        'name': kw.get('name'),
+                        'detailed_type': kw.get('detailed_type'),
+                        'invoice_policy': kw.get('invoice_policy'),
+                        'list_price': kw.get('list_price') if kw.get('list_price') else 1, 
+                        'standard_price': kw.get('standard_price'),
+                        'categ_id':  categ_id[0],
+                        'default_code': kw.get('default_code'),
+                        'purchase_method': kw.get('purchase_method'),
+                        'sale_ok': True if kw.get('sale_ok') == 1 else False,
+                        'purchase_ok': True if kw.get('purchase_ok') == 1 else False,
+                        'taxes_id': [(6, 0,customer_tax_list[0])],
+                        'supplier_taxes_id': [(6, 0,vendor_tax_list[0])],
+                        'create_api_values': kw
+                        }
+                if is_uom_available:
+                    create_vals.update({
+                            'uom_id':uom_id[0]
+                        })
+                if is_po_uom_available:
+                    create_vals.update({
+                            'uom_po_id':uom_po_id[0]
+                        })
 
                 product_template_id = request.env["product.template"].with_user(2).with_context(
                         {
                            'lang': 'en_US', 
                             'uid': 2, 
                             'allowed_company_ids': [1], 
-                        }).create(
-                        {
-                            'name': kw.get('name'),
-                            'detailed_type': kw.get('detailed_type'),
-                            'invoice_policy': kw.get('invoice_policy'),
-                            'list_price': kw.get('list_price'), 
-                            'standard_price': kw.get('standard_price'),
-                            'categ_id':  categ_id[0],
-                            'default_code': kw.get('default_code'),
-                            'purchase_method': kw.get('purchase_method'),
-                            'sale_ok': kw.get('sale_ok'),
-                            'purchase_ok': kw.get('purchase_ok'),
-                            'taxes_id': [(6, 0,customer_tax_list[0])],
-                            'supplier_taxes_id': [(6, 0,vendor_tax_list[0])],
-                            'uom_id':uom_id[0],
-                            'uom_po_id':uom_po_id[0],
-                            'create_api_values': kw
-                        })
+                        }).create(create_vals)
                 if product_template_id:
                     _logger.info("Product Created==============================================> " + str(product_template_id))
                     return {'Staus': 200,'record_id':product_template_id.id}
@@ -278,7 +304,7 @@ class Authorize2(http.Controller):
                 return {'Staus': 503,'Reason':str(e)}
         else:
             _logger.info("name or detailed_type or invoice_policy or list_price or standard_price or categ_id or default_code or purchase_method or sale_ok or purchase_okd Is Missing==============================================>")
-            return{'Staus': 600,'Reason':'name or detailed_type or invoice_policy or list_price or standard_price or categ_id or default_code or purchase_method or sale_ok or purchase_ok or uom_id or uom_po_id Is Missing'}
+            return{'Staus': 600,'Reason':'name or detailed_type or invoice_policy or categ_id or default_code or purchase_method Is Missing or customer Tax or Vendor tax'}
 
 
     @http.route('/update_product_template', type='json', auth='none', website=True)
@@ -293,10 +319,9 @@ class Authorize2(http.Controller):
             _logger.info("Product ID To Update==============================================> " + str(product_id))
             update_list =[]
             try:
-
                 if kw.get('customer_taxes_id'):
                     customer_tax_list = self.get_tax_ids(kw.get('customer_taxes_id'),tax_type='sale')
-                    if not customer_tax_list[1]:
+                    if not customer_tax_list[1]: 
                         return {'Staus': 608,'Reason':'Customer Tax Not available in odoo, Kinldy find the List of Sale Taxes in odoo','List':customer_tax_list[0]}
 
                 if kw.get('vendor_taxes_id'):
@@ -338,6 +363,7 @@ class Authorize2(http.Controller):
                     product_id.sudo().with_context({'lang': 'en_US','allowed_company_ids': [1]}).supplier_taxes_id = [(6, 0,[])]
                     product_id.sudo().with_context({'lang': 'en_US','allowed_company_ids': [1]}).supplier_taxes_id = [(6, 0,vendor_tax_list[0])]
                 product_id.sudo().with_context({'lang': 'en_US','allowed_company_ids': [1]}).write_api_values = kw
+
                 if update_list:
                     return {'Staus': 200,'Status':'Successfully Updated'+'-'+str(update_list)}
             except Exception as e:
