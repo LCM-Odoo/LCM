@@ -228,11 +228,11 @@ class Authorize2(http.Controller):
                 _logger.info("Purchase Method Not Exist, It Must be purchase or receive==============================================>")
                 return {'Staus': 604,'Reason':'Purchase Method Not Exist, It Must be purchase,or receive.'}
 
-            if kw.get('sale_ok') not in (1,0):
+            if str(kw.get('sale_ok')) not in ('1','0'):
                 _logger.info("Sale Ok Must be 1 or 0 ==============================================>")
                 return {'Staus': 605,'Reason':'Sale Ok Must be 1 or 0.'}
 
-            if kw.get('purchase_ok') not in (1,0):
+            if str(kw.get('purchase_ok')) not in ('1,0'):
                 _logger.info("Purchase Ok Must be 1 or 0 ==============================================>")
                 return {'Staus': 606,'Reason':'Purchase Ok Must be 1 or 0.'}
 
@@ -275,8 +275,8 @@ class Authorize2(http.Controller):
                         'categ_id':  categ_id[0],
                         'default_code': kw.get('default_code'),
                         'purchase_method': kw.get('purchase_method'),
-                        'sale_ok': True if kw.get('sale_ok') == 1 else False,
-                        'purchase_ok': True if kw.get('purchase_ok') == 1 else False,
+                        'sale_ok': True if str(kw.get('sale_ok')) == '1' else False,
+                        'purchase_ok': True if str(kw.get('purchase_ok')) == '1' else False,
                         'taxes_id': [(6, 0,customer_tax_list[0])],
                         'supplier_taxes_id': [(6, 0,vendor_tax_list[0])],
                         'create_api_values': kw
