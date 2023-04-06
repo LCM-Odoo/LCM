@@ -361,12 +361,15 @@ class Authorize2(http.Controller):
                 if kw.get('sale_ok'):
                     if str(kw.get('sale_ok')) not in ['1','0']:
                         return {'Staus': 612,'Reason':'Sale Ok Must Be 1 or 0'}
+                    update_list.append(kw.get('sale_ok'))
                     product_id.sudo().with_context({'lang': 'en_US','allowed_company_ids': [1]}).sale_ok = True if kw.get('sale_ok') == "1" else False
 
                 if kw.get('purchase_ok'):
                     if str(kw.get('purchase_ok')) not in ['1','0']:
                         return {'Staus': 612,'Reason':'Purchase Ok Must Be 1 or 0'}
                     product_id.sudo().with_context({'lang': 'en_US','allowed_company_ids': [1]}).purchase_ok = True if kw.get('purchase_ok') == "1" else False
+                    update_list.append(kw.get('purchase_ok'))
+                    
                 product_id.sudo().with_context({'lang': 'en_US','allowed_company_ids': [1]}).write_api_values = kw
 
                 if update_list:
