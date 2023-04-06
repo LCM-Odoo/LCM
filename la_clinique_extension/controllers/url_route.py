@@ -228,11 +228,11 @@ class Authorize2(http.Controller):
                 _logger.info("Purchase Method Not Exist, It Must be purchase or receive==============================================>")
                 return {'Staus': 604,'Reason':'Purchase Method Not Exist, It Must be purchase,or receive.'}
 
-            if str(kw.get('sale_ok')) not in ('1','0'):
+            if kw.get('sale_ok') and str(kw.get('sale_ok')) not in ('1','0'):
                 _logger.info("Sale Ok Must be 1 or 0 ==============================================>")
                 return {'Staus': 605,'Reason':'Sale Ok Must be 1 or 0.'}
 
-            if str(kw.get('purchase_ok')) not in ('1,0'):
+            if kw.get('purchase_ok') and str(kw.get('purchase_ok')) not in ('1,0'):
                 _logger.info("Purchase Ok Must be 1 or 0 ==============================================>")
                 return {'Staus': 606,'Reason':'Purchase Ok Must be 1 or 0.'}
 
