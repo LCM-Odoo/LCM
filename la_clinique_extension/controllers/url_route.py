@@ -211,7 +211,7 @@ class Authorize2(http.Controller):
     @http.route('/create_product_template', type='json', auth='none', website=True)
     def create_product_template(self, **kw):
         _logger.info("==============================================>Entering Product Creation===============>" + str(kw))
-        if kw.get('name') and kw.get('detailed_type') and kw.get('invoice_policy') and kw.get('categ_id') and kw.get('default_code') and kw.get('purchase_method') and kw.get('customer_taxes_id') and kw.get('vendor_taxes_id'):
+        if kw.get('name') and kw.get('detailed_type') and kw.get('invoice_policy') and kw.get('categ_id') and kw.get('default_code') and kw.get('purchase_method') and kw.get('customer_taxes_id') and kw.get('vendor_taxes_id') and kw.get('uom_id') and kw.get('uom_po_id'):
             if not self.product_internal_ref_validation(default_code=kw.get('default_code')):
                 _logger.info("Internal Ref Already Exist==============================================>")
                 return {'Staus': 601,'Reason':'Internal Ref Already Exist.'}
@@ -226,7 +226,7 @@ class Authorize2(http.Controller):
 
             if kw.get('purchase_method') not in ('purchase','receive'):
                 _logger.info("Purchase Method Not Exist, It Must be purchase or receive==============================================>")
-                return {'Staus': 604,'Reason':'Purchase Method Not Exist, It Must be purchase,or receive.'}
+                return {'Staus': 604,'Reason':'Purchase Method Not Exist, It Must be purchase or receive.'}
 
 
 
@@ -243,23 +243,14 @@ class Authorize2(http.Controller):
                 if not vendor_tax_list[1]:
                     return {'Staus': 609,'Reason':'Vendor Tax Not available in odoo, Kinldy find the List of Purchase Taxes in odoo','List':vendor_tax_list[0]}
 
-                is_uom_available = False
-                if kw.get('uom_id'):
-                    uom_id = self.get_uom_id(kw.get('uom_id'))
-                    if uom_id[1]:
-                        is_uom_available = True
-                    if not uom_id[1]:
-                        return {'Staus': 610,'Reason':'Uom Not available in odoo, Kinldy find the List of UOM in odoo','List':uom_id[0]}
+                uom_id = self.get_uom_id(kw.get('uom_id'))
+                if not uom_id[1]:
+                    return {'Staus': 610,'Reason':'Uom Not available in odoo, Kinldy find the List of UOM in odoo','List':uom_id[0]}
 
-                is_po_uom_available = False
-                if kw.get('uom_po_id'):    
-                    uom_po_id = self.get_uom_id(kw.get('uom_po_id'))
-                    if uom_po_id[1]:
-                        is_po_uom_available = True
-                    if not uom_po_id[1]:
-                        return {'Staus': 611,'Reason':' Purchase Uom Not available in odoo, Kinldy find the List of UOM in odoo','List':uom_po_id[0]}
+                uom_po_id = self.get_uom_id(kw.get('uom_po_id'))
+                if not uom_po_id[1]:
+                    return {'Staus': 611,'Reason':' Purchase Uom Not available in odoo, Kinldy find the List of UOM in odoo','List':uom_po_id[0]}
 
-                
                 create_vals = {
                         'name': kw.get('name'),
                         'detailed_type': kw.get('detailed_type'),
@@ -273,18 +264,11 @@ class Authorize2(http.Controller):
                         'purchase_ok': True,
                         'taxes_id': [(6, 0,customer_tax_list[0])],
                         'supplier_taxes_id': [(6, 0,vendor_tax_list[0])],
+                        'uom_id':uom_id[0],
+                        'uom_po_id':uom_po_id[0]
                         'create_api_values': kw
                         }
                         
-                if is_uom_available:
-                    create_vals.update({
-                            'uom_id':uom_id[0]
-                        })
-                if is_po_uom_available:
-                    create_vals.update({
-                            'uom_po_id':uom_po_id[0]
-                        })
-
                 product_template_id = request.env["product.template"].with_user(2).with_context(
                         {
                            'lang': 'en_US', 
@@ -298,8 +282,8 @@ class Authorize2(http.Controller):
                 _logger.error("Error==============================================> " + str(e))
                 return {'Staus': 503,'Reason':str(e)}
         else:
-            _logger.info("name or detailed_type or invoice_policy or list_price or standard_price or categ_id or default_code or purchase_method Is Missing==============================================>")
-            return{'Staus': 600,'Reason':'name or detailed_type or invoice_policy or categ_id or default_code or purchase_method Is Missing or customer Tax or Vendor tax  Is Missing' }
+            _logger.info("name or detailed_type or invoice_policy or list_price or standard_price or categ_id or default_code or purchase_method or customer Tax or Vendor tax or uom id or uom_po_id Is Missing==============================================>")
+            return{'Staus': 600,'Reason':'name or detailed_type or invoice_policy or categ_id or default_code or purchase_method Is Missing or customer Tax or Vendor tax or uom id or uom_po_id Is Missing' }
 
 
     @http.route('/update_product_template', type='json', auth='none', website=True)
@@ -369,7 +353,7 @@ class Authorize2(http.Controller):
                         return {'Staus': 612,'Reason':'Purchase Ok Must Be 1 or 0'}
                     product_id.sudo().with_context({'lang': 'en_US','allowed_company_ids': [1]}).purchase_ok = True if kw.get('purchase_ok') == "1" else False
                     update_list.append(kw.get('purchase_ok'))
-                    
+
                 product_id.sudo().with_context({'lang': 'en_US','allowed_company_ids': [1]}).write_api_values = kw
 
                 if update_list:
