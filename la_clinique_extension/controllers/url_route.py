@@ -265,7 +265,7 @@ class Authorize2(http.Controller):
                         'taxes_id': [(6, 0,customer_tax_list[0])],
                         'supplier_taxes_id': [(6, 0,vendor_tax_list[0])],
                         'uom_id':uom_id[0],
-                        'uom_po_id':uom_po_id[0]
+                        'uom_po_id':uom_po_id[0],
                         'create_api_values': kw
                         }
                         
