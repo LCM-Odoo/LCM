@@ -211,7 +211,7 @@ class Authorize2(http.Controller):
     @http.route('/create_product_template', type='json', auth='none', website=True)
     def create_product_template(self, **kw):
         _logger.info("==============================================>Entering Product Creation===============>" + str(kw))
-        if kw.get('name') and kw.get('detailed_type') and kw.get('invoice_policy') and kw.get('categ_id') and kw.get('default_code') and kw.get('purchase_method') and kw.get('customer_taxes_id') and kw.get('vendor_taxes_id'):
+        if kw.get('name') and kw.get('detailed_type') and kw.get('invoice_policy') and kw.get('categ_id') and kw.get('default_code') and kw.get('purchase_method') and kw.get('customer_taxes_id') and kw.get('vendor_taxes_id') and kw.get('sale_ok') and kw.get('purchase_ok'):
             if not self.product_internal_ref_validation(default_code=kw.get('default_code')):
                 _logger.info("Internal Ref Already Exist==============================================>")
                 return {'Staus': 601,'Reason':'Internal Ref Already Exist.'}
@@ -228,11 +228,11 @@ class Authorize2(http.Controller):
                 _logger.info("Purchase Method Not Exist, It Must be purchase or receive==============================================>")
                 return {'Staus': 604,'Reason':'Purchase Method Not Exist, It Must be purchase,or receive.'}
 
-            if kw.get('sale_ok') and str(kw.get('sale_ok')) not in ('1','0'):
+            if str(kw.get('sale_ok')) not in ('1','0'):
                 _logger.info("Sale Ok Must be 1 or 0 ==============================================>")
                 return {'Staus': 605,'Reason':'Sale Ok Must be 1 or 0.'}
 
-            if kw.get('purchase_ok') and str(kw.get('purchase_ok')) not in ('1,0'):
+            if str(kw.get('purchase_ok')) not in ('1,0'):
                 _logger.info("Purchase Ok Must be 1 or 0 ==============================================>")
                 return {'Staus': 606,'Reason':'Purchase Ok Must be 1 or 0.'}
 
@@ -303,8 +303,8 @@ class Authorize2(http.Controller):
                 _logger.error("Error==============================================> " + str(e))
                 return {'Staus': 503,'Reason':str(e)}
         else:
-            _logger.info("name or detailed_type or invoice_policy or list_price or standard_price or categ_id or default_code or purchase_method or sale_ok or purchase_okd Is Missing==============================================>")
-            return{'Staus': 600,'Reason':'name or detailed_type or invoice_policy or categ_id or default_code or purchase_method Is Missing or customer Tax or Vendor tax'}
+            _logger.info("name or detailed_type or invoice_policy or list_price or standard_price or categ_id or default_code or purchase_method or sale_ok or purchase_ok Is Missing==============================================>")
+            return{'Staus': 600,'Reason':'name or detailed_type or invoice_policy or categ_id or default_code or purchase_method Is Missing or customer Tax or Vendor tax or sale_ok or purchase_ok Is Missing' }
 
 
     @http.route('/update_product_template', type='json', auth='none', website=True)
