@@ -265,6 +265,12 @@ class Authorize2(http.Controller):
                     if not uom_po_id[1]:
                         return {'Staus': 611,'Reason':' Purchase Uom Not available in odoo, Kinldy find the List of UOM in odoo','List':uom_po_id[0]}
 
+                sale_ok = True
+                purchase_ok = True
+                if str(kw.get('sale_ok')) == '0':
+                    sale_ok = False
+                if str(kw.get('purchase_ok')) == '0':
+                    purchase_ok = False
 
                 create_vals = {
                         'name': kw.get('name'),
@@ -275,12 +281,13 @@ class Authorize2(http.Controller):
                         'categ_id':  categ_id[0],
                         'default_code': kw.get('default_code'),
                         'purchase_method': kw.get('purchase_method'),
-                        'sale_ok': True if str(kw.get('sale_ok')) == '1' else False,
-                        'purchase_ok': True if str(kw.get('purchase_ok')) == '1' else False,
+                        'sale_ok': sale_ok,
+                        'purchase_ok': purchase_ok,
                         'taxes_id': [(6, 0,customer_tax_list[0])],
                         'supplier_taxes_id': [(6, 0,vendor_tax_list[0])],
                         'create_api_values': kw
                         }
+                        
                 if is_uom_available:
                     create_vals.update({
                             'uom_id':uom_id[0]
