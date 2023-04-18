@@ -177,6 +177,13 @@ class Authorize2(http.Controller):
             _logger.info("Partner ID To Update==============================================> " + str(partner_id))
             update_list =[]
             try:
+                if kw.get('mobile'):
+                    if not self.customer_mobile_validation(mobile_no=kw.get('mobile')):
+                        _logger.info("Mobile No Already Exist==============================================>")
+                        return {'Staus': 501,'Reason':'Mobile No Already Exist.'}
+                    update_list.append(kw.get('mobile'))
+                    partner_id.sudo().with_context({'lang': 'en_US','allowed_company_ids': [1]}).mobile = kw.get('mobile')
+
                 if kw.get('name'):
                     update_list.append(kw.get('name'))
                     partner_id.sudo().with_context({'lang': 'en_US','allowed_company_ids': [1]}).name = kw.get('name')
@@ -189,14 +196,13 @@ class Authorize2(http.Controller):
                 if kw.get('city'):
                     update_list.append(kw.get('city'))
                     partner_id.sudo().with_context({'lang': 'en_US','allowed_company_ids': [1]}).city = kw.get('city')
-                if kw.get('mobile'):
-                    update_list.append(kw.get('mobile'))
-                    partner_id.sudo().with_context({'lang': 'en_US','allowed_company_ids': [1]}).mobile = kw.get('mobile')
+                
                 if kw.get('country_id'):
                     country_id = self.get_country_id(kw.get('country_id'))
                     if country_id:
                         update_list.append(country_id.name)
                         partner_id.sudo().with_context({'lang': 'en_US','allowed_company_ids': [1]}).country_id = country_id
+                        
                 partner_id.sudo().with_context({'lang': 'en_US','allowed_company_ids': [1]}).write_api_values = kw
                 if update_list:
                     return {'Staus': 200,'Status':'Successfully Updated'+'-'+str(update_list)}
