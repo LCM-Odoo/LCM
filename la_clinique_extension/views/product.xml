@@ -20,6 +20,10 @@
                     </group>
                 </page>
             </xpath>
+            <field name="uom_po_id" position="after">
+                <field name="bin_location_id"/>
+                <field name="product_profile_id"/>
+            </field>
         </field>
     </record>
 </odoo>

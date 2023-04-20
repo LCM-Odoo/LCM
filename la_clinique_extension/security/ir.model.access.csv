@@ -1,2 +1,3 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
-1,bank.account.purpose,model_bank_account_purpose,account.group_account_invoice,1,1,1,1
+access_bin_location,bin.location,model_bin_location,,1,1,1,1
+access_product_profile,product.profile,model_product_profile,,1,1,1,1
