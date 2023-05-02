@@ -82,7 +82,6 @@ class Authorize2(http.Controller):
         else:
             return True
 
-
     def product_id_validation(self,product_list=False):
         Product_missing_list =[]
         Product_available_list =[]
@@ -92,12 +91,22 @@ class Authorize2(http.Controller):
             if not product_template_id:Product_missing_list.append(i.get('product_id'))
             if product_template_id:
                 product_id = request.env["product.product"].sudo().search([('active','=',True),('product_tmpl_id','=',product_template_id.id)])
-                Product_available_list.append({'product_id':product_id.id,'qty':i.get('product_qty')})
-
+                Product_available_list.append(
+                    {
+                        'product_id':product_id.id,
+                        'qty':i.get('product_qty'),
+                        'moc_doc_price_unit':i.get('moc_doc_price_unit'),
+                    })
         if Product_missing_list:
             return Product_missing_list,True
         else:
             return Product_available_list,False
+
+    def check_price_validation(self,product_list=False):
+        for i in product_list:
+            if i.get('moc_doc_price_unit') < 0.1:
+                return True
+       
 
     def get_product_template_id(self,product=False):
         if product:
@@ -378,6 +387,9 @@ class Authorize2(http.Controller):
     def create_sale_order(self, **kw):
         if kw.get('customer_id') and kw.get('product_list'):
             try:
+                if self.check_price_validation(product_list=kw.get('product_list')):
+                    _logger.info("Mocdoc Price Is lesser than 0.1 ==============================================>")
+                    return {'Staus': 704,'Reason':'Moc Doc Unit Price Is Lesser Than 0.1'}
                 partner_id = self.search_customer_id_validation(kw.get('customer_id'))
                 product_id = self.product_id_validation(product_list=kw.get('product_list'))
                 if not partner_id:
@@ -401,6 +413,7 @@ class Authorize2(http.Controller):
                                 'product_id': i.get('product_id'),
                                 'order_id':sale_order_id.id,
                                 'product_uom_qty':i.get('qty'),
+                                'price_unit':i.get('moc_doc_price_unit'),
                             })
                         _logger.info("Sale Order Line Created==============================================> " + str(sale_order_line_id))
 
@@ -421,6 +434,9 @@ class Authorize2(http.Controller):
     def create_purchase_order(self, **kw):
         if kw.get('customer_id') and kw.get('product_list'):
             try:
+                if self.check_price_validation(product_list=kw.get('product_list')):
+                    _logger.info("Mocdoc Price Is lesser than 0.1 ==============================================>")
+                    return {'Staus': 804,'Reason':'Moc Doc Unit Price Is Lesser Than 0.1'}
                 partner_id = self.search_customer_id_validation(kw.get('customer_id'))
                 product_id = self.product_id_validation(product_list=kw.get('product_list'))
 
@@ -444,7 +460,8 @@ class Authorize2(http.Controller):
                             {
                                 'product_id': i.get('product_id'),
                                 'order_id':purchase_order_id.id,
-                                'product_qty':i.get('qty')
+                                'product_qty':i.get('qty'),
+                                'price_unit':i.get('moc_doc_price_unit'),
                             })
                         _logger.info("Purchase Order Line Created==============================================> " + str(purchase_order_line_id))
 
