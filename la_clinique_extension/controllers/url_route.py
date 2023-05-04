@@ -34,6 +34,7 @@ class Authorize2(http.Controller):
             return False
 
     def get_country_id(self,country_name=False):
+        _logger.info("country_name==============================================> " + str(country_name))
         country_id = request.env["res.country"].sudo().search([('name','=',country_name)],limit =1)
         if country_id:
             return country_id.id
@@ -206,11 +207,11 @@ class Authorize2(http.Controller):
                     update_list.append(kw.get('city'))
                     partner_id.sudo().with_context({'lang': 'en_US','allowed_company_ids': [1]}).city = kw.get('city')
                 
-                # if kw.get('country_id'):
-                #     country_id = self.get_country_id(kw.get('country_id'))
-                #     if country_id:
-                #         update_list.append(country_id.name)
-                #         partner_id.sudo().with_context({'lang': 'en_US','allowed_company_ids': [1]}).country_id = country_id
+                if kw.get('country_id'):
+                    country_id = self.get_country_id(kw.get('country_id'))
+                    if country_id:
+                        update_list.append(country_id.name)
+                        partner_id.sudo().with_context({'lang': 'en_US','allowed_company_ids': [1]}).country_id = country_id
                         
                 partner_id.sudo().with_context({'lang': 'en_US','allowed_company_ids': [1]}).write_api_values = kw
                 if update_list:
