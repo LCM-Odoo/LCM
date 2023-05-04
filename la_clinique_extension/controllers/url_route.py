@@ -12,8 +12,12 @@ from odoo import http, SUPERUSER_ID, _
 
 class Authorize2(http.Controller):
 
-    def customer_mobile_validation(self,mobile_no=False):
-        partner_id = request.env["res.partner"].sudo().search([('active','=',True),('mobile','=',mobile_no)])
+    def customer_mobile_validation(self,mobile_no=False,customer_id=False):
+        if customer_id:
+            partner_id = request.env["res.partner"].sudo().search([('id','!=',customer_id),('active','=',True),('mobile','=',mobile_no)])
+        else:
+            partner_id = request.env["res.partner"].sudo().search([('active','=',True),('mobile','=',mobile_no)])
+
         if partner_id:
             return False
         else:
@@ -187,7 +191,7 @@ class Authorize2(http.Controller):
             update_list =[]
             try:
                 if kw.get('mobile'):
-                    if not self.customer_mobile_validation(mobile_no=kw.get('mobile')):
+                    if not self.customer_mobile_validation(mobile_no=kw.get('mobile'),customer_id=partner_id.id):
                         _logger.info("Mobile No Already Exist==============================================>")
                         return {'Staus': 501,'Reason':'Mobile No Already Exist.'}
                     update_list.append(kw.get('mobile'))
