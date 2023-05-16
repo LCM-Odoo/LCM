@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+
+    <!-- Partner View Inherit -->
+
+    <record id="view_res_partner_form_inherit" model="ir.ui.view">
+        <field name="name">res.partner.form.view.inherit</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form"/>
+        <field name="arch" type="xml">
+            <field name="vat" position="after">
+                <field name="brn"/>
+                <field name="national_id"/>
+                <field name="moc_doc_id" readonly="1"/>
+            </field>
+            <field name="category_id" position="after">
+                <field name="doctor"/>
+                <field name="diagnosis"/>
+            </field>
+            <xpath expr="//page[@name='internal_notes']" position="after">
+                <page name="Api_Details" string="API Details">
+                    <group>
+                        <group>
+                            <field name="create_api_values" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="write_api_values" readonly="1"/>
+                        </group>
+                    </group>
+                </page>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>
