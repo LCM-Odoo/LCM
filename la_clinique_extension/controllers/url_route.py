@@ -52,21 +52,7 @@ class Authorize2(http.Controller):
             categ_list = [i.name for i in request.env["product.category"].sudo().search([])]
             return categ_list,False
 
-    def get_tax_ids(self,tax_ids=False,tax_type=''):
-        if tax_ids:
-            _logger.info("Tax_ids==============================================> " + str(tax_ids))
-            tax_list = []
-            for i in tax_ids:
-                tax_id = request.env["account.tax"].sudo().search([('name','=',i),('type_tax_use','=',tax_type)],limit =1)
-                if tax_id:
-                    tax_list.append(tax_id.id)
-                else:
-                    all_tax_list = [i.name for i in request.env["account.tax"].sudo().search([('type_tax_use','=',tax_type)])]
-                    return all_tax_list,False
-            _logger.info("Tax List==============================================> " + str(tax_list))
-            return tax_list,True
-        else:
-            return []
+    
 
     def get_uom_id(self,uom=False):
         if uom:
@@ -86,21 +72,43 @@ class Authorize2(http.Controller):
         else:
             return True
 
+
+    def get_tax_ids(self,tax_ids=False,tax_type=''):
+        _logger.info("Tax_ids==============================================> " + str(tax_ids))
+        tax_list = []
+        for i in tax_ids:
+            tax_id = request.env["account.tax"].sudo().search([('name','=',i),('type_tax_use','=',tax_type)],limit =1)
+            if tax_id:
+                tax_list.append(tax_id.id)
+            else:
+                all_tax_list = [i.name for i in request.env["account.tax"].sudo().search([('type_tax_use','=',tax_type)])]
+                return all_tax_list,False
+        _logger.info("Tax List==============================================> " + str(tax_list))
+        return tax_list,True
+
+
+
     def product_id_validation(self,product_list=False):
         Product_missing_list =[]
         Product_available_list =[]
 
         for i in product_list:
+            tax_list = []
             product_template_id = request.env["product.template"].sudo().search([('active','=',True),('id','=',i.get('product_id'))])
             if not product_template_id:Product_missing_list.append(i.get('product_id'))
             if product_template_id:
                 product_id = request.env["product.product"].sudo().search([('active','=',True),('product_tmpl_id','=',product_template_id.id)])
+                if i.get('customer_tax'):
+                    tax_list = self.get_tax_ids(i.get('customer_tax'),tax_type='sale')
+
                 Product_available_list.append(
                     {
                         'product_id':product_id.id,
                         'qty':i.get('product_qty'),
                         'moc_doc_price_unit':i.get('moc_doc_price_unit'),
+                        'tax_id':[(6, 0,tax_list[0])] if tax_list else [(6, 0,tax_list)]
                     })
+
         if Product_missing_list:
             return Product_missing_list,True
         else:
@@ -230,7 +238,7 @@ class Authorize2(http.Controller):
     @http.route('/create_product_template', type='json', auth='none', website=True)
     def create_product_template(self, **kw):
         _logger.info("==============================================>Entering Product Creation===============>" + str(kw))
-        if kw.get('name') and kw.get('detailed_type') and kw.get('invoice_policy') and kw.get('categ_id') and kw.get('default_code') and kw.get('purchase_method') and kw.get('customer_taxes_id') and kw.get('vendor_taxes_id') and kw.get('uom_id') and kw.get('uom_po_id'):
+        if kw.get('name') and kw.get('detailed_type') and kw.get('invoice_policy') and kw.get('categ_id') and kw.get('default_code') and kw.get('purchase_method') and kw.get('uom_id') and kw.get('uom_po_id'):
             if not self.product_internal_ref_validation(default_code=kw.get('default_code')):
                 _logger.info("Internal Ref Already Exist==============================================>")
                 return {'Staus': 601,'Reason':'Internal Ref Already Exist.'}
@@ -252,13 +260,13 @@ class Authorize2(http.Controller):
                 if not categ_id[1]:
                     return {'Staus': 607,'Reason':'Categ not available in odoo, Kinldy find the List of category in odoo','List':categ_id[0]}
 
-                customer_tax_list = self.get_tax_ids(kw.get('customer_taxes_id'),tax_type='sale')
-                if not customer_tax_list[1]:
-                    return {'Staus': 608,'Reason':'Customer Tax Not available in odoo, Kinldy find the List of Sale Taxes in odoo','List':customer_tax_list[0]}
+                # customer_tax_list = self.get_tax_ids(kw.get('customer_taxes_id'),tax_type='sale')
+                # if not customer_tax_list[1]:
+                #     return {'Staus': 608,'Reason':'Customer Tax Not available in odoo, Kinldy find the List of Sale Taxes in odoo','List':customer_tax_list[0]}
 
-                vendor_tax_list = self.get_tax_ids(kw.get('vendor_taxes_id'),tax_type='purchase')
-                if not vendor_tax_list[1]:
-                    return {'Staus': 609,'Reason':'Vendor Tax Not available in odoo, Kinldy find the List of Purchase Taxes in odoo','List':vendor_tax_list[0]}
+                # vendor_tax_list = self.get_tax_ids(kw.get('vendor_taxes_id'),tax_type='purchase')
+                # if not vendor_tax_list[1]:
+                #     return {'Staus': 609,'Reason':'Vendor Tax Not available in odoo, Kinldy find the List of Purchase Taxes in odoo','List':vendor_tax_list[0]}
 
                 uom_id = self.get_uom_id(kw.get('uom_id'))
                 if not uom_id[1]:
@@ -279,8 +287,8 @@ class Authorize2(http.Controller):
                         'purchase_method': kw.get('purchase_method'),
                         'sale_ok': True,
                         'purchase_ok': True,
-                        'taxes_id': [(6, 0,customer_tax_list[0])],
-                        'supplier_taxes_id': [(6, 0,vendor_tax_list[0])],
+                        # 'taxes_id': [(6, 0,customer_tax_list[0])],
+                        # 'supplier_taxes_id': [(6, 0,vendor_tax_list[0])],
                         'uom_id':uom_id[0],
                         'uom_po_id':uom_po_id[0],
                         'create_api_values': kw
@@ -299,8 +307,8 @@ class Authorize2(http.Controller):
                 _logger.error("Error==============================================> " + str(e))
                 return {'Staus': 503,'Reason':str(e)}
         else:
-            _logger.info("name or detailed_type or invoice_policy or list_price or standard_price or categ_id or default_code or purchase_method or customer Tax or Vendor tax or uom id or uom_po_id Is Missing==============================================>")
-            return{'Staus': 600,'Reason':'name or detailed_type or invoice_policy or categ_id or default_code or purchase_method Is Missing or customer Tax or Vendor tax or uom id or uom_po_id Is Missing' }
+            _logger.info("name or detailed_type or invoice_policy or list_price or standard_price or categ_id or default_code or purchase_method  or uom id or uom_po_id Is Missing==============================================>")
+            return{'Staus': 600,'Reason':'name or detailed_type or invoice_policy or categ_id or default_code or purchase_method Is Missing or uom id or uom_po_id Is Missing' }
 
 
     @http.route('/update_product_template', type='json', auth='none', website=True)
@@ -315,15 +323,15 @@ class Authorize2(http.Controller):
             _logger.info("Product ID To Update==============================================> " + str(product_id))
             update_list =[]
             try:
-                if kw.get('customer_taxes_id'):
-                    customer_tax_list = self.get_tax_ids(kw.get('customer_taxes_id'),tax_type='sale')
-                    if not customer_tax_list[1]: 
-                        return {'Staus': 608,'Reason':'Customer Tax Not available in odoo, Kinldy find the List of Sale Taxes in odoo','List':customer_tax_list[0]}
+                # if kw.get('customer_taxes_id'):
+                #     customer_tax_list = self.get_tax_ids(kw.get('customer_taxes_id'),tax_type='sale')
+                #     if not customer_tax_list[1]: 
+                #         return {'Staus': 608,'Reason':'Customer Tax Not available in odoo, Kinldy find the List of Sale Taxes in odoo','List':customer_tax_list[0]}
 
-                if kw.get('vendor_taxes_id'):
-                    vendor_tax_list = self.get_tax_ids(kw.get('vendor_taxes_id'),tax_type='purchase')
-                    if not vendor_tax_list[1]:
-                        return {'Staus': 609,'Reason':'Vendor Tax Not available in odoo, Kinldy find the List of Purchase Taxes in odoo','List':vendor_tax_list[0]}
+                # if kw.get('vendor_taxes_id'):
+                #     vendor_tax_list = self.get_tax_ids(kw.get('vendor_taxes_id'),tax_type='purchase')
+                #     if not vendor_tax_list[1]:
+                #         return {'Staus': 609,'Reason':'Vendor Tax Not available in odoo, Kinldy find the List of Purchase Taxes in odoo','List':vendor_tax_list[0]}
 
                 if kw.get('uom_id'):
                     uom_id = self.get_uom_id(kw.get('uom_id'))
@@ -350,14 +358,14 @@ class Authorize2(http.Controller):
                 if kw.get('uom_po_id'):
                     update_list.append(kw.get('uom_po_id'))
                     product_id.sudo().with_context({'lang': 'en_US','allowed_company_ids': [1]}).uom_po_id = uom_po_id[0]
-                if kw.get('customer_taxes_id'):
-                    update_list.append(kw.get('customer_taxes_id'))
-                    product_id.sudo().with_context({'lang': 'en_US','allowed_company_ids': [1]}).taxes_id = [(6, 0,[])]
-                    product_id.sudo().with_context({'lang': 'en_US','allowed_company_ids': [1]}).taxes_id = [(6, 0,customer_tax_list[0])]
-                if kw.get('vendor_taxes_id'):
-                    update_list.append(kw.get('vendor_taxes_id'))
-                    product_id.sudo().with_context({'lang': 'en_US','allowed_company_ids': [1]}).supplier_taxes_id = [(6, 0,[])]
-                    product_id.sudo().with_context({'lang': 'en_US','allowed_company_ids': [1]}).supplier_taxes_id = [(6, 0,vendor_tax_list[0])]
+                # if kw.get('customer_taxes_id'):
+                #     update_list.append(kw.get('customer_taxes_id'))
+                #     product_id.sudo().with_context({'lang': 'en_US','allowed_company_ids': [1]}).taxes_id = [(6, 0,[])]
+                #     product_id.sudo().with_context({'lang': 'en_US','allowed_company_ids': [1]}).taxes_id = [(6, 0,customer_tax_list[0])]
+                # if kw.get('vendor_taxes_id'):
+                #     update_list.append(kw.get('vendor_taxes_id'))
+                #     product_id.sudo().with_context({'lang': 'en_US','allowed_company_ids': [1]}).supplier_taxes_id = [(6, 0,[])]
+                #     product_id.sudo().with_context({'lang': 'en_US','allowed_company_ids': [1]}).supplier_taxes_id = [(6, 0,vendor_tax_list[0])]
 
                 if kw.get('sale_ok'):
                     if str(kw.get('sale_ok')) not in ['1','0']:
@@ -385,6 +393,7 @@ class Authorize2(http.Controller):
 
 
 
+
     @http.route('/create_sale_order', type='json', auth='none', website=True)
     def create_sale_order(self, **kw):
         if kw.get('customer_id') and kw.get('product_list'):
@@ -392,6 +401,13 @@ class Authorize2(http.Controller):
                 if self.check_price_validation(product_list=kw.get('product_list')):
                     _logger.info("Mocdoc Price Is lesser than 0.1 ==============================================>")
                     return {'Staus': 704,'Reason':'Moc Doc Unit Price Is Lesser Than 0.1'}
+
+                for i in kw.get('product_list'):
+                    if i.get('customer_tax'):
+                        customer_tax_list = self.get_tax_ids(i.get('customer_tax'),tax_type='sale')
+                        if not customer_tax_list[1]: 
+                            return {'Staus': 608,'Reason':'Customer Tax Not available in odoo, Kinldy find the List of Sale Taxes in odoo','List':customer_tax_list[0]}
+
                 partner_id = self.search_customer_id_validation(kw.get('customer_id'))
                 product_id = self.product_id_validation(product_list=kw.get('product_list'))
                 if not partner_id:
@@ -416,6 +432,7 @@ class Authorize2(http.Controller):
                                 'order_id':sale_order_id.id,
                                 'product_uom_qty':i.get('qty'),
                                 'price_unit':i.get('moc_doc_price_unit'),
+                                'tax_id': i.get('tax_id') 
                             })
                         _logger.info("Sale Order Line Created==============================================> " + str(sale_order_line_id))
 
