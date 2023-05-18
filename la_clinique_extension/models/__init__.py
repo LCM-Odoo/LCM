@@ -1,3 +1,5 @@
+from . import insurance_provider
+
 from . import bin_location
 from . import product_profile
 from . import partner

@@ -37,6 +37,23 @@ class Authorize2(http.Controller):
         else:
             return False
 
+    def search_insurance_provider_id_validation(self,provider_id=False):
+        provider_id = request.env["insurance.provider"].sudo().search([('active','=',True),('name','=',provider_id)],limit=1)
+        if provider_id:
+            return provider_id,True
+        else:
+            all_list = [i.name for i in request.env["insurance.provider"].sudo().search([('active','=',True)])]
+            return all_list,False
+
+    def search_currency_id_validation(self,currency_id=False):
+        currency_id = request.env["res.currency"].sudo().search([('active','=',True),('name','=',currency_id)],limit=1)
+        if currency_id:
+            return currency_id
+        else:
+            return False
+
+    
+
     def get_country_id(self,country_name=False):
         country_id = request.env["res.country"].sudo().search([('name','=',country_name)],limit =1)
         if country_id:
@@ -410,6 +427,12 @@ class Authorize2(http.Controller):
 
                 partner_id = self.search_customer_id_validation(kw.get('customer_id'))
                 product_id = self.product_id_validation(product_list=kw.get('product_list'))
+                if kw.get('insurance_provider_id'):
+                    insurance_provider = self.search_insurance_provider_id_validation(kw.get('insurance_provider_id'))
+                    if not insurance_provider[1]:
+                        _logger.info("Insurance Provider Does not Exist in odoo==============================================>")
+                        return {'Staus': 707,'Reason':'Insurance Provider Does not Exist in Odoo, Kinldy find the List of Insurance Providers in odoo','List':insurance_provider[0]}
+
                 if not partner_id:
                     _logger.info("Partner ID Does not Exist in odoo==============================================>")
                     return {'Staus': 705,'Reason':'Partner ID Doesnot Exist in Odoo, The Patient May Be archieved or deleted'}
@@ -417,11 +440,15 @@ class Authorize2(http.Controller):
                     _logger.info("Product ID Does not Exist in odoo==============================================>" + str(product_id))
                     return {'Staus': 706,'Reason':'Product ID Doesnot Exist in Odoo, The product May Be archieved or deleted' + str(product_id)}
 
+
                 sale_order_id = request.env["sale.order"].with_user(2).create(
                         {
                             'partner_id': partner_id.id,
                             'create_api_values':kw,
-                            'make_so_readonly':True
+                            'make_so_readonly':True,
+                            'insurance_provider_id': insurance_provider[0].id if kw.get('insurance_provider_id') else '',
+                            'agreed_amount': kw.get('agreed_amount') if kw.get('agreed_amount') else 0.0,
+                            'actual_paid': kw.get('actual_paid') if kw.get('actual_paid') else 0.0
                         })
                 if sale_order_id:
                     _logger.info("Sale Order Created==============================================> " + str(sale_order_id))
