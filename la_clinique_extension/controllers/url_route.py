@@ -117,6 +117,8 @@ class Authorize2(http.Controller):
                 product_id = request.env["product.product"].sudo().search([('active','=',True),('product_tmpl_id','=',product_template_id.id)])
                 if i.get('customer_tax'):
                     tax_list = self.get_tax_ids(i.get('customer_tax'),tax_type='sale')
+                if i.get('vendor_tax'):
+                    tax_list = self.get_tax_ids(i.get('vendor_tax'),tax_type='purchase')
 
                 Product_available_list.append(
                     {
@@ -366,9 +368,9 @@ class Authorize2(http.Controller):
                 if kw.get('list_price'):
                     update_list.append(kw.get('list_price'))
                     product_id.sudo().with_context({'lang': 'en_US','allowed_company_ids': [1]}).list_price = kw.get('list_price')
-                if kw.get('standard_price'):
-                    update_list.append(kw.get('standard_price'))
-                    product_id.sudo().with_context({'lang': 'en_US','allowed_company_ids': [1]}).standard_price = kw.get('standard_price')
+                # if kw.get('standard_price'):
+                #     update_list.append(kw.get('standard_price'))
+                #     product_id.sudo().with_context({'lang': 'en_US','allowed_company_ids': [1]}).standard_price = kw.get('standard_price')
                 if kw.get('uom_id'):
                     update_list.append(kw.get('uom_id'))
                     product_id.sudo().with_context({'lang': 'en_US','allowed_company_ids': [1]}).uom_id = uom_id[0]
@@ -427,6 +429,7 @@ class Authorize2(http.Controller):
 
                 partner_id = self.search_customer_id_validation(kw.get('customer_id'))
                 product_id = self.product_id_validation(product_list=kw.get('product_list'))
+
                 if kw.get('insurance_provider_id'):
                     insurance_provider = self.search_insurance_provider_id_validation(kw.get('insurance_provider_id'))
                     if not insurance_provider[1]:
@@ -483,6 +486,14 @@ class Authorize2(http.Controller):
                 if self.check_price_validation(product_list=kw.get('product_list')):
                     _logger.info("Mocdoc Price Is lesser than 0.1 ==============================================>")
                     return {'Staus': 804,'Reason':'Moc Doc Unit Price Is Lesser Than 0.1'}
+
+                for i in kw.get('product_list'):
+                    if i.get('vendor_tax'):
+                        vendor_tax_list = self.get_tax_ids(i.get('vendor_tax'),tax_type='purchase')
+                        if not vendor_tax_list[1]: 
+                            return {'Staus': 808,'Reason':'Customer Tax Not available in odoo, Kinldy find the List of Sale Taxes in odoo','List':vendor_tax_list[0]}
+
+
                 partner_id = self.search_customer_id_validation(kw.get('customer_id'))
                 product_id = self.product_id_validation(product_list=kw.get('product_list'))
 
@@ -508,6 +519,7 @@ class Authorize2(http.Controller):
                                 'order_id':purchase_order_id.id,
                                 'product_qty':i.get('qty'),
                                 'price_unit':i.get('moc_doc_price_unit'),
+                                'taxes_id': i.get('tax_id') 
                             })
                         _logger.info("Purchase Order Line Created==============================================> " + str(purchase_order_line_id))
 

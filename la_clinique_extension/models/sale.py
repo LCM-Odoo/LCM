@@ -23,6 +23,15 @@ class SaleOrder(models.Model):
         result = super(SaleOrder, self).write(values)
         return result
 
+    def _prepare_invoice(self):
+        invoice_vals = super(SaleOrder, self)._prepare_invoice()
+        invoice_vals['inv_insurance_provider_id'] = self.insurance_provider_id.id if self.insurance_provider_id else ''
+        invoice_vals['inv_agreed_amount'] = self.agreed_amount if self.agreed_amount else 0.0
+        invoice_vals['inv_actual_paid'] = self.actual_paid if self.actual_paid else 0.0
+        return invoice_vals
+
+
+
 
 
 
