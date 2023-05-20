@@ -122,10 +122,11 @@ class Authorize2(http.Controller):
 
                 Product_available_list.append(
                     {
-                        'product_id':product_id.id,
-                        'qty':i.get('product_qty'),
-                        'moc_doc_price_unit':i.get('moc_doc_price_unit'),
-                        'tax_id':[(6, 0,tax_list[0])] if tax_list else [(6, 0,tax_list)]
+                        'product_id': product_id.id,
+                        'qty': i.get('product_qty'),
+                        'moc_doc_price_unit': i.get('moc_doc_price_unit'),
+                        'tax_id': [(6, 0,tax_list[0])] if tax_list else [(6, 0,tax_list)],
+                        'disc': i.get('disc') if i.get('disc') else 0.0,
                     })
 
         if Product_missing_list:
@@ -453,6 +454,7 @@ class Authorize2(http.Controller):
                             'agreed_amount': kw.get('agreed_amount') if kw.get('agreed_amount') else 0.0,
                             'actual_paid': kw.get('actual_paid') if kw.get('actual_paid') else 0.0
                         })
+
                 if sale_order_id:
                     _logger.info("Sale Order Created==============================================> " + str(sale_order_id))
                     for i in product_id[0]:
@@ -462,8 +464,10 @@ class Authorize2(http.Controller):
                                 'order_id':sale_order_id.id,
                                 'product_uom_qty':i.get('qty'),
                                 'price_unit':i.get('moc_doc_price_unit'),
-                                'tax_id': i.get('tax_id') 
+                                'tax_id': i.get('tax_id'),
+                                'discount': i.get('disc')
                             })
+                        
                         _logger.info("Sale Order Line Created==============================================> " + str(sale_order_line_id))
 
                     sale_order_id.sudo().action_confirm()
