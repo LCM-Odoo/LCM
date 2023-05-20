@@ -238,6 +238,11 @@ class Authorize2(http.Controller):
                 if kw.get('city'):
                     update_list.append(kw.get('city'))
                     partner_id.sudo().with_context({'lang': 'en_US','allowed_company_ids': [1]}).city = kw.get('city')
+
+                if kw.get('city'):
+                    update_list.append(kw.get('email'))
+                    partner_id.sudo().with_context({'lang': 'en_US','allowed_company_ids': [1]}).email = kw.get('email')
+
                 
                 if kw.get('country_id'):
                     country_id = self.get_country_id(kw.get('country_id'))
