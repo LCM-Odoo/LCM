@@ -181,6 +181,7 @@ class Authorize2(http.Controller):
                                 'street': kw.get('street'), 
                                 'street2': kw.get('street2'),
                                 'city': kw.get('city'), 
+                                'email': kw.get('email'),
                                 'mobile': kw.get('mobile'), 
                                 'national_id': kw.get('national_id'), 
                                 'country_id': self.get_country_id(kw.get('country_id')), 
@@ -496,7 +497,7 @@ class Authorize2(http.Controller):
                     if i.get('vendor_tax'):
                         vendor_tax_list = self.get_tax_ids(i.get('vendor_tax'),tax_type='purchase')
                         if not vendor_tax_list[1]: 
-                            return {'Staus': 808,'Reason':'Customer Tax Not available in odoo, Kinldy find the List of Sale Taxes in odoo','List':vendor_tax_list[0]}
+                            return {'Staus': 808,'Reason':'Vendor Tax Not available in odoo, Kinldy find the List of Sale Taxes in odoo','List':vendor_tax_list[0]}
 
 
                 partner_id = self.search_customer_id_validation(kw.get('customer_id'))
