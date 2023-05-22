@@ -239,7 +239,7 @@ class Authorize2(http.Controller):
                     update_list.append(kw.get('city'))
                     partner_id.sudo().with_context({'lang': 'en_US','allowed_company_ids': [1]}).city = kw.get('city')
 
-                if kw.get('city'):
+                if kw.get('email'):
                     update_list.append(kw.get('email'))
                     partner_id.sudo().with_context({'lang': 'en_US','allowed_company_ids': [1]}).email = kw.get('email')
 
@@ -548,4 +548,56 @@ class Authorize2(http.Controller):
         else:
             _logger.info("partner_id or product_list Is Missing==============================================>")
             return{'Staus': 800,'Reason':'customer_id or product_list Is Missing'}
+
+
+    @http.route('/create_payment', type='json', auth='none', website=True)
+    def create_payment(self, **kw):
+        _logger.info("MoCDOC JSON==============================================>"+ str(kw))
+        if kw.get('customer_id') and kw.get('amount') and kw.get('currency_id') and kw.get('journal_type'):
+            try:
+                partner_id = self.search_customer_id_validation(customer_id=kw.get('customer_id'))
+                currency_id = self.search_currency_id_validation(currency_id=kw.get('currency_id'))
+
+                if not partner_id:
+                    _logger.info("Partner ID Does not Exist in odoo==============================================>")
+                    return {'Staus': 305,'Reason':'Patient ID Doesnot Exist in Odoo, The Patient May Be archieved or deleted'}
+
+                if not currency_id:
+                    _logger.info("Currency ID Does not Exist in odoo==============================================>")
+                    return {'Staus': 306,'Reason':'Currency ID Doesnot Exist in Odoo, The Currency Be archieved or deleted'}
+
+                if kw.get('amount') < 1.0:
+                    _logger.info("Amount Is lesser than 1.0 ==============================================>")
+                    return {'Staus': 304,'Reason':'Price Is Lesser Than 0.1'}
+
+                if kw.get('journal_type') not in ['Bank','Cash']:
+                    _logger.info("Journal Type Is Not in Bank or Cash ==============================================>")
+                    return {'Staus': 305,'Reason':'journal Type Is Not in Bank or Cash'}
+
+                journal_id = request.env["account.journal"].sudo().search([('name','=',kw.get('journal_type'))],limit =1)
+                if not journal_id:
+                    _logger.info("Journal Not found in odoo ==============================================>")
+                    return {'Staus': 306,'Reason':'Journal Not found in odoo '}
+
+                payment_id = request.env["account.payment"].with_user(2).create(
+                        {
+                            'partner_id': partner_id.id,
+                            'payment_type': 'inbound',
+                            'amount': kw.get('amount'),
+                            'currency_id': currency_id.id,
+                            'journal_id': journal_id.id,
+                            'ref': kw.get('ref'),
+                        })
+                
+                if payment_id:
+                    _logger.info("Payment Created==============================================> " + str(payment_id))
+                    payment_id.action_post()
+
+            except Exception as e:
+                _logger.error("Error==============================================> " + str(e))
+                return {'Staus': 503,'Reason':str(e)}
+        else:
+            _logger.info("partner_id or amount or currency Is Missing==============================================>")
+            return{'Staus': 300,'Reason':'customer_id or amount or currency or journal Type Is Missing'}
+
 
