@@ -480,7 +480,7 @@ class Authorize2(http.Controller):
 
                     sale_order_id.sudo().action_confirm()
 
-                    return {'Staus': 200,'record_id':sale_order_id.id}
+                    return {'Staus': 200,'record_id':sale_order_id.name}
 
             except Exception as e:
                 _logger.error("Error==============================================> " + str(e))
@@ -542,7 +542,7 @@ class Authorize2(http.Controller):
                     # picking_id.action_set_quantities_to_reservation()
                     # picking_id.button_validate()
 
-                    return {'Staus': 200,'record_id':purchase_order_id.id}
+                    return {'Staus': 200,'record_id':purchase_order_id.name}
 
             except Exception as e:
                 _logger.error("Error==============================================> " + str(e))
