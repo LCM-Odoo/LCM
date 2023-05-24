@@ -455,6 +455,7 @@ class Authorize2(http.Controller):
                 sale_order_id = request.env["sale.order"].with_user(2).create(
                         {
                             'partner_id': partner_id.id,
+                            'moc_doc_ref':kw.get('moc_doc_ref') if kw.get('moc_doc_ref') else False,
                             'create_api_values':kw,
                             'make_so_readonly':True,
                             'insurance_provider_id': insurance_provider[0].id if kw.get('insurance_provider_id') else '',
@@ -518,6 +519,7 @@ class Authorize2(http.Controller):
                 purchase_order_id = request.env["purchase.order"].with_user(2).create(
                         {
                             'partner_id': partner_id.id,
+                            'moc_doc_ref':kw.get('moc_doc_ref') if kw.get('moc_doc_ref') else False,
                             'create_api_values':kw,
                             'make_po_readonly':True
                         })
