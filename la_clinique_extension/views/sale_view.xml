@@ -22,7 +22,6 @@
                 <field name="insurance_provider_id" attrs="{'readonly': [('state', 'in',('done','sale'))]}"/>
                 <field name="agreed_amount" attrs="{'readonly': [('state', 'in',('done','sale'))]}"/>
                 <field name="actual_paid" attrs="{'readonly': [('state', 'in',('done','sale'))]}"/>
-                <field name="journal_id" attrs="{'readonly': [('state', 'in',('done','sale'))]}"/>
             </field>
 
             <xpath expr="//field[@name='order_line']" position="attributes">
