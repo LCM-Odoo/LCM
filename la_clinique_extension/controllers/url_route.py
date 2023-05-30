@@ -147,6 +147,13 @@ class Authorize2(http.Controller):
                 return product_template_id
             else:
                 return False
+
+    def search_pricleist(self):
+        pricelist_id = request.env["product.pricelist"].sudo().search([('name','=','API Pricelist')])
+        if pricelist_id:
+            return pricelist_id
+        else:
+            False
       
     @http.route('/create_customer', type='json', auth='none', website=True)
     def create_customer(self, **kw):
@@ -423,7 +430,7 @@ class Authorize2(http.Controller):
     @http.route('/create_sale_order', type='json', auth='none', website=True)
     def create_sale_order(self, **kw):
         _logger.info("Mocdoc Json write_api_valuesues==============================================>"+str(kw))
-        if kw.get('customer_id') and kw.get('product_list'):
+        if kw.get('customer_id') and kw.get('product_list') and kw.get('currency_type'):
             try:
                 if self.check_price_validation(product_list=kw.get('product_list')):
                     _logger.info("Mocdoc Price Is lesser than 0.1 ==============================================>")
@@ -450,7 +457,14 @@ class Authorize2(http.Controller):
                 if product_id[1]:
                     _logger.info("Product ID Does not Exist in odoo==============================================>" + str(product_id))
                     return {'Staus': 706,'Reason':'Product ID Doesnot Exist in Odoo, The product May Be archieved or deleted' + str(product_id)}
+                    
 
+
+                # if kw.get('journal_type'):
+
+                api_priclist = False
+                if kw.get('currency_type'):
+                    api_priclist = self.search_pricleist()
 
                 sale_order_id = request.env["sale.order"].with_user(2).create(
                         {
@@ -460,7 +474,8 @@ class Authorize2(http.Controller):
                             'make_so_readonly':True,
                             'insurance_provider_id': insurance_provider[0].id if kw.get('insurance_provider_id') else '',
                             'agreed_amount': kw.get('agreed_amount') if kw.get('agreed_amount') else 0.0,
-                            'actual_paid': kw.get('actual_paid') if kw.get('actual_paid') else 0.0
+                            'actual_paid': kw.get('actual_paid') if kw.get('actual_paid') else 0.0,
+                            'pricelist_id':api_priclist.id
                         })
 
                 if sale_order_id:
@@ -480,13 +495,19 @@ class Authorize2(http.Controller):
 
                     sale_order_id.sudo().action_confirm()
 
+
+                    picking_id = request.env["stock.picking"].with_user(2).search([('origin','=',sale_order_id.name)])
+                    if picking_id and picking_id.products_availability == 'Available':
+                        picking_id.action_set_quantities_to_reservation()
+                        picking_id.button_validate()
+
                     return {'Staus': 200,'record_id':sale_order_id.name}
 
             except Exception as e:
                 _logger.error("Error==============================================> " + str(e))
                 return {'Staus': 503,'Reason':str(e)}
         else:
-            _logger.info("partner_id or product_list Is Missing==============================================>")
+            _logger.info("partner_id or pricelist or product_list Is Missing==============================================>")
             return{'Staus': 700,'Reason':'customer_id or product_list Is Missing'}
 
 
@@ -594,6 +615,8 @@ class Authorize2(http.Controller):
                 if payment_id:
                     _logger.info("Payment Created==============================================> " + str(payment_id))
                     payment_id.action_post()
+
+                    return {'Staus': 200,'record_id':payment_id.name}
 
             except Exception as e:
                 _logger.error("Error==============================================> " + str(e))
