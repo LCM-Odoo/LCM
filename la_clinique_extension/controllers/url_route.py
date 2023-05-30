@@ -507,14 +507,14 @@ class Authorize2(http.Controller):
                 _logger.error("Error==============================================> " + str(e))
                 return {'Staus': 503,'Reason':str(e)}
         else:
-            _logger.info("partner_id or pricelist or product_list Is Missing==============================================>")
-            return{'Staus': 700,'Reason':'customer_id or product_list Is Missing'}
+            _logger.info("partner_id or currency_type or product_list Is Missing==============================================>")
+            return{'Staus': 700,'Reason':'customer_id or currency_type or product_list Is Missing'}
 
 
 
     @http.route('/create_purchase_order', type='json', auth='none', website=True)
     def create_purchase_order(self, **kw):
-        if kw.get('customer_id') and kw.get('product_list'):
+        if kw.get('customer_id') and kw.get('product_list') and kw.get('currency_type'):
             try:
                 if self.check_price_validation(product_list=kw.get('product_list')):
                     _logger.info("Mocdoc Price Is lesser than 0.1 ==============================================>")
@@ -529,6 +529,8 @@ class Authorize2(http.Controller):
 
                 partner_id = self.search_customer_id_validation(kw.get('customer_id'))
                 product_id = self.product_id_validation(product_list=kw.get('product_list'))
+                currency_id = self.search_currency_id_validation(currency_id=kw.get('currency_type'))
+
 
                 if not partner_id:
                     _logger.info("Partner ID Does not Exist in odoo==============================================>")
@@ -536,14 +538,20 @@ class Authorize2(http.Controller):
                 if product_id[1]:
                     _logger.info("Product ID Does not Exist in odoo==============================================>" + str(product_id))
                     return {'Staus': 806,'Reason':'Product ID Doesnot Exist in Odoo, The product May Be archieved or deleted' + str(product_id)}
+                if not currency_id:
+                    _logger.info("Currency ID Does not Exist in odoo==============================================>")
+                    return {'Staus': 807,'Reason':'Currency ID Doesnot Exist in Odoo, The Currency Be archieved or deleted'}
+
 
                 purchase_order_id = request.env["purchase.order"].with_user(2).create(
                         {
                             'partner_id': partner_id.id,
+                            'currency_id': currency_id.id,
                             'moc_doc_ref':kw.get('moc_doc_ref') if kw.get('moc_doc_ref') else False,
                             'create_api_values':kw,
                             'make_po_readonly':True
                         })
+                
                 if purchase_order_id:
                     _logger.info("Purchase Order Created==============================================> " + str(purchase_order_id))
                     for i in product_id[0]:
@@ -569,8 +577,8 @@ class Authorize2(http.Controller):
                 _logger.error("Error==============================================> " + str(e))
                 return {'Staus': 503,'Reason':str(e)}
         else:
-            _logger.info("partner_id or product_list Is Missing==============================================>")
-            return{'Staus': 800,'Reason':'customer_id or product_list Is Missing'}
+            _logger.info("partner_id or currency_type or  product_list Is Missing==============================================>")
+            return{'Staus': 800,'Reason':'customer_id or currency_type or product_list Is Missing'}
 
 
     @http.route('/create_payment', type='json', auth='none', website=True)

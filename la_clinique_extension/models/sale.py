@@ -30,7 +30,16 @@ class SaleOrder(models.Model):
         invoice_vals['inv_insurance_provider_id'] = self.insurance_provider_id.id if self.insurance_provider_id else ''
         invoice_vals['inv_agreed_amount'] = self.agreed_amount if self.agreed_amount else 0.0
         invoice_vals['inv_actual_paid'] = self.actual_paid if self.actual_paid else 0.0
+        invoice_vals['inv_moc_doc_ref'] = self.moc_doc_ref if self.moc_doc_ref else False
         return invoice_vals
+
+class SaleOrderLine(models.Model):
+    _inherit = 'sale.order.line'
+
+    def _prepare_invoice_line(self, **optional_values):
+        values = super(SaleOrderLine, self)._prepare_invoice_line(**optional_values)
+        values.update({'moc_doc_ref':self.order_id.moc_doc_ref if self.order_id.moc_doc_ref else False})
+        return values
 
 
 
