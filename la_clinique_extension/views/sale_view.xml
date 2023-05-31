@@ -12,6 +12,18 @@
                 <field name="create_api_values" readonly="1"/>
                 <field name="make_so_readonly" groups="base.group_erp_manager"/>
             </field>
+
+            <field name="partner_id" position="after">
+                <field name="patient_type"/>
+                <field name="moc_doc_ref" attrs="{'readonly': [('state', 'in',('done','sale'))]}"/>
+            </field>
+
+            <field name="payment_term_id" position="after">
+                <field name="insurance_provider_id" attrs="{'readonly': [('state', 'in',('done','sale'))]}"/>
+                <field name="agreed_amount" attrs="{'readonly': [('state', 'in',('done','sale'))]}"/>
+                <field name="actual_paid" attrs="{'readonly': [('state', 'in',('done','sale'))]}"/>
+            </field>
+
             <xpath expr="//field[@name='order_line']" position="attributes">
                 <attribute name="attrs">{'readonly': ['|',('state', 'in', ('done','cancel')),('make_so_readonly','=',True)]}</attribute>
             </xpath>

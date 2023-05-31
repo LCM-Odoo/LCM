@@ -8,5 +8,6 @@ class PurchaseOrder(models.Model):
 
     create_api_values = fields.Char(string='Create API Values',copy=False)
     make_po_readonly = fields.Boolean(string='Make PO Readonly',copy=False)
+    moc_doc_ref = fields.Char(string="Moc Doc Ref",copy=False)
 
 
