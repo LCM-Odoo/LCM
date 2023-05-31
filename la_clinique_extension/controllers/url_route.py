@@ -154,6 +154,15 @@ class Authorize2(http.Controller):
             return pricelist_id
         else:
             False
+
+    def search_journal(self,journal_type=False):
+        journal_id = request.env["account.journal"].sudo().search([('name','=',journal_type)],limit =1)
+        if journal_id:
+            return journal_id,False
+        else:
+            journal_list = [i.name for i in request.env["account.journal"].sudo().search([('type','in',('bank','cash'))])]
+            return journal_list,True
+
       
     @http.route('/create_customer', type='json', auth='none', website=True)
     def create_customer(self, **kw):
@@ -601,14 +610,10 @@ class Authorize2(http.Controller):
                     _logger.info("Amount Is lesser than 1.0 ==============================================>")
                     return {'Staus': 304,'Reason':'Price Is Lesser Than 0.1'}
 
-                if kw.get('journal_type') not in ['Bank','Cash']:
-                    _logger.info("Journal Type Is Not in Bank or Cash ==============================================>")
-                    return {'Staus': 305,'Reason':'journal Type Is Not in Bank or Cash'}
-
-                journal_id = request.env["account.journal"].sudo().search([('name','=',kw.get('journal_type'))],limit =1)
-                if not journal_id:
+                journal_id = self.search_journal(journal_type=kw.get('journal_type'))
+                if journal_id[1]:
                     _logger.info("Journal Not found in odoo ==============================================>")
-                    return {'Staus': 306,'Reason':'Journal Not found in odoo '}
+                    return {'Staus': 305,'Reason':'Journal Not found in odoo, Kinldy find the List of Payment Methods','List':journal_id[0]}
 
                 payment_id = request.env["account.payment"].with_user(2).create(
                         {
@@ -616,7 +621,7 @@ class Authorize2(http.Controller):
                             'payment_type': 'inbound',
                             'amount': kw.get('amount'),
                             'currency_id': currency_id.id,
-                            'journal_id': journal_id.id,
+                            'journal_id': journal_id[0].id,
                             'ref': kw.get('ref'),
                         })
                 
