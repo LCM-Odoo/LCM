@@ -148,8 +148,8 @@ class Authorize2(http.Controller):
             else:
                 return False
 
-    def search_pricleist(self):
-        pricelist_id = request.env["product.pricelist"].sudo().search([('name','=','API Pricelist')])
+    def search_pricleist(self,currency_name=False):
+        pricelist_id = request.env["product.pricelist"].sudo().search([('is_moc_doc_priclist','=',True),('currency_id.name','=',currency_name)],limit=1)
         if pricelist_id:
             return pricelist_id
         else:
@@ -471,9 +471,9 @@ class Authorize2(http.Controller):
 
                 # if kw.get('journal_type'):
 
-                api_priclist = False
+                api_pricelist = False
                 if kw.get('currency_type'):
-                    api_priclist = self.search_pricleist()
+                    api_pricelist = self.search_pricleist(currency_name=kw.get('currency_type'))
 
                 sale_order_id = request.env["sale.order"].with_user(2).create(
                         {
@@ -484,7 +484,7 @@ class Authorize2(http.Controller):
                             'insurance_provider_id': insurance_provider[0].id if kw.get('insurance_provider_id') else '',
                             'agreed_amount': kw.get('agreed_amount') if kw.get('agreed_amount') else 0.0,
                             'actual_paid': kw.get('actual_paid') if kw.get('actual_paid') else 0.0,
-                            'pricelist_id':api_priclist.id
+                            'pricelist_id':api_pricelist.id
                         })
 
                 if sale_order_id:

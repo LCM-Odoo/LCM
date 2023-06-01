@@ -1,3 +1,4 @@
+from . import product_pricelist
 from . import insurance_provider
 
 from . import bin_location
