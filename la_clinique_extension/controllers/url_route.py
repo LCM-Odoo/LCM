@@ -104,10 +104,19 @@ class Authorize2(http.Controller):
         return tax_list,True
 
 
+    def search_location(self,location=False):
+        stock_location_id = request.env["stock.location"].sudo().search([('name','=',location)],limit=1)
+        if stock_location_id:
+            return stock_location_id
+        else:
+            return False
+
+
 
     def product_id_validation(self,product_list=False):
         Product_missing_list =[]
         Product_available_list =[]
+        location_id = False
 
         for i in product_list:
             tax_list = []
@@ -120,6 +129,9 @@ class Authorize2(http.Controller):
                 if i.get('vendor_tax'):
                     tax_list = self.get_tax_ids(i.get('vendor_tax'),tax_type='purchase')
 
+                if i.get('moc_doc_location'):
+                    location_id = self.search_location(location=i.get('moc_doc_location'))
+
                 Product_available_list.append(
                     {
                         'product_id': product_id.id,
@@ -127,6 +139,7 @@ class Authorize2(http.Controller):
                         'moc_doc_price_unit': i.get('moc_doc_price_unit'),
                         'tax_id': [(6, 0,tax_list[0])] if tax_list else [(6, 0,tax_list)],
                         'disc': i.get('disc') if i.get('disc') else 0.0,
+                        'moc_doc_location_id':location_id.id if location_id else False
                     })
 
         if Product_missing_list:
@@ -497,7 +510,8 @@ class Authorize2(http.Controller):
                                 'product_uom_qty':i.get('qty'),
                                 'price_unit':i.get('moc_doc_price_unit'),
                                 'tax_id': i.get('tax_id'),
-                                'discount': i.get('disc')
+                                'discount': i.get('disc'),
+                                'moc_doc_location_id': i.get('moc_doc_location_id'),
                             })
                         
                         _logger.info("Sale Order Line Created==============================================> " + str(sale_order_line_id))
@@ -506,9 +520,12 @@ class Authorize2(http.Controller):
 
 
                     picking_id = request.env["stock.picking"].with_user(2).search([('origin','=',sale_order_id.name)])
-                    if picking_id and picking_id.products_availability == 'Available':
-                        picking_id.action_set_quantities_to_reservation()
-                        picking_id.button_validate()
+                    if picking_id:
+                        picking_id.do_unreserve()
+                        picking_id.action_assign()
+                    # if picking_id and picking_id.products_availability == 'Available':
+                        # picking_id.action_set_quantities_to_reservation()
+                        # picking_id.button_validate()
 
                     return {'Status': 200,'record_id':sale_order_id.name}
 

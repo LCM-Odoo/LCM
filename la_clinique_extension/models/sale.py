@@ -36,10 +36,57 @@ class SaleOrder(models.Model):
 class SaleOrderLine(models.Model):
     _inherit = 'sale.order.line'
 
+    moc_doc_location_id = fields.Many2one('stock.location',string='Moc doc Location')
+
     def _prepare_invoice_line(self, **optional_values):
         values = super(SaleOrderLine, self)._prepare_invoice_line(**optional_values)
         values.update({'moc_doc_ref':self.order_id.moc_doc_ref if self.order_id.moc_doc_ref else False})
         return values
+
+    # 1.This fucntion will pass the P&D value from SO Line To Stock Move P&D Line
+
+    def _prepare_procurement_values(self, group_id=False):
+        values = super(SaleOrderLine, self)._prepare_procurement_values(group_id)
+        values.update({'moc_location_id':self.moc_doc_location_id.id if self.moc_doc_location_id else False})
+        return values
+
+
+class StockMove(models.Model):
+    _inherit = "stock.move"
+
+    move_moc_doc_location_id = fields.Many2one('stock.location',string='Moc doc Location')
+
+    @api.model
+    def create(self, vals):    
+        result = super(StockMove, self).create(vals)
+        return result
+
+
+class StockPicking(models.Model):
+    _inherit = "stock.picking"
+
+    def action_assign(self):
+        values = super(StockPicking, self).action_assign()
+        for i in self.move_line_ids_without_package:
+            if i.move_line_moc_doc_location_id:
+                i.location_id = i.move_line_moc_doc_location_id.id
+        return values
+
+
+class StockRule(models.Model):
+    _inherit = 'stock.rule'
+
+    def _get_stock_move_values(self, product_id, product_qty, product_uom, location_id, name, origin, company_id, values):
+        res = super(StockRule, self)._get_stock_move_values(product_id, product_qty, product_uom, location_id, name, origin, company_id,values)
+        res.update({'move_moc_doc_location_id': values.get('moc_location_id') if values.get('moc_location_id') else ''})
+        return res
+
+
+
+class StockMoveLine(models.Model):
+    _inherit = "stock.move.line"
+
+    move_line_moc_doc_location_id = fields.Many2one('stock.location',related='move_id.move_moc_doc_location_id',string='Moc doc Location')
 
 
 
