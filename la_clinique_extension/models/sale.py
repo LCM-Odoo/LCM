@@ -56,6 +56,13 @@ class StockMove(models.Model):
 
     move_moc_doc_location_id = fields.Many2one('stock.location',string='Moc doc Location')
 
+    def _get_new_picking_values(self):
+        res = super(StockMove, self)._get_new_picking_values()
+        res.update({
+            'is_from_api': True if self.group_id.sale_id and self.group_id.sale_id.create_api_values else False,
+            })
+        return res
+
     @api.model
     def create(self, vals):    
         result = super(StockMove, self).create(vals)
@@ -65,11 +72,14 @@ class StockMove(models.Model):
 class StockPicking(models.Model):
     _inherit = "stock.picking"
 
+    is_from_api = fields.Boolean(string='From Api',copy=False)
+
     def action_assign(self):
         values = super(StockPicking, self).action_assign()
-        for i in self.move_line_ids_without_package:
-            if i.move_line_moc_doc_location_id:
-                i.location_id = i.move_line_moc_doc_location_id.id
+        if self.is_from_api:
+            for i in self.move_line_ids_without_package:
+                if i.move_line_moc_doc_location_id:
+                    i.location_id = i.move_line_moc_doc_location_id.id
         return values
 
 

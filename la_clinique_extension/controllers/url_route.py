@@ -109,7 +109,10 @@ class Authorize2(http.Controller):
         if stock_location_id:
             return stock_location_id
         else:
-            return False
+            stock_location_id = request.env["stock.location"].sudo().search([('is_missing_loc','=',True)],limit=1)
+            if stock_location_id:
+                return stock_location_id
+        return False
 
 
 
