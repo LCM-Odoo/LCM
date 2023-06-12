@@ -114,9 +114,18 @@ class Authorize2(http.Controller):
                 return stock_location_id
         return False
 
+    def search_internal_transfer_loc(self,location=False):
+        stock_location_id = request.env["stock.location"].sudo().search([('name','=',location)],limit=1)
+        if stock_location_id:
+            return stock_location_id,True
+        else:
+            stock_location_id = [i.name for i in request.env["stock.location"].sudo().search([])]
+            return stock_location_id,False
 
 
-    def product_id_validation(self,product_list=False):
+
+
+    def product_id_validation(self,product_list=False,internal_transfer=False):
         Product_missing_list =[]
         Product_available_list =[]
         location_id = False
@@ -127,23 +136,33 @@ class Authorize2(http.Controller):
             if not product_template_id:Product_missing_list.append(i.get('product_id'))
             if product_template_id:
                 product_id = request.env["product.product"].sudo().search([('active','=',True),('product_tmpl_id','=',product_template_id.id)])
-                if i.get('customer_tax'):
-                    tax_list = self.get_tax_ids(i.get('customer_tax'),tax_type='sale')
-                if i.get('vendor_tax'):
-                    tax_list = self.get_tax_ids(i.get('vendor_tax'),tax_type='purchase')
 
-                if i.get('moc_doc_location'):
-                    location_id = self.search_location(location=i.get('moc_doc_location'))
+                if internal_transfer:
+                    Product_available_list.append(
+                        {
+                            'name': product_id.name,
+                            'product_id': product_id.id,
+                            'qty_done': i.get('product_qty'),
+                            'product_uom': product_id.uom_id.id,
+                        })
+                else:
+                    if i.get('customer_tax'):
+                        tax_list = self.get_tax_ids(i.get('customer_tax'),tax_type='sale')
+                    if i.get('vendor_tax'):
+                        tax_list = self.get_tax_ids(i.get('vendor_tax'),tax_type='purchase')
 
-                Product_available_list.append(
-                    {
-                        'product_id': product_id.id,
-                        'qty': i.get('product_qty'),
-                        'moc_doc_price_unit': i.get('moc_doc_price_unit'),
-                        'tax_id': [(6, 0,tax_list[0])] if tax_list else [(6, 0,tax_list)],
-                        'disc': i.get('disc') if i.get('disc') else 0.0,
-                        'moc_doc_location_id':location_id.id if location_id else False
-                    })
+                    if i.get('moc_doc_location'):
+                        location_id = self.search_location(location=i.get('moc_doc_location'))
+
+                    Product_available_list.append(
+                        {
+                            'product_id': product_id.id,
+                            'qty': i.get('product_qty'),
+                            'moc_doc_price_unit': i.get('moc_doc_price_unit'),
+                            'tax_id': [(6, 0,tax_list[0])] if tax_list else [(6, 0,tax_list)],
+                            'disc': i.get('disc') if i.get('disc') else 0.0,
+                            'moc_doc_location_id':location_id.id if location_id else False
+                        })
 
         if Product_missing_list:
             return Product_missing_list,True
@@ -178,6 +197,13 @@ class Authorize2(http.Controller):
         else:
             journal_list = [i.name for i in request.env["account.journal"].sudo().search([('type','in',('bank','cash'))])]
             return journal_list,True
+
+    def search_internal_transfer_operation_type(self):
+        internal_picking_id = request.env["stock.picking.type"].sudo().search([('is_api_transfer','=',True)],limit=1)
+        if internal_picking_id:
+            return internal_picking_id
+        else:
+            return False
 
       
     @http.route('/create_customer', type='json', auth='none', website=True)
@@ -657,5 +683,70 @@ class Authorize2(http.Controller):
         else:
             _logger.info("partner_id or amount or currency Is Missing==============================================>")
             return {'Status': 300,'Reason':'customer_id or amount or currency or journal Type Is Missing'}
+
+
+    @http.route('/create_internal_transfer', type='json', auth='none', website=True)
+    def create_internal_transfer(self, **kw):
+        _logger.info("MoCDOC JSON==============================================>"+ str(kw))
+        if kw.get('from_location') and kw.get('to_location') and kw.get('product_list'):
+            try:
+                from_location_id = self.search_internal_transfer_loc(location=kw.get('from_location'))
+                to_location_id = self.search_internal_transfer_loc(location=kw.get('to_location'))
+
+                product_id = self.product_id_validation(product_list=kw.get('product_list'),internal_transfer=True)
+
+                if not from_location_id[1]:
+                    _logger.info("From Location Does not Exist in odoo==============================================>")
+                    return {'Status': 405,'Reason':'From Location Does Not Exist in Odoo, Kinldy find the List of Locations','List':from_location_id[0]}
+
+                if not to_location_id[1]:
+                    _logger.info("To Location Does not Exist in odoo==============================================>")
+                    return {'Status': 406,'Reason':'To Location Does Not Exist in Odoo, Kinldy find the List of Locations','List':to_location_id[0]}
+
+                if product_id[1]:
+                    _logger.info("Product ID Does not Exist in odoo==============================================>" + str(product_id))
+                    return {'Status': 406,'Reason':'Product ID Does not Exist in Odoo, The product May Be archived or deleted' + str(product_id)}
+
+                internal_transfer_id = self.search_internal_transfer_operation_type()
+                if not internal_transfer_id:
+                    _logger.info("Is API Internal Transfer Does not Configured in odoo, Kindly do the Configuration==============================================>" + str(product_id))
+                    return {'Status': 407,'Reason':'Is API Internal Transfer Does not Configured in odoo, Kindly do the Configuration'}
+
+
+                picking_id = request.env["stock.picking"].with_user(2).create(
+                        {
+                            'location_id': from_location_id[0].id,
+                            'location_dest_id': to_location_id[0].id,
+                            'picking_type_id': internal_transfer_id.id,
+                        })
+
+                if picking_id:
+                    _logger.info("Transfer Created==============================================> " + str(picking_id))
+                    for i in product_id[0]:
+                        move_id = request.env["stock.move"].with_user(2).create(
+                            {
+                                'product_id': i.get('product_id'),
+                                'product_uom_qty':i.get('qty_done'),
+                                'picking_id':picking_id.id,
+                                'name': i.get('name'),
+                                'description_picking': i.get('name'),
+                                'product_uom':i.get('product_uom'),
+                                'location_id': from_location_id[0].id,
+                                'location_dest_id': to_location_id[0].id,
+                            })
+                        _logger.info("Move Line Created==============================================> " + str(move_id))
+                    if picking_id:
+                        picking_id.action_confirm()
+                        return {'Status': 200,'record_id':picking_id.name}
+
+            except Exception as e:
+                _logger.error("Error==============================================> " + str(e))
+                return {'Status': 503,'Reason':str(e)}
+        else:
+            _logger.info("From Location or To Location or Product List Is Missing==============================================>")
+            return {'Status': 400,'Reason':'From Location or To Location or Product List Is Missing'}
+
+
+
 
 

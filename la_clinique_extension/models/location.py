@@ -8,3 +8,10 @@ class StockLocation(models.Model):
 
     is_missing_loc = fields.Boolean(string='Is Missing API Location',copy=False)
 
+
+class StockPickingType(models.Model):
+    _inherit = 'stock.picking.type'
+
+    is_api_transfer = fields.Boolean(string='Is API Transfer',copy=False)
+
+

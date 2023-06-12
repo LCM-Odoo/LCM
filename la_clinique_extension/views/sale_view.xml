@@ -42,7 +42,7 @@
                 <field name="is_from_api" readonly="1"/>
             </field>
             <xpath expr="//notebook/page[2]/field/tree/field[@name='product_uom_qty']" position="after">
-               <field name="move_moc_doc_location_id" readonly="0" optional="hide"/>
+               <field name="move_moc_doc_location_id" readonly="0" attrs="{'column_invisible': [('parent.is_from_api', '!=',True)]}"/>
             </xpath>
         </field>
     </record>
