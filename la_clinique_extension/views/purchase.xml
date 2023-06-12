@@ -8,7 +8,7 @@
         <field name="inherit_id" ref="purchase.purchase_order_form"/>
         <field name="arch" type="xml">
             <field name="incoterm_id" position="after">
-                <field name="moc_doc_ref" readonly="1"/>
+                <field name="moc_doc_ref" readonly="0"/>
                 <field name="create_api_values" readonly="1"/>
                 <field name="make_po_readonly" groups="base.group_erp_manager"/>
             </field>
