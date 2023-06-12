@@ -569,6 +569,7 @@ class Authorize2(http.Controller):
 
     @http.route('/create_purchase_order', type='json', auth='none', website=True)
     def create_purchase_order(self, **kw):
+        _logger.info("Mocdoc Json create_api_valuesues==============================================>"+str(kw))
         if kw.get('customer_id') and kw.get('product_list') and kw.get('currency_type'):
             try:
                 if self.check_price_validation(product_list=kw.get('product_list')):
