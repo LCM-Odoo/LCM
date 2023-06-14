@@ -132,37 +132,41 @@ class Authorize2(http.Controller):
         for i in product_list:
             location_id = False
             tax_list = []
-            product_template_id = request.env["product.template"].sudo().search([('active','=',True),('id','=',i.get('product_id'))])
-            if not product_template_id:Product_missing_list.append(i.get('product_id'))
-            if product_template_id:
-                product_id = request.env["product.product"].sudo().search([('active','=',True),('product_tmpl_id','=',product_template_id.id)])
+            if i.get('product_id'):
+                product_template_id = request.env["product.template"].sudo().search([('active','=',True),('id','=',i.get('product_id'))])
+                if not product_template_id:Product_missing_list.append(i.get('product_id'))
+                if product_template_id:
+                    product_id = request.env["product.product"].sudo().search([('active','=',True),('product_tmpl_id','=',product_template_id.id)])
 
-                if internal_transfer:
-                    Product_available_list.append(
-                        {
-                            'name': product_id.name,
-                            'product_id': product_id.id,
-                            'qty_done': i.get('product_qty'),
-                            'product_uom': product_id.uom_id.id,
-                        })
-                else:
-                    if i.get('customer_tax'):
-                        tax_list = self.get_tax_ids(i.get('customer_tax'),tax_type='sale')
-                    if i.get('vendor_tax'):
-                        tax_list = self.get_tax_ids(i.get('vendor_tax'),tax_type='purchase')
+                    if internal_transfer:
+                        Product_available_list.append(
+                            {
+                                'name': product_id.name,
+                                'product_id': product_id.id,
+                                'qty_done': i.get('product_qty'),
+                                'product_uom': product_id.uom_id.id,
+                            })
+                    else:
+                        if i.get('customer_tax'):
+                            tax_list = self.get_tax_ids(i.get('customer_tax'),tax_type='sale')
 
-                    if i.get('moc_doc_location'):
-                        location_id = self.search_location(location=i.get('moc_doc_location'))
+                        if i.get('vendor_tax'):
+                            tax_list = self.get_tax_ids(i.get('vendor_tax'),tax_type='purchase')
 
-                    Product_available_list.append(
-                        {
-                            'product_id': product_id.id,
-                            'qty': i.get('product_qty'),
-                            'moc_doc_price_unit': i.get('moc_doc_price_unit'),
-                            'tax_id': [(6, 0,tax_list[0])] if tax_list else [(6, 0,tax_list)],
-                            'disc': i.get('disc') if i.get('disc') else 0.0,
-                            'moc_doc_location_id':location_id.id if location_id else False
-                        })
+                        if i.get('moc_doc_location'):
+                            location_id = self.search_location(location=i.get('moc_doc_location'))
+
+                        Product_available_list.append(
+                            {
+                                'product_id': product_id.id,
+                                'qty': i.get('product_qty'),
+                                'moc_doc_price_unit': i.get('moc_doc_price_unit'),
+                                'tax_id': [(6, 0,tax_list[0])] if tax_list else [(6, 0,tax_list)],
+                                'disc': i.get('disc') if i.get('disc') else 0.0,
+                                'moc_doc_location_id':location_id.id if location_id else False
+                            })
+            else:
+                Product_missing_list.append('Product Id not sent from Mocdoc')
 
         if Product_missing_list:
             return Product_missing_list,True
@@ -190,13 +194,21 @@ class Authorize2(http.Controller):
         else:
             False
 
-    def search_journal(self,journal_type=False):
+    def search_journal(self,journal_type=False,from_sale=False):
         journal_id = request.env["account.journal"].sudo().search([('name','=',journal_type)],limit =1)
         if journal_id:
-            return journal_id,False
+            if from_sale:
+                return journal_id.id
+            else:
+                return journal_id,False
         else:
-            journal_list = [i.name for i in request.env["account.journal"].sudo().search([('type','in',('bank','cash'))])]
-            return journal_list,True
+            if from_sale:
+                return False
+            else:
+                journal_list = [i.name for i in request.env["account.journal"].sudo().search([('type','in',('bank','cash'))])]
+                return journal_list,True
+       
+
 
     def search_internal_transfer_operation_type(self):
         internal_picking_id = request.env["stock.picking.type"].sudo().search([('is_api_transfer','=',True)],limit=1)
@@ -493,8 +505,10 @@ class Authorize2(http.Controller):
                         if not customer_tax_list[1]: 
                             return {'Status': 608,'Reason':'Customer Tax Not available in odoo, Kindly find the List of Sale Taxes in odoo','List':customer_tax_list[0]}
 
+
                 partner_id = self.search_customer_id_validation(kw.get('customer_id'))
                 product_id = self.product_id_validation(product_list=kw.get('product_list'))
+                currency_id = self.search_currency_id_validation(currency_id=kw.get('currency_type'))
 
                 if kw.get('insurance_provider_id'):
                     insurance_provider = self.search_insurance_provider_id_validation(kw.get('insurance_provider_id'))
@@ -505,14 +519,15 @@ class Authorize2(http.Controller):
                 if not partner_id:
                     _logger.info("Partner ID Does not Exist in odoo==============================================>")
                     return {'Status': 705,'Reason':'Partner ID Does not Exist in Odoo, The Patient May Be archived or deleted'}
+
                 if product_id[1]:
                     _logger.info("Product ID Does not Exist in odoo==============================================>" + str(product_id))
                     return {'Status': 706,'Reason':'Product ID Does not Exist in Odoo, The product May Be archived or deleted' + str(product_id)}
+
+                if not currency_id:
+                    _logger.info("Currency ID Does not Exist in odoo==============================================>")
+                    return {'Status': 709,'Reason':'Currency ID Does not Exist in Odoo, The Currency Be archived or deleted'}
                     
-
-
-                # if kw.get('journal_type'):
-
                 api_pricelist = False
                 if kw.get('currency_type'):
                     api_pricelist = self.search_pricleist(currency_name=kw.get('currency_type'))
@@ -520,6 +535,20 @@ class Authorize2(http.Controller):
                 patient_type = ''
                 if kw.get('patient_type') and kw.get('patient_type') in ('in','out'):
                     patient_type = kw.get('patient_type')
+
+                amount = 0.0
+                journal_id = False
+
+                if kw.get('amount') > 0.0:
+                    amount = kw.get('amount')
+                    if not kw.get('journal_type'):
+                        return {'Status': 710,'Reason':'Journal Not Sent From Mocdoc'}
+
+                    journal_id = self.search_journal(journal_type=kw.get('journal_type'),from_sale=True)
+                    if not journal_id:
+                        _logger.info("Journal Not found in odoo ==============================================>")
+                        return {'Status': 708,'Reason':'Journal Not found in odoo'}
+
 
                 sale_order_id = request.env["sale.order"].with_user(2).create(
                         {
@@ -531,7 +560,10 @@ class Authorize2(http.Controller):
                             'agreed_amount': kw.get('agreed_amount') if kw.get('agreed_amount') else 0.0,
                             'actual_paid': kw.get('actual_paid') if kw.get('actual_paid') else 0.0,
                             'pricelist_id':api_pricelist.id,
-                            'patient_type' : patient_type
+                            'patient_type' : patient_type,
+                            'sale_bill_amount': amount,
+                            'sale_bill_type':journal_id,
+                            'sale_bill_currency': currency_id.id
                         })
 
                 if sale_order_id:
@@ -551,7 +583,7 @@ class Authorize2(http.Controller):
                         _logger.info("Sale Order Line Created==============================================> " + str(sale_order_line_id))
 
                     sale_order_id.sudo().action_confirm()
-
+                    sale_order_id.create_payment()
 
                     picking_id = request.env["stock.picking"].with_user(2).search([('origin','=',sale_order_id.name)])
                     if picking_id:
@@ -725,6 +757,7 @@ class Authorize2(http.Controller):
                             'location_dest_id': to_location_id[0].id,
                             'picking_type_id': internal_transfer_id.id,
                             'moc_doc_ref': kw.get('moc_doc_ref') if kw.get('moc_doc_ref') else False,
+                            'is_int_api':True,
                             'create_api_values':kw,
                         })
 
@@ -747,13 +780,23 @@ class Authorize2(http.Controller):
                     if picking_id:
                         picking_id.action_confirm()
                         if picking_id.state == 'assigned':
-                            make_it_done=True
+                            quant_check = False
+                            location_check = False
+                        
                             for j in picking_id.move_ids_without_package:
                                 if not j.product_uom_qty == j.reserved_availability:
-                                    make_it_done = False
+                                    quant_check = True
+                                    _logger.info("Quant Check Failed==============================================> ")
                                     break
 
-                            if make_it_done:
+                            for k in picking_id.move_line_ids_without_package:
+                                if not picking_id.location_id.id == k.location_id.id or not picking_id.location_dest_id.id == k.location_dest_id.id:
+                                    location_check = True
+                                    _logger.info("Location Check Failed==============================================> ")
+                                    break
+
+                            if not quant_check and not location_check:
+                                _logger.info("Transfer Moved To Done==============================================> ")
                                 picking_id.action_set_quantities_to_reservation()
                                 picking_id.button_validate()
 

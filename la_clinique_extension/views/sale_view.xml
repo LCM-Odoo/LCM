@@ -8,6 +8,15 @@
         <field name="model">sale.order</field>
         <field name="inherit_id" ref="sale.view_order_form"/>
         <field name="arch" type="xml">
+            <button name="action_cancel" position="after">
+                <button name="create_payment" icon="fa-money" string="Create Payment" attrs="{'invisible': [('is_payment_created','=', True)]}" type="object" class="oe_stat_button"/>
+            </button>
+
+            <field name="tag_ids" position="after">
+                <field name="create_api_values" readonly="1" groups="base.group_no_one"/>
+                <field name="make_so_readonly" groups="base.group_no_one"/>
+            </field>
+
             <field name="tag_ids" position="after">
                 <field name="create_api_values" readonly="1" groups="base.group_no_one"/>
                 <field name="make_so_readonly" groups="base.group_no_one"/>
@@ -16,6 +25,10 @@
             <field name="partner_id" position="after">
                 <field name="patient_type"/>
                 <field name="moc_doc_ref" attrs="{'readonly': [('state', 'in',('done','sale'))]}"/>
+                <field name="sale_bill_amount" attrs="{'readonly': [('is_payment_created', 'in',('done','sale'))]}"/>
+                <field name="sale_bill_type" attrs="{'readonly': [('is_payment_created', 'in',('done','sale'))]}"/>
+                <field name="sale_bill_currency" attrs="{'readonly': [('is_payment_created', 'in',('done','sale'))]}"/>
+                <field name="is_payment_created" readonly="1"/>
             </field>
 
             <field name="payment_term_id" position="after">
@@ -40,6 +53,7 @@
         <field name="arch" type="xml">
             <field name="origin" position="after">
                 <field name="is_from_api" readonly="1" groups="base.group_no_one"/>
+                <field name="is_int_api" readonly="1" groups="base.group_no_one"/>
             </field>
              <field name="user_id" position="after">
                 <field name="moc_doc_ref" readonly="1"/>

@@ -1,4 +1,5 @@
 from odoo import api, fields, models, SUPERUSER_ID, _
+from odoo.exceptions import UserError
 import logging
 _logger = logging.getLogger(__name__)
 
@@ -15,6 +16,10 @@ class SaleOrder(models.Model):
     agreed_amount = fields.Float(string="Agreed Amount",copy=False)
     actual_paid = fields.Float(string="Actual Paid",copy=False)
 
+    sale_bill_amount = fields.Float(string='Moc Doc Bill Amount')
+    sale_bill_type = fields.Many2one('account.journal',string='Moc Doc  Bill Type',domain="[('type','in',('bank','cash'))]")
+    sale_bill_currency = fields.Many2one('res.currency',string='Moc Doc  Bill Currency')
+    is_payment_created = fields.Boolean(string='Is Bill Payment Created')
 
     @api.model
     def create(self, vals):
@@ -32,6 +37,25 @@ class SaleOrder(models.Model):
         invoice_vals['inv_actual_paid'] = self.actual_paid if self.actual_paid else 0.0
         invoice_vals['inv_moc_doc_ref'] = self.moc_doc_ref if self.moc_doc_ref else False
         return invoice_vals
+
+    def create_payment(self):
+        for i in self:
+            if i.partner_id and i.sale_bill_amount > 0.0 and i.sale_bill_type and i.sale_bill_currency:
+                payment_id = self.env["account.payment"].with_user(2).create(
+                        {
+                            'partner_id': i.partner_id.id,
+                            'payment_type': 'inbound',
+                            'amount': i.sale_bill_amount,
+                            'currency_id': i.sale_bill_currency.id,
+                            'journal_id': i.sale_bill_type.id,
+                            'ref': i.moc_doc_ref if i.moc_doc_ref else False,
+                        })
+
+                if payment_id:
+                    _logger.info("Payment Created==============================================> " + str(payment_id))
+                    payment_id.action_post()
+                    i.is_payment_created = True
+                    return payment_id
 
 class SaleOrderLine(models.Model):
     _inherit = 'sale.order.line'
@@ -64,7 +88,7 @@ class StockMove(models.Model):
         return res
 
     @api.model
-    def create(self, vals):    
+    def create(self, vals):  
         result = super(StockMove, self).create(vals)
         return result
 
@@ -72,7 +96,8 @@ class StockMove(models.Model):
 class StockPicking(models.Model):
     _inherit = "stock.picking"
 
-    is_from_api = fields.Boolean(string='From Api',copy=False)
+    is_from_api = fields.Boolean(string='Is Api Delivery',copy=False)
+    is_int_api = fields.Boolean(string='Is Api Internal Transfer',copy=False)
     moc_doc_ref = fields.Char(string="Moc Doc Ref",copy=False)
     create_api_values = fields.Char(string='Internal Transfer Create API Values',copy=False)
     
