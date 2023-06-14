@@ -128,9 +128,9 @@ class Authorize2(http.Controller):
     def product_id_validation(self,product_list=False,internal_transfer=False):
         Product_missing_list =[]
         Product_available_list =[]
-        location_id = False
-
+        
         for i in product_list:
+            location_id = False
             tax_list = []
             product_template_id = request.env["product.template"].sudo().search([('active','=',True),('id','=',i.get('product_id'))])
             if not product_template_id:Product_missing_list.append(i.get('product_id'))
@@ -517,6 +517,10 @@ class Authorize2(http.Controller):
                 if kw.get('currency_type'):
                     api_pricelist = self.search_pricleist(currency_name=kw.get('currency_type'))
 
+                patient_type = ''
+                if kw.get('patient_type') and kw.get('patient_type') in ('in','out'):
+                    patient_type = kw.get('patient_type')
+
                 sale_order_id = request.env["sale.order"].with_user(2).create(
                         {
                             'partner_id': partner_id.id,
@@ -526,7 +530,8 @@ class Authorize2(http.Controller):
                             'insurance_provider_id': insurance_provider[0].id if kw.get('insurance_provider_id') else '',
                             'agreed_amount': kw.get('agreed_amount') if kw.get('agreed_amount') else 0.0,
                             'actual_paid': kw.get('actual_paid') if kw.get('actual_paid') else 0.0,
-                            'pricelist_id':api_pricelist.id
+                            'pricelist_id':api_pricelist.id,
+                            'patient_type' : patient_type
                         })
 
                 if sale_order_id:
@@ -719,6 +724,8 @@ class Authorize2(http.Controller):
                             'location_id': from_location_id[0].id,
                             'location_dest_id': to_location_id[0].id,
                             'picking_type_id': internal_transfer_id.id,
+                            'moc_doc_ref': kw.get('moc_doc_ref') if kw.get('moc_doc_ref') else False,
+                            'create_api_values':kw,
                         })
 
                 if picking_id:
@@ -736,8 +743,20 @@ class Authorize2(http.Controller):
                                 'location_dest_id': to_location_id[0].id,
                             })
                         _logger.info("Move Line Created==============================================> " + str(move_id))
+
                     if picking_id:
                         picking_id.action_confirm()
+                        if picking_id.state == 'assigned':
+                            make_it_done=True
+                            for j in picking_id.move_ids_without_package:
+                                if not j.product_uom_qty == j.reserved_availability:
+                                    make_it_done = False
+                                    break
+
+                            if make_it_done:
+                                picking_id.action_set_quantities_to_reservation()
+                                picking_id.button_validate()
+
                         return {'Status': 200,'record_id':picking_id.name}
 
             except Exception as e:

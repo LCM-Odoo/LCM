@@ -73,6 +73,9 @@ class StockPicking(models.Model):
     _inherit = "stock.picking"
 
     is_from_api = fields.Boolean(string='From Api',copy=False)
+    moc_doc_ref = fields.Char(string="Moc Doc Ref",copy=False)
+    create_api_values = fields.Char(string='Internal Transfer Create API Values',copy=False)
+    
 
     def action_assign(self):
         values = super(StockPicking, self).action_assign()
