@@ -10,8 +10,8 @@
         <field name="arch" type="xml">
             <field name="payment_reference" position="after">
                 <field name="inv_insurance_provider_id" readonly="1"/>
-                <field name="inv_agreed_amount" readonly="1"/>
-                <field name="inv_actual_paid" readonly="1"/>
+                <field name="inv_agreed_amount" readonly="0"/>
+                <field name="inv_actual_paid" readonly="0"/>
             </field>
             <xpath expr="//div[@class='oe_title']" position="after">
                 <div class="oe_title">

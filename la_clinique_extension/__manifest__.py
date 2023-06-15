@@ -11,6 +11,8 @@
     'depends': ['base','sale','account','product','purchase'],
     'data': [
         'security/ir.model.access.csv',
+        'views/location_view.xml',
+        'views/product_pricelist.xml',
         'views/insurance_provider.xml',
         'views/bin_location_view.xml',
         'views/product_profile_view.xml',

@@ -104,30 +104,69 @@ class Authorize2(http.Controller):
         return tax_list,True
 
 
+    def search_location(self,location=False):
+        stock_location_id = request.env["stock.location"].sudo().search([('name','=',location)],limit=1)
+        if stock_location_id:
+            return stock_location_id
+        else:
+            stock_location_id = request.env["stock.location"].sudo().search([('is_missing_loc','=',True)],limit=1)
+            if stock_location_id:
+                return stock_location_id
+        return False
 
-    def product_id_validation(self,product_list=False):
+    def search_internal_transfer_loc(self,location=False):
+        stock_location_id = request.env["stock.location"].sudo().search([('name','=',location)],limit=1)
+        if stock_location_id:
+            return stock_location_id,True
+        else:
+            stock_location_id = [i.name for i in request.env["stock.location"].sudo().search([])]
+            return stock_location_id,False
+
+
+
+
+    def product_id_validation(self,product_list=False,internal_transfer=False):
         Product_missing_list =[]
         Product_available_list =[]
-
+        
         for i in product_list:
+            location_id = False
             tax_list = []
-            product_template_id = request.env["product.template"].sudo().search([('active','=',True),('id','=',i.get('product_id'))])
-            if not product_template_id:Product_missing_list.append(i.get('product_id'))
-            if product_template_id:
-                product_id = request.env["product.product"].sudo().search([('active','=',True),('product_tmpl_id','=',product_template_id.id)])
-                if i.get('customer_tax'):
-                    tax_list = self.get_tax_ids(i.get('customer_tax'),tax_type='sale')
-                if i.get('vendor_tax'):
-                    tax_list = self.get_tax_ids(i.get('vendor_tax'),tax_type='purchase')
+            if i.get('product_id'):
+                product_template_id = request.env["product.template"].sudo().search([('active','=',True),('id','=',i.get('product_id'))])
+                if not product_template_id:Product_missing_list.append(i.get('product_id'))
+                if product_template_id:
+                    product_id = request.env["product.product"].sudo().search([('active','=',True),('product_tmpl_id','=',product_template_id.id)])
 
-                Product_available_list.append(
-                    {
-                        'product_id': product_id.id,
-                        'qty': i.get('product_qty'),
-                        'moc_doc_price_unit': i.get('moc_doc_price_unit'),
-                        'tax_id': [(6, 0,tax_list[0])] if tax_list else [(6, 0,tax_list)],
-                        'disc': i.get('disc') if i.get('disc') else 0.0,
-                    })
+                    if internal_transfer:
+                        Product_available_list.append(
+                            {
+                                'name': product_id.name,
+                                'product_id': product_id.id,
+                                'qty_done': i.get('product_qty'),
+                                'product_uom': product_id.uom_id.id,
+                            })
+                    else:
+                        if i.get('customer_tax'):
+                            tax_list = self.get_tax_ids(i.get('customer_tax'),tax_type='sale')
+
+                        if i.get('vendor_tax'):
+                            tax_list = self.get_tax_ids(i.get('vendor_tax'),tax_type='purchase')
+
+                        if i.get('moc_doc_location'):
+                            location_id = self.search_location(location=i.get('moc_doc_location'))
+
+                        Product_available_list.append(
+                            {
+                                'product_id': product_id.id,
+                                'qty': i.get('product_qty'),
+                                'moc_doc_price_unit': i.get('moc_doc_price_unit'),
+                                'tax_id': [(6, 0,tax_list[0])] if tax_list else [(6, 0,tax_list)],
+                                'disc': i.get('disc') if i.get('disc') else 0.0,
+                                'moc_doc_location_id':location_id.id if location_id else False
+                            })
+            else:
+                Product_missing_list.append('Product Id not sent from Mocdoc')
 
         if Product_missing_list:
             return Product_missing_list,True
@@ -148,28 +187,52 @@ class Authorize2(http.Controller):
             else:
                 return False
 
-    def search_pricleist(self):
-        pricelist_id = request.env["product.pricelist"].sudo().search([('name','=','API Pricelist')])
+    def search_pricleist(self,currency_name=False):
+        pricelist_id = request.env["product.pricelist"].sudo().search([('is_moc_doc_priclist','=',True),('currency_id.name','=',currency_name)],limit=1)
         if pricelist_id:
             return pricelist_id
         else:
             False
+
+    def search_journal(self,journal_type=False,from_sale=False):
+        journal_id = request.env["account.journal"].sudo().search([('name','=',journal_type)],limit =1)
+        if journal_id:
+            if from_sale:
+                return journal_id.id
+            else:
+                return journal_id,False
+        else:
+            if from_sale:
+                return False
+            else:
+                journal_list = [i.name for i in request.env["account.journal"].sudo().search([('type','in',('bank','cash'))])]
+                return journal_list,True
+       
+
+
+    def search_internal_transfer_operation_type(self):
+        internal_picking_id = request.env["stock.picking.type"].sudo().search([('is_api_transfer','=',True)],limit=1)
+        if internal_picking_id:
+            return internal_picking_id
+        else:
+            return False
+
       
     @http.route('/create_customer', type='json', auth='none', website=True)
     def create_customer(self, **kw):
         _logger.info("==============================================>Entering Customer Creation=========================================================>")
-        if kw.get('name') and kw.get('mobile') and kw.get('moc_doc_id') and kw.get('type'):
+        if kw.get('name') and kw.get('moc_doc_id') and kw.get('type'):
             if kw.get('type') not in ('cus','ven'):
                 _logger.info("Type Not In Cus Or Ven==============================================>" + str(kw.get('type')))
-                return {'Staus': 506,'Reason':'Type Not In Cus Or Ven.'}
+                return {'Status': 506,'Reason':'Patient Type Not In Cus Or Ven.'}
 
-            if not self.customer_mobile_validation(mobile_no=kw.get('mobile')):
-                _logger.info("Mobile No Already Exist==============================================>")
-                return {'Staus': 501,'Reason':'Mobile No Already Exist.'}
+            # if not self.customer_mobile_validation(mobile_no=kw.get('mobile')):
+            #     _logger.info("Mobile No Already Exist==============================================>")
+            #     return {'Status': 501,'Reason':'Mobile No Already Exist.'}
 
             if not self.customer_moc_doc_id_validation(moc_doc_id=kw.get('moc_doc_id')):
                 _logger.info("Moc Doc Id  Already Exist==============================================>")
-                return {'Staus': 504,'Reason':'Moc Doc Id  Already Exist.'}
+                return {'Status': 504,'Reason':'Moc Doc Id  Already Exist for Another Patient In Odoo. Kindly provide a Unique One'}
             try:
                 customer_rank = supplier_rank = 0
 
@@ -203,15 +266,15 @@ class Authorize2(http.Controller):
 
                 if partner_id:
                     _logger.info("Partner Created==============================================> " + str(partner_id))
-                    return {'Staus': 200,'record_id':partner_id.id}
+                    return {'Status': 200,'record_id':partner_id.id}
                 else:
                      _logger.error("Customer Not Created==============================================>")
             except Exception as e:
                 _logger.error("Error==============================================> " + str(e))
-                return {'Staus': 503,'Reason':str(e)}
+                return {'Status': 503,'Reason':str(e)}
         else:
-            _logger.info("Name or Mobile or Moc Doc Id Is Missing==============================================>")
-            return {'Staus': 500,'Reason':'Name or Mobile or Moc Doc Id or Type Is Missing'}
+            _logger.info("Name or Moc Doc Id Is Missing==============================================>")
+            return {'Status': 500,'Reason':'Name or Moc Doc Id or Patient Type(Customer Or Vendor In Odoo) Is Missing'}
 
 
     @http.route('/customer_update', type='json', auth='none', website=True)
@@ -221,15 +284,15 @@ class Authorize2(http.Controller):
             partner_id = self.search_customer_id_validation(customer_id=kw.get('customer_id'))
             if not partner_id:
                 _logger.info("ID Does not Exist in odoo==============================================>")
-                return {'Staus': 505,'Reason':'ID Doesnot Exist in Odoo, The customer May Be archieved or deleted'}
+                return {'Status': 505,'Reason':'ID Does not Exist in Odoo, The Patient May Be archived or deleted'}
 
             _logger.info("Partner ID To Update==============================================> " + str(partner_id))
             update_list =[]
             try:
                 if kw.get('mobile'):
-                    if not self.customer_mobile_validation(mobile_no=kw.get('mobile'),customer_id=partner_id.id):
-                        _logger.info("Mobile No Already Exist==============================================>")
-                        return {'Staus': 501,'Reason':'Mobile No Already Exist.'}
+                    # if not self.customer_mobile_validation(mobile_no=kw.get('mobile'),customer_id=partner_id.id):
+                    #     _logger.info("Mobile No Already Exist==============================================>")
+                    #     return {'Status': 501,'Reason':'Mobile No Already Exist.'}
                     update_list.append(kw.get('mobile'))
                     partner_id.sudo().with_context({'lang': 'en_US','allowed_company_ids': [1]}).mobile = kw.get('mobile')
 
@@ -259,13 +322,13 @@ class Authorize2(http.Controller):
                         
                 partner_id.sudo().with_context({'lang': 'en_US','allowed_company_ids': [1]}).write_api_values = kw
                 if update_list:
-                    return {'Staus': 200,'Status':'Successfully Updated'+'-'+str(update_list)}
+                    return {'Status': 200,'Status':'Successfully Updated'+'-'+str(update_list)}
             except Exception as e:
                 _logger.error("Error==============================================> " + str(e))
-                return {'Staus': 503,'Reason':str(e)}
+                return {'Status': 503,'Reason':str(e)}
         else:
             _logger.info("Customer Id Is Missing==============================================>")
-            return {'Staus': 500,'Reason':'Customer Id Is Missing'}
+            return {'Status': 500,'Reason':'Customer Id Is Missing'}
 
 
     @http.route('/create_product_template', type='json', auth='none', website=True)
@@ -274,40 +337,40 @@ class Authorize2(http.Controller):
         if kw.get('name') and kw.get('detailed_type') and kw.get('invoice_policy') and kw.get('categ_id') and kw.get('default_code') and kw.get('purchase_method') and kw.get('uom_id') and kw.get('uom_po_id'):
             if not self.product_internal_ref_validation(default_code=kw.get('default_code')):
                 _logger.info("Internal Ref Already Exist==============================================>")
-                return {'Staus': 601,'Reason':'Internal Ref Already Exist.'}
+                return {'Status': 601,'Reason':'Internal Ref Already Exist.'}
 
             if kw.get('detailed_type') not in ('consu','service','product'):
                 _logger.info("Detailed Type Not Exist, It Must be consu or service or product==============================================>")
-                return {'Staus': 602,'Reason':'Detailed Type Not Exist, It Must be consu or service or product.'}
+                return {'Status': 602,'Reason':'Detailed Type Not Exist, It Must be consu or service or product.'}
 
             if kw.get('invoice_policy') not in ('order','delivery'):
                 _logger.info("Invoice Policy Not Exist, It Must be order or delivery==============================================>")
-                return {'Staus': 603,'Reason':'Invoice Policy Not Exist, It Must be order or delivery.'}
+                return {'Status': 603,'Reason':'Invoice Policy Not Exist, It Must be order or delivery.'}
 
             if kw.get('purchase_method') not in ('purchase','receive'):
                 _logger.info("Purchase Method Not Exist, It Must be purchase or receive==============================================>")
-                return {'Staus': 604,'Reason':'Purchase Method Not Exist, It Must be purchase or receive.'}
+                return {'Status': 604,'Reason':'Purchase Method Not Exist, It Must be purchase or receive.'}
 
             try:
                 categ_id = self.get_product_category(kw.get('categ_id'))
                 if not categ_id[1]:
-                    return {'Staus': 607,'Reason':'Categ not available in odoo, Kinldy find the List of category in odoo','List':categ_id[0]}
+                    return {'Status': 607,'Reason':'Categ not available in odoo, Kindly find the List of category in odoo','List':categ_id[0]}
 
                 # customer_tax_list = self.get_tax_ids(kw.get('customer_taxes_id'),tax_type='sale')
                 # if not customer_tax_list[1]:
-                #     return {'Staus': 608,'Reason':'Customer Tax Not available in odoo, Kinldy find the List of Sale Taxes in odoo','List':customer_tax_list[0]}
+                #     return {'Status': 608,'Reason':'Customer Tax Not available in odoo, Kinldy find the List of Sale Taxes in odoo','List':customer_tax_list[0]}
 
                 # vendor_tax_list = self.get_tax_ids(kw.get('vendor_taxes_id'),tax_type='purchase')
                 # if not vendor_tax_list[1]:
-                #     return {'Staus': 609,'Reason':'Vendor Tax Not available in odoo, Kinldy find the List of Purchase Taxes in odoo','List':vendor_tax_list[0]}
+                #     return {'Status': 609,'Reason':'Vendor Tax Not available in odoo, Kinldy find the List of Purchase Taxes in odoo','List':vendor_tax_list[0]}
 
                 uom_id = self.get_uom_id(kw.get('uom_id'))
                 if not uom_id[1]:
-                    return {'Staus': 610,'Reason':'Uom Not available in odoo, Kinldy find the List of UOM in odoo','List':uom_id[0]}
+                    return {'Status': 610,'Reason':'Uom Not available in odoo, Kindly find the List of UOM in odoo','List':uom_id[0]}
 
                 uom_po_id = self.get_uom_id(kw.get('uom_po_id'))
                 if not uom_po_id[1]:
-                    return {'Staus': 611,'Reason':' Purchase Uom Not available in odoo, Kinldy find the List of UOM in odoo','List':uom_po_id[0]}
+                    return {'Status': 611,'Reason':' Purchase Uom Not available in odoo, Kindly find the List of UOM in odoo','List':uom_po_id[0]}
 
                 create_vals = {
                         'name': kw.get('name'),
@@ -335,13 +398,13 @@ class Authorize2(http.Controller):
                         }).create(create_vals)
                 if product_template_id:
                     _logger.info("Product Created==============================================> " + str(product_template_id))
-                    return {'Staus': 200,'record_id':product_template_id.id}
+                    return {'Status': 200,'record_id':product_template_id.id}
             except Exception as e:
                 _logger.error("Error==============================================> " + str(e))
-                return {'Staus': 503,'Reason':str(e)}
+                return {'Status': 503,'Reason':str(e)}
         else:
-            _logger.info("name or detailed_type or invoice_policy or list_price or standard_price or categ_id or default_code or purchase_method  or uom id or uom_po_id Is Missing==============================================>")
-            return{'Staus': 600,'Reason':'name or detailed_type or invoice_policy or categ_id or default_code or purchase_method Is Missing or uom id or uom_po_id Is Missing' }
+            _logger.info("name or detailed_type or invoice_policy or categ_id or default_code or purchase_method  or uom id or uom_po_id Is Missing==============================================>")
+            return {'Status': 600,'Reason':'name or detailed_type or invoice_policy or categ_id or default_code or purchase_method Is Missing or uom id or uom_po_id Is Missing' }
 
 
     @http.route('/update_product_template', type='json', auth='none', website=True)
@@ -351,7 +414,7 @@ class Authorize2(http.Controller):
             product_id = self.get_product_template_id(product=kw.get('product_id'))
             if not product_id:
                 _logger.info("ID Does not Exist in odoo==============================================>")
-                return {'Staus': 505,'Reason':'ID Doesnot Exist in Odoo, The product May Be archieved or deleted'}
+                return {'Status': 505,'Reason':'ID Does not Exist in Odoo, The product May Be archived or deleted in Odoo'}
 
             _logger.info("Product ID To Update==============================================> " + str(product_id))
             update_list =[]
@@ -359,22 +422,22 @@ class Authorize2(http.Controller):
                 # if kw.get('customer_taxes_id'):
                 #     customer_tax_list = self.get_tax_ids(kw.get('customer_taxes_id'),tax_type='sale')
                 #     if not customer_tax_list[1]: 
-                #         return {'Staus': 608,'Reason':'Customer Tax Not available in odoo, Kinldy find the List of Sale Taxes in odoo','List':customer_tax_list[0]}
+                #         return {'Status': 608,'Reason':'Customer Tax Not available in odoo, Kinldy find the List of Sale Taxes in odoo','List':customer_tax_list[0]}
 
                 # if kw.get('vendor_taxes_id'):
                 #     vendor_tax_list = self.get_tax_ids(kw.get('vendor_taxes_id'),tax_type='purchase')
                 #     if not vendor_tax_list[1]:
-                #         return {'Staus': 609,'Reason':'Vendor Tax Not available in odoo, Kinldy find the List of Purchase Taxes in odoo','List':vendor_tax_list[0]}
+                #         return {'Status': 609,'Reason':'Vendor Tax Not available in odoo, Kinldy find the List of Purchase Taxes in odoo','List':vendor_tax_list[0]}
 
                 if kw.get('uom_id'):
                     uom_id = self.get_uom_id(kw.get('uom_id'))
                     if not uom_id[1]:
-                        return {'Staus': 610,'Reason':'Uom Not available in odoo, Kinldy find the List of UOM in odoo','List':uom_id[0]}
+                        return {'Status': 610,'Reason':'Uom Not available in odoo, Kindly find the List of UOM in odoo','List':uom_id[0]}
 
                 if kw.get('uom_po_id'):
                     uom_po_id = self.get_uom_id(kw.get('uom_po_id'))
                     if not uom_po_id[1]:
-                        return {'Staus': 611,'Reason':' Purchase Uom Not available in odoo, Kinldy find the List of UOM in odoo','List':uom_po_id[0]}
+                        return {'Status': 611,'Reason':' Purchase Uom Not available in odoo, Kindly find the List of UOM in odoo','List':uom_po_id[0]}
 
                 if kw.get('name'):
                     update_list.append(kw.get('name'))
@@ -402,27 +465,27 @@ class Authorize2(http.Controller):
 
                 if kw.get('sale_ok'):
                     if str(kw.get('sale_ok')) not in ['1','0']:
-                        return {'Staus': 612,'Reason':'Sale Ok Must Be 1 or 0'}
+                        return {'Status': 612,'Reason':'Sale Ok Must Be 1 or 0'}
                     update_list.append(kw.get('sale_ok'))
                     product_id.sudo().with_context({'lang': 'en_US','allowed_company_ids': [1]}).sale_ok = True if kw.get('sale_ok') == "1" else False
 
                 if kw.get('purchase_ok'):
                     if str(kw.get('purchase_ok')) not in ['1','0']:
-                        return {'Staus': 612,'Reason':'Purchase Ok Must Be 1 or 0'}
+                        return {'Status': 612,'Reason':'Purchase Ok Must Be 1 or 0'}
                     product_id.sudo().with_context({'lang': 'en_US','allowed_company_ids': [1]}).purchase_ok = True if kw.get('purchase_ok') == "1" else False
                     update_list.append(kw.get('purchase_ok'))
 
                 product_id.sudo().with_context({'lang': 'en_US','allowed_company_ids': [1]}).write_api_values = kw
 
                 if update_list:
-                    return {'Staus': 200,'Status':'Successfully Updated'+'-'+str(update_list)}
+                    return {'Status': 200,'Status':'Successfully Updated'+'-'+str(update_list)}
             except Exception as e:
                 _logger.error("Error==============================================> " + str(e))
-                return {'Staus': 503,'Reason':str(e)}
+                return {'Status': 503,'Reason':str(e)}
 
         else:
             _logger.info("Product Id Is Missing==============================================>")
-            return {'Staus': 500,'Reason':'Product Id Is Missing'}
+            return {'Status': 500,'Reason':'Product Id Is Missing'}
 
 
 
@@ -434,37 +497,58 @@ class Authorize2(http.Controller):
             try:
                 if self.check_price_validation(product_list=kw.get('product_list')):
                     _logger.info("Mocdoc Price Is lesser than 0.1 ==============================================>")
-                    return {'Staus': 704,'Reason':'Moc Doc Unit Price Is Lesser Than 0.1'}
+                    return {'Status': 704,'Reason':'Moc Doc Unit Price Is Lesser Than 0.1'}
 
                 for i in kw.get('product_list'):
                     if i.get('customer_tax'):
                         customer_tax_list = self.get_tax_ids(i.get('customer_tax'),tax_type='sale')
                         if not customer_tax_list[1]: 
-                            return {'Staus': 608,'Reason':'Customer Tax Not available in odoo, Kinldy find the List of Sale Taxes in odoo','List':customer_tax_list[0]}
+                            return {'Status': 608,'Reason':'Customer Tax Not available in odoo, Kindly find the List of Sale Taxes in odoo','List':customer_tax_list[0]}
+
 
                 partner_id = self.search_customer_id_validation(kw.get('customer_id'))
                 product_id = self.product_id_validation(product_list=kw.get('product_list'))
+                currency_id = self.search_currency_id_validation(currency_id=kw.get('currency_type'))
 
                 if kw.get('insurance_provider_id'):
                     insurance_provider = self.search_insurance_provider_id_validation(kw.get('insurance_provider_id'))
                     if not insurance_provider[1]:
                         _logger.info("Insurance Provider Does not Exist in odoo==============================================>")
-                        return {'Staus': 707,'Reason':'Insurance Provider Does not Exist in Odoo, Kinldy find the List of Insurance Providers in odoo','List':insurance_provider[0]}
+                        return {'Status': 707,'Reason':'Insurance Provider Does not Exist in Odoo, Kindly find the List of Insurance Providers in odoo','List':insurance_provider[0]}
 
                 if not partner_id:
                     _logger.info("Partner ID Does not Exist in odoo==============================================>")
-                    return {'Staus': 705,'Reason':'Partner ID Doesnot Exist in Odoo, The Patient May Be archieved or deleted'}
+                    return {'Status': 705,'Reason':'Partner ID Does not Exist in Odoo, The Patient May Be archived or deleted'}
+
                 if product_id[1]:
                     _logger.info("Product ID Does not Exist in odoo==============================================>" + str(product_id))
-                    return {'Staus': 706,'Reason':'Product ID Doesnot Exist in Odoo, The product May Be archieved or deleted' + str(product_id)}
+                    return {'Status': 706,'Reason':'Product ID Does not Exist in Odoo, The product May Be archived or deleted' + str(product_id)}
+
+                if not currency_id:
+                    _logger.info("Currency ID Does not Exist in odoo==============================================>")
+                    return {'Status': 709,'Reason':'Currency ID Does not Exist in Odoo, The Currency Be archived or deleted'}
                     
-
-
-                # if kw.get('journal_type'):
-
-                api_priclist = False
+                api_pricelist = False
                 if kw.get('currency_type'):
-                    api_priclist = self.search_pricleist()
+                    api_pricelist = self.search_pricleist(currency_name=kw.get('currency_type'))
+
+                patient_type = ''
+                if kw.get('patient_type') and kw.get('patient_type') in ('in','out'):
+                    patient_type = kw.get('patient_type')
+
+                amount = 0.0
+                journal_id = False
+
+                if kw.get('amount') > 0.0:
+                    amount = kw.get('amount')
+                    if not kw.get('journal_type'):
+                        return {'Status': 710,'Reason':'Journal Not Sent From Mocdoc'}
+
+                    journal_id = self.search_journal(journal_type=kw.get('journal_type'),from_sale=True)
+                    if not journal_id:
+                        _logger.info("Journal Not found in odoo ==============================================>")
+                        return {'Status': 708,'Reason':'Journal Not found in odoo'}
+
 
                 sale_order_id = request.env["sale.order"].with_user(2).create(
                         {
@@ -475,7 +559,11 @@ class Authorize2(http.Controller):
                             'insurance_provider_id': insurance_provider[0].id if kw.get('insurance_provider_id') else '',
                             'agreed_amount': kw.get('agreed_amount') if kw.get('agreed_amount') else 0.0,
                             'actual_paid': kw.get('actual_paid') if kw.get('actual_paid') else 0.0,
-                            'pricelist_id':api_priclist.id
+                            'pricelist_id':api_pricelist.id,
+                            'patient_type' : patient_type,
+                            'sale_bill_amount': amount,
+                            'sale_bill_type':journal_id,
+                            'sale_bill_currency': currency_id.id
                         })
 
                 if sale_order_id:
@@ -488,43 +576,48 @@ class Authorize2(http.Controller):
                                 'product_uom_qty':i.get('qty'),
                                 'price_unit':i.get('moc_doc_price_unit'),
                                 'tax_id': i.get('tax_id'),
-                                'discount': i.get('disc')
+                                'discount': i.get('disc'),
+                                'moc_doc_location_id': i.get('moc_doc_location_id'),
                             })
                         
                         _logger.info("Sale Order Line Created==============================================> " + str(sale_order_line_id))
 
                     sale_order_id.sudo().action_confirm()
-
+                    sale_order_id.create_payment()
 
                     picking_id = request.env["stock.picking"].with_user(2).search([('origin','=',sale_order_id.name)])
-                    if picking_id and picking_id.products_availability == 'Available':
-                        picking_id.action_set_quantities_to_reservation()
-                        picking_id.button_validate()
+                    if picking_id:
+                        picking_id.do_unreserve()
+                        picking_id.action_assign()
+                    # if picking_id and picking_id.products_availability == 'Available':
+                        # picking_id.action_set_quantities_to_reservation()
+                        # picking_id.button_validate()
 
-                    return {'Staus': 200,'record_id':sale_order_id.name}
+                    return {'Status': 200,'record_id':sale_order_id.name}
 
             except Exception as e:
                 _logger.error("Error==============================================> " + str(e))
-                return {'Staus': 503,'Reason':str(e)}
+                return {'Status': 503,'Reason':str(e)}
         else:
             _logger.info("partner_id or currency_type or product_list Is Missing==============================================>")
-            return{'Staus': 700,'Reason':'customer_id or currency_type or product_list Is Missing'}
+            return {'Status': 700,'Reason':'customer_id or currency_type or product_list Is Missing'}
 
 
 
     @http.route('/create_purchase_order', type='json', auth='none', website=True)
     def create_purchase_order(self, **kw):
+        _logger.info("Mocdoc Json create_api_valuesues==============================================>"+str(kw))
         if kw.get('customer_id') and kw.get('product_list') and kw.get('currency_type'):
             try:
                 if self.check_price_validation(product_list=kw.get('product_list')):
                     _logger.info("Mocdoc Price Is lesser than 0.1 ==============================================>")
-                    return {'Staus': 804,'Reason':'Moc Doc Unit Price Is Lesser Than 0.1'}
+                    return {'Status': 804,'Reason':'Moc Doc Unit Price Is Lesser Than 0.1'}
 
                 for i in kw.get('product_list'):
                     if i.get('vendor_tax'):
                         vendor_tax_list = self.get_tax_ids(i.get('vendor_tax'),tax_type='purchase')
                         if not vendor_tax_list[1]: 
-                            return {'Staus': 808,'Reason':'Vendor Tax Not available in odoo, Kinldy find the List of Sale Taxes in odoo','List':vendor_tax_list[0]}
+                            return {'Status': 808,'Reason':'Vendor Tax Not available in odoo, Kinldy find the List of Sale Taxes in odoo','List':vendor_tax_list[0]}
 
 
                 partner_id = self.search_customer_id_validation(kw.get('customer_id'))
@@ -534,13 +627,13 @@ class Authorize2(http.Controller):
 
                 if not partner_id:
                     _logger.info("Partner ID Does not Exist in odoo==============================================>")
-                    return {'Staus': 805,'Reason':'Partner ID Doesnot Exist in Odoo, The Patient May Be archieved or deleted'}
+                    return {'Status': 805,'Reason':'Partner ID Does not Exist in Odoo, The Patient May Be archived or deleted'}
                 if product_id[1]:
                     _logger.info("Product ID Does not Exist in odoo==============================================>" + str(product_id))
-                    return {'Staus': 806,'Reason':'Product ID Doesnot Exist in Odoo, The product May Be archieved or deleted' + str(product_id)}
+                    return {'Status': 806,'Reason':'Product ID Does not Exist in Odoo, The product May Be archived or deleted' + str(product_id)}
                 if not currency_id:
                     _logger.info("Currency ID Does not Exist in odoo==============================================>")
-                    return {'Staus': 807,'Reason':'Currency ID Doesnot Exist in Odoo, The Currency Be archieved or deleted'}
+                    return {'Status': 807,'Reason':'Currency ID Does not Exist in Odoo, The Currency Be archived or deleted'}
 
 
                 purchase_order_id = request.env["purchase.order"].with_user(2).create(
@@ -571,14 +664,14 @@ class Authorize2(http.Controller):
                     # picking_id.action_set_quantities_to_reservation()
                     # picking_id.button_validate()
 
-                    return {'Staus': 200,'record_id':purchase_order_id.name}
+                    return {'Status': 200,'record_id':purchase_order_id.name}
 
             except Exception as e:
                 _logger.error("Error==============================================> " + str(e))
-                return {'Staus': 503,'Reason':str(e)}
+                return {'Status': 503,'Reason':str(e)}
         else:
             _logger.info("partner_id or currency_type or  product_list Is Missing==============================================>")
-            return{'Staus': 800,'Reason':'customer_id or currency_type or product_list Is Missing'}
+            return {'Status': 800,'Reason':'customer_id or currency_type or product_list Is Missing'}
 
 
     @http.route('/create_payment', type='json', auth='none', website=True)
@@ -591,24 +684,20 @@ class Authorize2(http.Controller):
 
                 if not partner_id:
                     _logger.info("Partner ID Does not Exist in odoo==============================================>")
-                    return {'Staus': 305,'Reason':'Patient ID Doesnot Exist in Odoo, The Patient May Be archieved or deleted'}
+                    return {'Status': 305,'Reason':'Patient ID Does not Exist in Odoo, The Patient May Be archived or deleted'}
 
                 if not currency_id:
                     _logger.info("Currency ID Does not Exist in odoo==============================================>")
-                    return {'Staus': 306,'Reason':'Currency ID Doesnot Exist in Odoo, The Currency Be archieved or deleted'}
+                    return {'Status': 306,'Reason':'Currency ID Does not Exist in Odoo, The Currency Be archived or deleted'}
 
                 if kw.get('amount') < 1.0:
                     _logger.info("Amount Is lesser than 1.0 ==============================================>")
-                    return {'Staus': 304,'Reason':'Price Is Lesser Than 0.1'}
+                    return {'Status': 304,'Reason':'Price Is Lesser Than 0.1'}
 
-                if kw.get('journal_type') not in ['Bank','Cash']:
-                    _logger.info("Journal Type Is Not in Bank or Cash ==============================================>")
-                    return {'Staus': 305,'Reason':'journal Type Is Not in Bank or Cash'}
-
-                journal_id = request.env["account.journal"].sudo().search([('name','=',kw.get('journal_type'))],limit =1)
-                if not journal_id:
+                journal_id = self.search_journal(journal_type=kw.get('journal_type'))
+                if journal_id[1]:
                     _logger.info("Journal Not found in odoo ==============================================>")
-                    return {'Staus': 306,'Reason':'Journal Not found in odoo '}
+                    return {'Status': 305,'Reason':'Journal Not found in odoo, Kinldy find the List of Payment Methods','List':journal_id[0]}
 
                 payment_id = request.env["account.payment"].with_user(2).create(
                         {
@@ -616,7 +705,7 @@ class Authorize2(http.Controller):
                             'payment_type': 'inbound',
                             'amount': kw.get('amount'),
                             'currency_id': currency_id.id,
-                            'journal_id': journal_id.id,
+                            'journal_id': journal_id[0].id,
                             'ref': kw.get('ref'),
                         })
                 
@@ -624,13 +713,103 @@ class Authorize2(http.Controller):
                     _logger.info("Payment Created==============================================> " + str(payment_id))
                     payment_id.action_post()
 
-                    return {'Staus': 200,'record_id':payment_id.name}
+                    return {'Status': 200,'record_id':payment_id.name}
 
             except Exception as e:
                 _logger.error("Error==============================================> " + str(e))
-                return {'Staus': 503,'Reason':str(e)}
+                return {'Status': 503,'Reason':str(e)}
         else:
             _logger.info("partner_id or amount or currency Is Missing==============================================>")
-            return{'Staus': 300,'Reason':'customer_id or amount or currency or journal Type Is Missing'}
+            return {'Status': 300,'Reason':'customer_id or amount or currency or journal Type Is Missing'}
+
+
+    @http.route('/create_internal_transfer', type='json', auth='none', website=True)
+    def create_internal_transfer(self, **kw):
+        _logger.info("MoCDOC JSON==============================================>"+ str(kw))
+        if kw.get('from_location') and kw.get('to_location') and kw.get('product_list'):
+            try:
+                from_location_id = self.search_internal_transfer_loc(location=kw.get('from_location'))
+                to_location_id = self.search_internal_transfer_loc(location=kw.get('to_location'))
+
+                product_id = self.product_id_validation(product_list=kw.get('product_list'),internal_transfer=True)
+
+                if not from_location_id[1]:
+                    _logger.info("From Location Does not Exist in odoo==============================================>")
+                    return {'Status': 405,'Reason':'From Location Does Not Exist in Odoo, Kinldy find the List of Locations','List':from_location_id[0]}
+
+                if not to_location_id[1]:
+                    _logger.info("To Location Does not Exist in odoo==============================================>")
+                    return {'Status': 406,'Reason':'To Location Does Not Exist in Odoo, Kinldy find the List of Locations','List':to_location_id[0]}
+
+                if product_id[1]:
+                    _logger.info("Product ID Does not Exist in odoo==============================================>" + str(product_id))
+                    return {'Status': 406,'Reason':'Product ID Does not Exist in Odoo, The product May Be archived or deleted' + str(product_id)}
+
+                internal_transfer_id = self.search_internal_transfer_operation_type()
+                if not internal_transfer_id:
+                    _logger.info("Is API Internal Transfer Does not Configured in odoo, Kindly do the Configuration==============================================>" + str(product_id))
+                    return {'Status': 407,'Reason':'Is API Internal Transfer Does not Configured in odoo, Kindly do the Configuration'}
+
+
+                picking_id = request.env["stock.picking"].with_user(2).create(
+                        {
+                            'location_id': from_location_id[0].id,
+                            'location_dest_id': to_location_id[0].id,
+                            'picking_type_id': internal_transfer_id.id,
+                            'moc_doc_ref': kw.get('moc_doc_ref') if kw.get('moc_doc_ref') else False,
+                            'is_int_api':True,
+                            'create_api_values':kw,
+                        })
+
+                if picking_id:
+                    _logger.info("Transfer Created==============================================> " + str(picking_id))
+                    for i in product_id[0]:
+                        move_id = request.env["stock.move"].with_user(2).create(
+                            {
+                                'product_id': i.get('product_id'),
+                                'product_uom_qty':i.get('qty_done'),
+                                'picking_id':picking_id.id,
+                                'name': i.get('name'),
+                                'description_picking': i.get('name'),
+                                'product_uom':i.get('product_uom'),
+                                'location_id': from_location_id[0].id,
+                                'location_dest_id': to_location_id[0].id,
+                            })
+                        _logger.info("Move Line Created==============================================> " + str(move_id))
+
+                    if picking_id:
+                        picking_id.action_confirm()
+                        if picking_id.state == 'assigned':
+                            quant_check = False
+                            location_check = False
+                        
+                            for j in picking_id.move_ids_without_package:
+                                if not j.product_uom_qty == j.reserved_availability:
+                                    quant_check = True
+                                    _logger.info("Quant Check Failed==============================================> ")
+                                    break
+
+                            for k in picking_id.move_line_ids_without_package:
+                                if not picking_id.location_id.id == k.location_id.id or not picking_id.location_dest_id.id == k.location_dest_id.id:
+                                    location_check = True
+                                    _logger.info("Location Check Failed==============================================> ")
+                                    break
+
+                            if not quant_check and not location_check:
+                                _logger.info("Transfer Moved To Done==============================================> ")
+                                picking_id.action_set_quantities_to_reservation()
+                                picking_id.button_validate()
+
+                        return {'Status': 200,'record_id':picking_id.name}
+
+            except Exception as e:
+                _logger.error("Error==============================================> " + str(e))
+                return {'Status': 503,'Reason':str(e)}
+        else:
+            _logger.info("From Location or To Location or Product List Is Missing==============================================>")
+            return {'Status': 400,'Reason':'From Location or To Location or Product List Is Missing'}
+
+
+
 
 

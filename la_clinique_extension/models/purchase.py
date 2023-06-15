@@ -10,4 +10,12 @@ class PurchaseOrder(models.Model):
     make_po_readonly = fields.Boolean(string='Make PO Readonly',copy=False)
     moc_doc_ref = fields.Char(string="Moc Doc Ref",copy=False)
 
+    def _prepare_invoice(self):
+        invoice_vals = super(PurchaseOrder, self)._prepare_invoice()
+        invoice_vals['inv_moc_doc_ref'] = self.moc_doc_ref if self.moc_doc_ref else False
+        return invoice_vals
+
+
+
+
 
