@@ -23,7 +23,7 @@
             </field>
 
             <field name="partner_id" position="after">
-                <field name="patient_type"/>
+                <field name="patient_type" attrs="{'readonly': [('state', 'in',('done','sale'))]}"/>
                 <field name="moc_doc_ref" attrs="{'readonly': [('state', 'in',('done','sale'))]}"/>
                 <field name="sale_bill_amount" readonly="1"/>
                 <field name="sale_bill_type" readonly="1"/>
@@ -40,7 +40,7 @@
             <xpath expr="//notebook/page[1]/field/tree/field[@name='name']" position="after">
                 <field name="moc_doc_location_id" readonly="1"/>
             </xpath>
-            
+
             <xpath expr="//field[@name='order_line']" position="attributes">
                 <attribute name="attrs">{'readonly': ['|',('state', 'in', ('done','cancel')),('make_so_readonly','=',True)]}</attribute>
             </xpath>
