@@ -322,7 +322,7 @@ class Authorize2(http.Controller):
                         
                 partner_id.sudo().with_context({'lang': 'en_US','allowed_company_ids': [1]}).write_api_values = kw
                 if update_list:
-                    return {'Status': 200,'Status':'Successfully Updated'+'-'+str(update_list)}
+                    return {'Status': 200,'Reason':'Successfully Updated'+'-'+str(update_list)}
             except Exception as e:
                 _logger.error("Error==============================================> " + str(e))
                 return {'Status': 503,'Reason':str(e)}
