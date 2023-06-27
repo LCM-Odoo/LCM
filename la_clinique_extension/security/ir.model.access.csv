@@ -2,3 +2,4 @@ id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
 access_bin_location,bin.location,model_bin_location,,1,1,1,1
 access_product_profile,product.profile,model_product_profile,,1,1,1,1
 access_insurance_provider,insurance.provider,model_insurance_provider,,1,1,1,1
+access_api_logs,api.logs,model_api_logs,,1,1,1,1
