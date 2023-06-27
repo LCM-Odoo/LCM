@@ -217,6 +217,26 @@ class Authorize2(http.Controller):
         else:
             return False
 
+    def create_error_logs(self,mocdoc_api_values='',api_type='',model='',response=''):
+        try:
+            if mocdoc_api_values and api_type and model and response:
+                api_log_id = request.env["api.logs"].with_user(2).with_context(
+                            {
+                               'lang': 'en_US', 
+                                'uid': 2, 
+                                'allowed_company_ids': [1], 
+                            }).create({
+                                        'name':response,
+                                        'mocdoc_api_values':mocdoc_api_values,
+                                        'api_type':api_type,
+                                        'model':model,
+                            })
+                if api_log_id:
+                    _logger.info("Error Log Created==============================================>" + str(api_log_id))
+        except Exception as e:
+                    _logger.error("Error Log not created in Odoo==============================================> " + str(e))
+
+
       
     @http.route('/create_customer', type='json', auth='none', website=True)
     def create_customer(self, **kw):
@@ -224,7 +244,9 @@ class Authorize2(http.Controller):
         if kw.get('name') and kw.get('moc_doc_id') and kw.get('type'):
             if kw.get('type') not in ('cus','ven'):
                 _logger.info("Type Not In Cus Or Ven==============================================>" + str(kw.get('type')))
-                return {'Status': 506,'Reason':'Patient Type Not In Cus Or Ven.'}
+                response = {'Status': 506,'Reason':'Patient Type Not In Cus Or Ven.'}
+                self.create_error_logs(mocdoc_api_values=str(kw),api_type='create',model='customer',response=str(response))
+                return response
 
             # if not self.customer_mobile_validation(mobile_no=kw.get('mobile')):
             #     _logger.info("Mobile No Already Exist==============================================>")
@@ -232,7 +254,9 @@ class Authorize2(http.Controller):
 
             if not self.customer_moc_doc_id_validation(moc_doc_id=kw.get('moc_doc_id')):
                 _logger.info("Moc Doc Id  Already Exist==============================================>")
-                return {'Status': 504,'Reason':'Moc Doc Id  Already Exist for Another Patient In Odoo. Kindly provide a Unique One'}
+                response = {'Status': 504,'Reason':'Moc Doc Id  Already Exist for Another Patient In Odoo. Kindly provide a Unique One'}
+                self.create_error_logs(mocdoc_api_values=str(kw),api_type='create',model='customer',response=str(response))
+                return response
             try:
                 customer_rank = supplier_rank = 0
 
@@ -271,10 +295,14 @@ class Authorize2(http.Controller):
                      _logger.error("Customer Not Created==============================================>")
             except Exception as e:
                 _logger.error("Error==============================================> " + str(e))
-                return {'Status': 503,'Reason':str(e)}
+                response = {'Status': 503,'Reason':str(e)}
+                self.create_error_logs(mocdoc_api_values=str(kw),api_type='create',model='customer',response=str(response))
+                return response
         else:
             _logger.info("Name or Moc Doc Id Is Missing==============================================>")
-            return {'Status': 500,'Reason':'Name or Moc Doc Id or Patient Type(Customer Or Vendor In Odoo) Is Missing'}
+            response = {'Status': 500,'Reason':'Name or Moc Doc Id or Patient Type(Customer Or Vendor In Odoo) Is Missing'}
+            self.create_error_logs(mocdoc_api_values=str(kw),api_type='create',model='customer',response=str(response))
+            return response
 
 
     @http.route('/customer_update', type='json', auth='none', website=True)
@@ -284,7 +312,9 @@ class Authorize2(http.Controller):
             partner_id = self.search_customer_id_validation(customer_id=kw.get('customer_id'))
             if not partner_id:
                 _logger.info("ID Does not Exist in odoo==============================================>")
-                return {'Status': 505,'Reason':'ID Does not Exist in Odoo, The Patient May Be archived or deleted'}
+                response = {'Status': 505,'Reason':'ID Does not Exist in Odoo, The Patient May Be archived or deleted'}
+                self.create_error_logs(mocdoc_api_values=str(kw),api_type='update',model='customer',response=str(response))
+                return response
 
             _logger.info("Partner ID To Update==============================================> " + str(partner_id))
             update_list =[]
@@ -322,13 +352,17 @@ class Authorize2(http.Controller):
                         
                 partner_id.sudo().with_context({'lang': 'en_US','allowed_company_ids': [1]}).write_api_values = kw
                 if update_list:
-                    return {'Status': 200,'Status':'Successfully Updated'+'-'+str(update_list)}
+                    return {'Status': 200,'Reason':'Successfully Updated'+'-'+str(update_list)}
             except Exception as e:
                 _logger.error("Error==============================================> " + str(e))
-                return {'Status': 503,'Reason':str(e)}
+                response = {'Status': 503,'Reason':str(e)}
+                self.create_error_logs(mocdoc_api_values=str(kw),api_type='update',model='customer',response=str(response))
+                return response
         else:
             _logger.info("Customer Id Is Missing==============================================>")
-            return {'Status': 500,'Reason':'Customer Id Is Missing'}
+            response = {'Status': 500,'Reason':'Customer Id Is Missing'}
+            self.create_error_logs(mocdoc_api_values=str(kw),api_type='update',model='customer',response=str(response))
+            return response
 
 
     @http.route('/create_product_template', type='json', auth='none', website=True)
@@ -337,24 +371,34 @@ class Authorize2(http.Controller):
         if kw.get('name') and kw.get('detailed_type') and kw.get('invoice_policy') and kw.get('categ_id') and kw.get('default_code') and kw.get('purchase_method') and kw.get('uom_id') and kw.get('uom_po_id'):
             if not self.product_internal_ref_validation(default_code=kw.get('default_code')):
                 _logger.info("Internal Ref Already Exist==============================================>")
-                return {'Status': 601,'Reason':'Internal Ref Already Exist.'}
+                response = {'Status': 601,'Reason':'Internal Ref Already Exist.'}
+                self.create_error_logs(mocdoc_api_values=str(kw),api_type='create',model='product',response=str(response))
+                return response
 
             if kw.get('detailed_type') not in ('consu','service','product'):
                 _logger.info("Detailed Type Not Exist, It Must be consu or service or product==============================================>")
-                return {'Status': 602,'Reason':'Detailed Type Not Exist, It Must be consu or service or product.'}
+                response = {'Status': 602,'Reason':'Detailed Type Not Exist, It Must be consu or service or product.'}
+                self.create_error_logs(mocdoc_api_values=str(kw),api_type='create',model='product',response=str(response))
+                return response
 
             if kw.get('invoice_policy') not in ('order','delivery'):
                 _logger.info("Invoice Policy Not Exist, It Must be order or delivery==============================================>")
-                return {'Status': 603,'Reason':'Invoice Policy Not Exist, It Must be order or delivery.'}
+                response = {'Status': 603,'Reason':'Invoice Policy Not Exist, It Must be order or delivery.'}
+                self.create_error_logs(mocdoc_api_values=str(kw),api_type='create',model='product',response=str(response))
+                return response
 
             if kw.get('purchase_method') not in ('purchase','receive'):
                 _logger.info("Purchase Method Not Exist, It Must be purchase or receive==============================================>")
-                return {'Status': 604,'Reason':'Purchase Method Not Exist, It Must be purchase or receive.'}
+                response = {'Status': 604,'Reason':'Purchase Method Not Exist, It Must be purchase or receive.'}
+                self.create_error_logs(mocdoc_api_values=str(kw),api_type='create',model='product',response=str(response))
+                return response
 
             try:
                 categ_id = self.get_product_category(kw.get('categ_id'))
                 if not categ_id[1]:
-                    return {'Status': 607,'Reason':'Categ not available in odoo, Kindly find the List of category in odoo','List':categ_id[0]}
+                    response = {'Status': 607,'Reason':'Categ not available in odoo, Kindly find the List of category in odoo','List':categ_id[0]}
+                    self.create_error_logs(mocdoc_api_values=str(kw),api_type='create',model='product',response=str(response))
+                    return response
 
                 # customer_tax_list = self.get_tax_ids(kw.get('customer_taxes_id'),tax_type='sale')
                 # if not customer_tax_list[1]:
@@ -366,11 +410,15 @@ class Authorize2(http.Controller):
 
                 uom_id = self.get_uom_id(kw.get('uom_id'))
                 if not uom_id[1]:
-                    return {'Status': 610,'Reason':'Uom Not available in odoo, Kindly find the List of UOM in odoo','List':uom_id[0]}
+                    response = {'Status': 610,'Reason':'Uom Not available in odoo, Kindly find the List of UOM in odoo','List':uom_id[0]}
+                    self.create_error_logs(mocdoc_api_values=str(kw),api_type='create',model='product',response=str(response))
+                    return response
 
                 uom_po_id = self.get_uom_id(kw.get('uom_po_id'))
                 if not uom_po_id[1]:
-                    return {'Status': 611,'Reason':' Purchase Uom Not available in odoo, Kindly find the List of UOM in odoo','List':uom_po_id[0]}
+                    response = {'Status': 611,'Reason':' Purchase Uom Not available in odoo, Kindly find the List of UOM in odoo','List':uom_po_id[0]}
+                    self.create_error_logs(mocdoc_api_values=str(kw),api_type='create',model='product',response=str(response))
+                    return response
 
                 create_vals = {
                         'name': kw.get('name'),
@@ -401,10 +449,14 @@ class Authorize2(http.Controller):
                     return {'Status': 200,'record_id':product_template_id.id}
             except Exception as e:
                 _logger.error("Error==============================================> " + str(e))
-                return {'Status': 503,'Reason':str(e)}
+                response = {'Status': 503,'Reason':str(e)}
+                self.create_error_logs(mocdoc_api_values=str(kw),api_type='create',model='product',response=str(response))
+                return response
         else:
             _logger.info("name or detailed_type or invoice_policy or categ_id or default_code or purchase_method  or uom id or uom_po_id Is Missing==============================================>")
-            return {'Status': 600,'Reason':'name or detailed_type or invoice_policy or categ_id or default_code or purchase_method Is Missing or uom id or uom_po_id Is Missing' }
+            response = {'Status': 600,'Reason':'name or detailed_type or invoice_policy or categ_id or default_code or purchase_method Is Missing or uom id or uom_po_id Is Missing' }
+            self.create_error_logs(mocdoc_api_values=str(kw),api_type='create',model='product',response=str(response))
+            return response
 
 
     @http.route('/update_product_template', type='json', auth='none', website=True)
@@ -414,7 +466,9 @@ class Authorize2(http.Controller):
             product_id = self.get_product_template_id(product=kw.get('product_id'))
             if not product_id:
                 _logger.info("ID Does not Exist in odoo==============================================>")
-                return {'Status': 505,'Reason':'ID Does not Exist in Odoo, The product May Be archived or deleted in Odoo'}
+                response = {'Status': 505,'Reason':'ID Does not Exist in Odoo, The product May Be archived or deleted in Odoo'}
+                self.create_error_logs(mocdoc_api_values=str(kw),api_type='update',model='product',response=str(response))
+                return response
 
             _logger.info("Product ID To Update==============================================> " + str(product_id))
             update_list =[]
@@ -432,12 +486,16 @@ class Authorize2(http.Controller):
                 if kw.get('uom_id'):
                     uom_id = self.get_uom_id(kw.get('uom_id'))
                     if not uom_id[1]:
-                        return {'Status': 610,'Reason':'Uom Not available in odoo, Kindly find the List of UOM in odoo','List':uom_id[0]}
+                        response = {'Status': 610,'Reason':'Uom Not available in odoo, Kindly find the List of UOM in odoo','List':uom_id[0]}
+                        self.create_error_logs(mocdoc_api_values=str(kw),api_type='update',model='product',response=str(response))
+                        return response
 
                 if kw.get('uom_po_id'):
                     uom_po_id = self.get_uom_id(kw.get('uom_po_id'))
                     if not uom_po_id[1]:
-                        return {'Status': 611,'Reason':' Purchase Uom Not available in odoo, Kindly find the List of UOM in odoo','List':uom_po_id[0]}
+                        response = {'Status': 611,'Reason':' Purchase Uom Not available in odoo, Kindly find the List of UOM in odoo','List':uom_po_id[0]}
+                        self.create_error_logs(mocdoc_api_values=str(kw),api_type='update',model='product',response=str(response))
+                        return response
 
                 if kw.get('name'):
                     update_list.append(kw.get('name'))
@@ -478,14 +536,18 @@ class Authorize2(http.Controller):
                 product_id.sudo().with_context({'lang': 'en_US','allowed_company_ids': [1]}).write_api_values = kw
 
                 if update_list:
-                    return {'Status': 200,'Status':'Successfully Updated'+'-'+str(update_list)}
+                    return {'Status': 200,'Reason':'Successfully Updated'+'-'+str(update_list)}
             except Exception as e:
                 _logger.error("Error==============================================> " + str(e))
-                return {'Status': 503,'Reason':str(e)}
+                response = {'Status': 503,'Reason':str(e)}
+                self.create_error_logs(mocdoc_api_values=str(kw),api_type='update',model='product',response=str(response))
+                return response
 
         else:
             _logger.info("Product Id Is Missing==============================================>")
-            return {'Status': 500,'Reason':'Product Id Is Missing'}
+            response = {'Status': 500,'Reason':'Product Id Is Missing'}
+            self.create_error_logs(mocdoc_api_values=str(kw),api_type='update',model='product',response=str(response))
+            return response
 
 
 
@@ -497,13 +559,17 @@ class Authorize2(http.Controller):
             try:
                 if self.check_price_validation(product_list=kw.get('product_list')):
                     _logger.info("Mocdoc Price Is lesser than 0.1 ==============================================>")
-                    return {'Status': 704,'Reason':'Moc Doc Unit Price Is Lesser Than 0.1'}
+                    response = {'Status': 704,'Reason':'Moc Doc Unit Price Is Lesser Than 0.1'}
+                    self.create_error_logs(mocdoc_api_values=str(kw),api_type='create',model='sale',response=str(response))
+                    return response
 
                 for i in kw.get('product_list'):
                     if i.get('customer_tax'):
                         customer_tax_list = self.get_tax_ids(i.get('customer_tax'),tax_type='sale')
                         if not customer_tax_list[1]: 
-                            return {'Status': 608,'Reason':'Customer Tax Not available in odoo, Kindly find the List of Sale Taxes in odoo','List':customer_tax_list[0]}
+                            response = {'Status': 608,'Reason':'Customer Tax Not available in odoo, Kindly find the List of Sale Taxes in odoo','List':customer_tax_list[0]}
+                            self.create_error_logs(mocdoc_api_values=str(kw),api_type='create',model='sale',response=str(response))
+                            return response
 
 
                 partner_id = self.search_customer_id_validation(kw.get('customer_id'))
@@ -514,26 +580,34 @@ class Authorize2(http.Controller):
                     insurance_provider = self.search_insurance_provider_id_validation(kw.get('insurance_provider_id'))
                     if not insurance_provider[1]:
                         _logger.info("Insurance Provider Does not Exist in odoo==============================================>")
-                        return {'Status': 707,'Reason':'Insurance Provider Does not Exist in Odoo, Kindly find the List of Insurance Providers in odoo','List':insurance_provider[0]}
+                        response = {'Status': 707,'Reason':'Insurance Provider Does not Exist in Odoo, Kindly find the List of Insurance Providers in odoo','List':insurance_provider[0]}
+                        self.create_error_logs(mocdoc_api_values=str(kw),api_type='create',model='sale',response=str(response))
+                        return response
 
                 if not partner_id:
                     _logger.info("Partner ID Does not Exist in odoo==============================================>")
-                    return {'Status': 705,'Reason':'Partner ID Does not Exist in Odoo, The Patient May Be archived or deleted'}
+                    response = {'Status': 705,'Reason':'Partner ID Does not Exist in Odoo, The Patient May Be archived or deleted'}
+                    self.create_error_logs(mocdoc_api_values=str(kw),api_type='create',model='sale',response=str(response))
+                    return response
 
                 if product_id[1]:
                     _logger.info("Product ID Does not Exist in odoo==============================================>" + str(product_id))
-                    return {'Status': 706,'Reason':'Product ID Does not Exist in Odoo, The product May Be archived or deleted' + str(product_id)}
+                    response = {'Status': 706,'Reason':'Product ID Does not Exist in Odoo, The product May Be archived or deleted' + str(product_id)}
+                    self.create_error_logs(mocdoc_api_values=str(kw),api_type='create',model='sale',response=str(response))
+                    return response
 
                 if not currency_id:
                     _logger.info("Currency ID Does not Exist in odoo==============================================>")
-                    return {'Status': 709,'Reason':'Currency ID Does not Exist in Odoo, The Currency Be archived or deleted'}
+                    response = {'Status': 709,'Reason':'Currency ID Does not Exist in Odoo, The Currency Be archived or deleted'}
+                    self.create_error_logs(mocdoc_api_values=str(kw),api_type='create',model='sale',response=str(response))
+                    return response
                     
                 api_pricelist = False
                 if kw.get('currency_type'):
                     api_pricelist = self.search_pricleist(currency_name=kw.get('currency_type'))
 
                 patient_type = ''
-                if kw.get('patient_type') and kw.get('patient_type') in ('in','out','self'):
+                if kw.get('patient_type') and kw.get('patient_type') in ('in','out'):
                     patient_type = kw.get('patient_type')
 
                 amount = 0.0
@@ -542,12 +616,16 @@ class Authorize2(http.Controller):
                 if kw.get('amount') > 0.0:
                     amount = kw.get('amount')
                     if not kw.get('journal_type'):
-                        return {'Status': 710,'Reason':'Journal Not Sent From Mocdoc'}
+                        response = {'Status': 710,'Reason':'Journal Not Sent From Mocdoc'}
+                        self.create_error_logs(mocdoc_api_values=str(kw),api_type='create',model='sale',response=str(response))
+                        return response
 
                     journal_id = self.search_journal(journal_type=kw.get('journal_type'),from_sale=True)
                     if not journal_id:
                         _logger.info("Journal Not found in odoo ==============================================>")
-                        return {'Status': 708,'Reason':'Journal Not found in odoo'}
+                        response = {'Status': 708,'Reason':'Journal Not found in odoo'}
+                        self.create_error_logs(mocdoc_api_values=str(kw),api_type='create',model='sale',response=str(response))
+                        return response
 
 
                 sale_order_id = request.env["sale.order"].with_user(2).create(
@@ -597,10 +675,14 @@ class Authorize2(http.Controller):
 
             except Exception as e:
                 _logger.error("Error==============================================> " + str(e))
-                return {'Status': 503,'Reason':str(e)}
+                response = {'Status': 503,'Reason':str(e)}
+                self.create_error_logs(mocdoc_api_values=str(kw),api_type='create',model='sale',response=str(response))
+                return response
         else:
             _logger.info("partner_id or currency_type or product_list Is Missing==============================================>")
-            return {'Status': 700,'Reason':'customer_id or currency_type or product_list Is Missing'}
+            response = {'Status': 700,'Reason':'customer_id or currency_type or product_list Is Missing'}
+            self.create_error_logs(mocdoc_api_values=str(kw),api_type='create',model='sale',response=str(response))
+            return response
 
 
 
@@ -611,13 +693,17 @@ class Authorize2(http.Controller):
             try:
                 if self.check_price_validation(product_list=kw.get('product_list')):
                     _logger.info("Mocdoc Price Is lesser than 0.1 ==============================================>")
-                    return {'Status': 804,'Reason':'Moc Doc Unit Price Is Lesser Than 0.1'}
+                    response = {'Status': 804,'Reason':'Moc Doc Unit Price Is Lesser Than 0.1'}
+                    self.create_error_logs(mocdoc_api_values=str(kw),api_type='create',model='purchase',response=str(response))
+                    return response
 
                 for i in kw.get('product_list'):
                     if i.get('vendor_tax'):
                         vendor_tax_list = self.get_tax_ids(i.get('vendor_tax'),tax_type='purchase')
                         if not vendor_tax_list[1]: 
-                            return {'Status': 808,'Reason':'Vendor Tax Not available in odoo, Kinldy find the List of Sale Taxes in odoo','List':vendor_tax_list[0]}
+                            response = {'Status': 808,'Reason':'Vendor Tax Not available in odoo, Kinldy find the List of Sale Taxes in odoo','List':vendor_tax_list[0]}
+                            self.create_error_logs(mocdoc_api_values=str(kw),api_type='create',model='purchase',response=str(response))
+                            return response
 
 
                 partner_id = self.search_customer_id_validation(kw.get('customer_id'))
@@ -627,13 +713,21 @@ class Authorize2(http.Controller):
 
                 if not partner_id:
                     _logger.info("Partner ID Does not Exist in odoo==============================================>")
-                    return {'Status': 805,'Reason':'Partner ID Does not Exist in Odoo, The Patient May Be archived or deleted'}
+                    response = {'Status': 805,'Reason':'Partner ID Does not Exist in Odoo, The Patient May Be archived or deleted'}
+                    self.create_error_logs(mocdoc_api_values=str(kw),api_type='create',model='purchase',response=str(response))
+                    return response
+
                 if product_id[1]:
                     _logger.info("Product ID Does not Exist in odoo==============================================>" + str(product_id))
-                    return {'Status': 806,'Reason':'Product ID Does not Exist in Odoo, The product May Be archived or deleted' + str(product_id)}
+                    response = {'Status': 806,'Reason':'Product ID Does not Exist in Odoo, The product May Be archived or deleted' + str(product_id)}
+                    self.create_error_logs(mocdoc_api_values=str(kw),api_type='create',model='purchase',response=str(response))
+                    return response
+
                 if not currency_id:
                     _logger.info("Currency ID Does not Exist in odoo==============================================>")
-                    return {'Status': 807,'Reason':'Currency ID Does not Exist in Odoo, The Currency Be archived or deleted'}
+                    response = {'Status': 807,'Reason':'Currency ID Does not Exist in Odoo, The Currency Be archived or deleted'}
+                    self.create_error_logs(mocdoc_api_values=str(kw),api_type='create',model='purchase',response=str(response))
+                    return response
 
 
                 purchase_order_id = request.env["purchase.order"].with_user(2).create(
@@ -668,10 +762,14 @@ class Authorize2(http.Controller):
 
             except Exception as e:
                 _logger.error("Error==============================================> " + str(e))
-                return {'Status': 503,'Reason':str(e)}
+                response = {'Status': 503,'Reason':str(e)}
+                self.create_error_logs(mocdoc_api_values=str(kw),api_type='create',model='purchase',response=str(response))
+                return response
         else:
             _logger.info("partner_id or currency_type or  product_list Is Missing==============================================>")
-            return {'Status': 800,'Reason':'customer_id or currency_type or product_list Is Missing'}
+            response = {'Status': 800,'Reason':'customer_id or currency_type or product_list Is Missing'}
+            self.create_error_logs(mocdoc_api_values=str(kw),api_type='create',model='purchase',response=str(response))
+            return response
 
 
     @http.route('/create_payment', type='json', auth='none', website=True)
@@ -684,20 +782,28 @@ class Authorize2(http.Controller):
 
                 if not partner_id:
                     _logger.info("Partner ID Does not Exist in odoo==============================================>")
-                    return {'Status': 305,'Reason':'Patient ID Does not Exist in Odoo, The Patient May Be archived or deleted'}
+                    response = {'Status': 305,'Reason':'Patient ID Does not Exist in Odoo, The Patient May Be archived or deleted'}
+                    self.create_error_logs(mocdoc_api_values=str(kw),api_type='create',model='payment',response=str(response))
+                    return response
 
                 if not currency_id:
                     _logger.info("Currency ID Does not Exist in odoo==============================================>")
-                    return {'Status': 306,'Reason':'Currency ID Does not Exist in Odoo, The Currency Be archived or deleted'}
+                    response = {'Status': 306,'Reason':'Currency ID Does not Exist in Odoo, The Currency Be archived or deleted'}
+                    self.create_error_logs(mocdoc_api_values=str(kw),api_type='create',model='payment',response=str(response))
+                    return response
 
                 if kw.get('amount') < 1.0:
                     _logger.info("Amount Is lesser than 1.0 ==============================================>")
-                    return {'Status': 304,'Reason':'Price Is Lesser Than 0.1'}
+                    response = {'Status': 304,'Reason':'Price Is Lesser Than 0.1'}
+                    self.create_error_logs(mocdoc_api_values=str(kw),api_type='create',model='payment',response=str(response))
+                    return response
 
                 journal_id = self.search_journal(journal_type=kw.get('journal_type'))
                 if journal_id[1]:
                     _logger.info("Journal Not found in odoo ==============================================>")
-                    return {'Status': 305,'Reason':'Journal Not found in odoo, Kinldy find the List of Payment Methods','List':journal_id[0]}
+                    response = {'Status': 305,'Reason':'Journal Not found in odoo, Kinldy find the List of Payment Methods','List':journal_id[0]}
+                    self.create_error_logs(mocdoc_api_values=str(kw),api_type='create',model='payment',response=str(response))
+                    return response
 
                 payment_id = request.env["account.payment"].with_user(2).create(
                         {
@@ -717,10 +823,14 @@ class Authorize2(http.Controller):
 
             except Exception as e:
                 _logger.error("Error==============================================> " + str(e))
-                return {'Status': 503,'Reason':str(e)}
+                response = {'Status': 503,'Reason':str(e)}
+                self.create_error_logs(mocdoc_api_values=str(kw),api_type='create',model='payment',response=str(response))
+                return response
         else:
             _logger.info("partner_id or amount or currency Is Missing==============================================>")
-            return {'Status': 300,'Reason':'customer_id or amount or currency or journal Type Is Missing'}
+            response = {'Status': 300,'Reason':'customer_id or amount or currency or journal Type Is Missing'}
+            self.create_error_logs(mocdoc_api_values=str(kw),api_type='create',model='payment',response=str(response))
+            return response
 
 
     @http.route('/create_internal_transfer', type='json', auth='none', website=True)
@@ -735,20 +845,28 @@ class Authorize2(http.Controller):
 
                 if not from_location_id[1]:
                     _logger.info("From Location Does not Exist in odoo==============================================>")
-                    return {'Status': 405,'Reason':'From Location Does Not Exist in Odoo, Kinldy find the List of Locations','List':from_location_id[0]}
+                    response = {'Status': 405,'Reason':'From Location Does Not Exist in Odoo, Kinldy find the List of Locations','List':from_location_id[0]}
+                    self.create_error_logs(mocdoc_api_values=str(kw),api_type='create',model='internal_transfer',response=str(response))
+                    return response
 
                 if not to_location_id[1]:
                     _logger.info("To Location Does not Exist in odoo==============================================>")
-                    return {'Status': 406,'Reason':'To Location Does Not Exist in Odoo, Kinldy find the List of Locations','List':to_location_id[0]}
+                    response = {'Status': 406,'Reason':'To Location Does Not Exist in Odoo, Kinldy find the List of Locations','List':to_location_id[0]}
+                    self.create_error_logs(mocdoc_api_values=str(kw),api_type='create',model='internal_transfer',response=str(response))
+                    return response
 
                 if product_id[1]:
                     _logger.info("Product ID Does not Exist in odoo==============================================>" + str(product_id))
-                    return {'Status': 406,'Reason':'Product ID Does not Exist in Odoo, The product May Be archived or deleted' + str(product_id)}
+                    response = {'Status': 406,'Reason':'Product ID Does not Exist in Odoo, The product May Be archived or deleted' + str(product_id)}
+                    self.create_error_logs(mocdoc_api_values=str(kw),api_type='create',model='internal_transfer',response=str(response))
+                    return response
 
                 internal_transfer_id = self.search_internal_transfer_operation_type()
                 if not internal_transfer_id:
                     _logger.info("Is API Internal Transfer Does not Configured in odoo, Kindly do the Configuration==============================================>" + str(product_id))
-                    return {'Status': 407,'Reason':'Is API Internal Transfer Does not Configured in odoo, Kindly do the Configuration'}
+                    response = {'Status': 407,'Reason':'Is API Internal Transfer Does not Configured in odoo, Kindly do the Configuration'}
+                    self.create_error_logs(mocdoc_api_values=str(kw),api_type='create',model='internal_transfer',response=str(response))
+                    return response
 
 
                 picking_id = request.env["stock.picking"].with_user(2).create(
@@ -804,10 +922,14 @@ class Authorize2(http.Controller):
 
             except Exception as e:
                 _logger.error("Error==============================================> " + str(e))
-                return {'Status': 503,'Reason':str(e)}
+                response = {'Status': 503,'Reason':str(e)}
+                self.create_error_logs(mocdoc_api_values=str(kw),api_type='create',model='internal_transfer',response=str(response))
+                return response
         else:
             _logger.info("From Location or To Location or Product List Is Missing==============================================>")
-            return {'Status': 400,'Reason':'From Location or To Location or Product List Is Missing'}
+            response = {'Status': 400,'Reason':'From Location or To Location or Product List Is Missing'}
+            self.create_error_logs(mocdoc_api_values=str(kw),api_type='create',model='internal_transfer',response=str(response))
+            return response
 
 
 

@@ -1,7 +1,8 @@
+from . import api_logs
 from . import location
 from . import product_pricelist
 from . import insurance_provider
-
+from . import payment
 from . import bin_location
 from . import product_profile
 from . import partner
