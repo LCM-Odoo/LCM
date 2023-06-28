@@ -44,6 +44,8 @@
             <xpath expr="//field[@name='order_line']" position="attributes">
                 <attribute name="attrs">{'readonly': ['|',('state', 'in', ('done','cancel')),('make_so_readonly','=',True)]}</attribute>
             </xpath>
+
+            
         </field>
     </record>
 

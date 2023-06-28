@@ -607,7 +607,7 @@ class Authorize2(http.Controller):
                     api_pricelist = self.search_pricleist(currency_name=kw.get('currency_type'))
 
                 patient_type = ''
-                if kw.get('patient_type') and kw.get('patient_type') in ('in','out'):
+                if kw.get('patient_type') and kw.get('patient_type') in ('in','out','self'):
                     patient_type = kw.get('patient_type')
 
                 amount = 0.0

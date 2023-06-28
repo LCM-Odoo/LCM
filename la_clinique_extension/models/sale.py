@@ -3,6 +3,9 @@ from odoo.exceptions import UserError
 import logging
 _logger = logging.getLogger(__name__)
 
+import json
+from lxml import etree
+
 
 class SaleOrder(models.Model):
     _inherit = 'sale.order'
@@ -10,7 +13,7 @@ class SaleOrder(models.Model):
     create_api_values = fields.Char(string='Create API Values',copy=False)
     make_so_readonly = fields.Boolean(string='Make SO Readonly',copy=False)
     moc_doc_ref = fields.Char(string="Moc Doc Ref",copy=False)
-    patient_type = fields.Selection(selection=[('in', 'In-Patient'),('out', 'Out-Patient')], string='Patient Type',copy=False, tracking=True,default='')
+    patient_type = fields.Selection(selection=[('self', 'Self'),('in', 'In-Patient'),('out', 'Out-Patient')], string='Patient Type',copy=False, tracking=True,default='')
 
     insurance_provider_id = fields.Many2one('insurance.provider',string="Insurance Company",copy=False)
     agreed_amount = fields.Float(string="Agreed Amount",copy=False)
@@ -20,6 +23,22 @@ class SaleOrder(models.Model):
     sale_bill_type = fields.Many2one('account.journal',string='Moc Doc  Bill Type',domain="[('type','in',('bank','cash'))]")
     sale_bill_currency = fields.Many2one('res.currency',string='Moc Doc  Bill Currency')
     is_payment_created = fields.Boolean(string='Payment Status')
+
+
+    @api.model
+    def fields_view_get(self, view_id=None, view_type='form', toolbar=False, submenu=False):
+        res = super(SaleOrder, self).fields_view_get(view_id=view_id, view_type=view_type, toolbar=toolbar, submenu=submenu)
+        doc = etree.XML(res['arch'])
+        if view_type == 'form':
+            fields = ['date_order']
+            for field in fields:
+                for node in doc.xpath("//field[@name='%s']" % field):
+                    node.set("readonly", "0")
+                    modifiers = json.loads(node.get("modifiers"))
+                    modifiers['readonly'] = False
+                    node.set("modifiers", json.dumps(modifiers))
+            res['arch'] = etree.tostring(doc)
+        return res
 
     @api.model
     def create(self, vals):
