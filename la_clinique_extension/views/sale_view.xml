@@ -17,11 +17,6 @@
                 <field name="make_so_readonly" groups="base.group_no_one"/>
             </field>
 
-            <field name="tag_ids" position="after">
-                <field name="create_api_values" readonly="1" groups="base.group_no_one"/>
-                <field name="make_so_readonly" groups="base.group_no_one"/>
-            </field>
-
             <field name="partner_id" position="after">
                 <field name="patient_type" attrs="{'readonly': [('state', 'in',('done','sale'))]}"/>
                 <field name="moc_doc_ref" attrs="{'readonly': [('state', 'in',('done','sale'))]}"/>
@@ -44,9 +39,53 @@
             <xpath expr="//field[@name='order_line']" position="attributes">
                 <attribute name="attrs">{'readonly': ['|',('state', 'in', ('done','cancel')),('make_so_readonly','=',True)]}</attribute>
             </xpath>
+
+            
         </field>
     </record>
 
+
+    <!-- Quotation - List view inherit -->
+    <record id="view_quotation_tree_inheirt" model="ir.ui.view">
+        <field name="name">sale.quotation.tree.view.inherit</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_quotation_tree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='name']" position="after">
+                <field name="moc_doc_ref"/>
+            </xpath>
+            <xpath expr="//field[@name='partner_id']" position="after">
+                <field name="patient_type"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Sale order - List view inherit -->
+    <record id="view_sale_tree_inherit" model="ir.ui.view">
+        <field name="name">sale.tree.view.inherit</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_tree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='name']" position="after">
+                <field name="moc_doc_ref"/>
+            </xpath>
+            <xpath expr="//field[@name='partner_id']" position="after">
+                <field name="patient_type"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Sale order - Search view inherit -->
+    <record id="view_sales_order_filter_inheirt" model="ir.ui.view">
+        <field name="name">sale.order.search.view.inherit</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_sales_order_filter"/>
+        <field name="arch" type="xml">
+            <xpath expr="//search" type="inside">
+                <field name="moc_doc_ref"/>
+            </xpath>
+        </field>
+    </record>
 
     <record id="view_stock_form_inherit" model="ir.ui.view">
         <field name="name">picking.form.view.inherit</field>
