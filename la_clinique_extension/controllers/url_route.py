@@ -37,6 +37,13 @@ class Authorize2(http.Controller):
         else:
             return False
 
+    def search_cash_customer_validation(self):
+        partner_id = request.env["res.partner"].sudo().search([('active','=',True),('is_cash_customer','=',True)],limit=1)
+        if partner_id:
+            return partner_id
+        else:
+            return False
+
     def search_insurance_provider_id_validation(self,provider_id=False):
         provider_id = request.env["insurance.provider"].sudo().search([('active','=',True),('name','=',provider_id)],limit=1)
         if provider_id:
@@ -555,8 +562,23 @@ class Authorize2(http.Controller):
     @http.route('/create_sale_order', type='json', auth='none', website=True)
     def create_sale_order(self, **kw):
         _logger.info("Mocdoc Json write_api_valuesues==============================================>"+str(kw))
-        if kw.get('customer_id') and kw.get('product_list') and kw.get('currency_type'):
+        if kw.get('product_list') and kw.get('currency_type'):
             try:
+                patient_type = ''
+                if kw.get('patient_type') and kw.get('patient_type') in ('in','out','self'):
+                    patient_type = kw.get('patient_type')
+
+                if not patient_type:
+                    response = {'Status': 711,'Reason':'Patinet Type Is not in (in/out/self) for the Bill'}
+                    self.create_error_logs(mocdoc_api_values=str(kw),api_type='create',model='sale',response=str(response))
+                    return response
+
+                if patient_type != 'self' and not kw.get('customer_id'):
+                    response = {'Status': 712,'Reason':'Customer Id not sent from Mocdoc for the Bill'}
+                    self.create_error_logs(mocdoc_api_values=str(kw),api_type='create',model='sale',response=str(response))
+                    return response
+
+
                 if self.check_price_validation(product_list=kw.get('product_list')):
                     _logger.info("Mocdoc Price Is lesser than 0.1 ==============================================>")
                     response = {'Status': 704,'Reason':'Moc Doc Unit Price Is Lesser Than 0.1'}
@@ -571,8 +593,21 @@ class Authorize2(http.Controller):
                             self.create_error_logs(mocdoc_api_values=str(kw),api_type='create',model='sale',response=str(response))
                             return response
 
+                if patient_type == 'self':
+                    partner_id = self.search_cash_customer_validation()
+                    if not partner_id:
+                        _logger.info("Cash Customer Is Not Configured in odoo==============================================>")
+                        response = {'Status': 713,'Reason':'Cash Customer Is not Configured in Odoo'}
+                        self.create_error_logs(mocdoc_api_values=str(kw),api_type='create',model='sale',response=str(response))
+                        return response
+                else:
+                    partner_id = self.search_customer_id_validation(customer_id=kw.get('customer_id'))
+                    if not partner_id:
+                        _logger.info("Partner ID Does not Exist in odoo==============================================>")
+                        response = {'Status': 705,'Reason':'Partner ID Does not Exist in Odoo, The Patient May Be archived or deleted'}
+                        self.create_error_logs(mocdoc_api_values=str(kw),api_type='create',model='sale',response=str(response))
+                        return response
 
-                partner_id = self.search_customer_id_validation(kw.get('customer_id'))
                 product_id = self.product_id_validation(product_list=kw.get('product_list'))
                 currency_id = self.search_currency_id_validation(currency_id=kw.get('currency_type'))
 
@@ -583,13 +618,7 @@ class Authorize2(http.Controller):
                         response = {'Status': 707,'Reason':'Insurance Provider Does not Exist in Odoo, Kindly find the List of Insurance Providers in odoo','List':insurance_provider[0]}
                         self.create_error_logs(mocdoc_api_values=str(kw),api_type='create',model='sale',response=str(response))
                         return response
-
-                if not partner_id:
-                    _logger.info("Partner ID Does not Exist in odoo==============================================>")
-                    response = {'Status': 705,'Reason':'Partner ID Does not Exist in Odoo, The Patient May Be archived or deleted'}
-                    self.create_error_logs(mocdoc_api_values=str(kw),api_type='create',model='sale',response=str(response))
-                    return response
-
+                
                 if product_id[1]:
                     _logger.info("Product ID Does not Exist in odoo==============================================>" + str(product_id))
                     response = {'Status': 706,'Reason':'Product ID Does not Exist in Odoo, The product May Be archived or deleted' + str(product_id)}
@@ -606,9 +635,6 @@ class Authorize2(http.Controller):
                 if kw.get('currency_type'):
                     api_pricelist = self.search_pricleist(currency_name=kw.get('currency_type'))
 
-                patient_type = ''
-                if kw.get('patient_type') and kw.get('patient_type') in ('in','out','self'):
-                    patient_type = kw.get('patient_type')
 
                 amount = 0.0
                 journal_id = False
@@ -679,8 +705,8 @@ class Authorize2(http.Controller):
                 self.create_error_logs(mocdoc_api_values=str(kw),api_type='create',model='sale',response=str(response))
                 return response
         else:
-            _logger.info("partner_id or currency_type or product_list Is Missing==============================================>")
-            response = {'Status': 700,'Reason':'customer_id or currency_type or product_list Is Missing'}
+            _logger.info("currency_type or product_list Is Missing==============================================>")
+            response = {'Status': 700,'Reason':'currency_type or product_list Is Missing'}
             self.create_error_logs(mocdoc_api_values=str(kw),api_type='create',model='sale',response=str(response))
             return response
 
@@ -706,7 +732,7 @@ class Authorize2(http.Controller):
                             return response
 
 
-                partner_id = self.search_customer_id_validation(kw.get('customer_id'))
+                partner_id = self.search_customer_id_validation(customer_id=kw.get('customer_id'))
                 product_id = self.product_id_validation(product_list=kw.get('product_list'))
                 currency_id = self.search_currency_id_validation(currency_id=kw.get('currency_type'))
 
