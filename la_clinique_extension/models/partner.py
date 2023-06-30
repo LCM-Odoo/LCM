@@ -11,6 +11,7 @@ class ResPartner(models.Model):
     moc_doc_id = fields.Char(string='Moc Doc Id',copy=False)
     doctor = fields.Char(string='Doctor',copy=False)
     diagnosis = fields.Char(string='Diagnosis',copy=False)
+    is_cash_customer = fields.Boolean(string='Is Cash Customer',copy=False)
     create_api_values = fields.Char(string='Create API Values',copy=False)
     write_api_values = fields.Char(string='Write API Values',copy=False)
 

@@ -25,6 +25,7 @@
                         </group>
                         <group>
                             <field name="write_api_values" readonly="1"/>
+                            <field name="is_cash_customer"/>
                         </group>
                     </group>
                 </page>
