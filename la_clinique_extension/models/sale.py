@@ -30,7 +30,7 @@ class SaleOrder(models.Model):
         res = super(SaleOrder, self).fields_view_get(view_id=view_id, view_type=view_type, toolbar=toolbar, submenu=submenu)
         doc = etree.XML(res['arch'])
         if view_type == 'form':
-            fields = ['date_order','effective_date']
+            fields = ['date_order']
             for field in fields:
                 for node in doc.xpath("//field[@name='%s']" % field):
                     node.set("readonly", "0")
