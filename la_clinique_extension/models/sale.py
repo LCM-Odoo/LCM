@@ -145,6 +145,14 @@ class StockPicking(models.Model):
                     i.location_id = i.move_line_moc_doc_location_id.id
         return values
 
+    def button_validate(self):
+        for i in self.move_line_ids_without_package:
+            if i.move_line_moc_doc_location_id:
+                if i.move_line_moc_doc_location_id.id != i.location_id.id:
+                    raise UserError(_('The From Location Is Not Same As The Mocdoc Location, Kinldy Check It'))
+        values = super(StockPicking, self).button_validate()
+        return values
+
 
 class StockRule(models.Model):
     _inherit = 'stock.rule'
