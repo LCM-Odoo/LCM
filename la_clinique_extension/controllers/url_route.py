@@ -592,6 +592,11 @@ class Authorize2(http.Controller):
                             response = {'Status': 608,'Reason':'Customer Tax Not available in odoo, Kindly find the List of Sale Taxes in odoo','List':customer_tax_list[0]}
                             self.create_error_logs(mocdoc_api_values=str(kw),api_type='create',model='sale',response=str(response))
                             return response
+                    else:
+                        response = {'Status': 608,'Reason':'Customer Tax is not sent from Mocdoc Please find the Values','List':str(kw)}
+                        self.create_error_logs(mocdoc_api_values=str(kw),api_type='create',model='sale',response=str(response))
+                        return response
+
 
                 if patient_type == 'self':
                     partner_id = self.search_cash_customer_validation()
@@ -730,6 +735,11 @@ class Authorize2(http.Controller):
                             response = {'Status': 808,'Reason':'Vendor Tax Not available in odoo, Kinldy find the List of Sale Taxes in odoo','List':vendor_tax_list[0]}
                             self.create_error_logs(mocdoc_api_values=str(kw),api_type='create',model='purchase',response=str(response))
                             return response
+                    else:
+                        response = {'Status': 808,'Reason':'Vendor Tax Not send from Mocdoc, Please find the Value','List':str(kw)}
+                        self.create_error_logs(mocdoc_api_values=str(kw),api_type='create',model='purchase',response=str(response))
+                        return response
+
 
 
                 partner_id = self.search_customer_id_validation(customer_id=kw.get('customer_id'))
