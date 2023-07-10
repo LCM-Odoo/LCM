@@ -33,6 +33,8 @@
                 <field name="create_date" readonly="1"/>
                 <field name="model" readonly="1"/>
                 <field name="api_type" readonly="1"/>
+                <field name="moc_doc_ref" readonly="1"/>
+                <field name="product_list" readonly="1"/>
                 <field name="mocdoc_api_values" readonly="1"/>
                 <field name="name" readonly="1"/>
             </tree>

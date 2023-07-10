@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="0">
+
+        <!-- Sale Bill API Mail Template -->
+
+        <record id="sale_api_email_template" model="mail.template">
+            <field name="name">Sale API Bill Mail Template</field>
+            <field name="model_id" ref="la_clinique_extension.model_api_logs"/>
+            <field name="email_from">sathishkmr12345@gmail.com</field>
+            <field name="email_to">satish@sslconsultingservice.com</field>
+            <field name="subject">Mocdoc - Sale Bill Error</field>
+            <field name="auto_delete" eval="False"/>
+            <field name="body_html" type="html">
+                <p>Hi Team,</p>
+                <p>The Below Mentioned Bill Is Not Synced With Odoo, Kindly Look into the below details,</p>
+
+                <strong>Mocdoc Ref :</strong> <br/>
+                <strong><span t-field="object.moc_doc_ref"/></strong>
+                <br/>
+                <br/>
+                <strong>Error Reason:</strong> <br/>
+                <strong><span t-field="object.name"/></strong>
+                <br/>
+                <br/>
+                <strong>Mocdoc Values:</strong><br/>
+                <strong><span t-field="object.mocdoc_api_values"/></strong>
+                <br/>
+                <br/>
+                <strong>Product List:</strong><br/>
+                <strong><span t-field="object.product_list"/></strong>
+            </field>
+        </record>
+
+
+        <!-- Purchase Bill API Mail Template -->
+
+        <record id="purchase_api_email_template" model="mail.template">
+            <field name="name">Purchase API Bill Mail Template</field>
+            <field name="model_id" ref="la_clinique_extension.model_api_logs"/>
+            <field name="email_from">sathishkmr12345@gmail.com</field>
+            <field name="email_to">satish@sslconsultingservice.com</field>
+            <field name="subject">Mocdoc - Purchase Bill Error</field>
+            <field name="auto_delete" eval="False"/>
+            <field name="body_html" type="html">
+                <p>Hi Team,</p>
+                <p>The Below Mentioned Bill Is Not Synced With Odoo, Kindly Look into the below details,</p>
+
+                <strong>Mocdoc Ref :</strong> <br/>
+                <strong><span t-field="object.moc_doc_ref"/></strong>
+                <br/>
+                <br/>
+                <strong>Error Reason:</strong> <br/>
+                <strong><span t-field="object.name"/></strong>
+                <br/>
+                <br/>
+                <strong>Mocdoc Values:</strong><br/>
+                <strong><span t-field="object.mocdoc_api_values"/></strong>
+                <br/>
+                <br/>
+                <strong>Product List:</strong><br/>
+                <strong><span t-field="object.product_list"/></strong>
+            </field>
+        </record>
+
+
+        <!--Customer API Mail Template -->
+        
+        <record id="customer_api_email_template" model="mail.template">
+            <field name="name">Customer API Mail Template</field>
+            <field name="model_id" ref="la_clinique_extension.model_api_logs"/>
+            <field name="email_from">sathishkmr12345@gmail.com</field>
+            <field name="email_to">satish@sslconsultingservice.com</field>
+            <field name="subject">Mocdoc - Patient Error</field>
+            <field name="auto_delete" eval="False"/>
+            <field name="body_html" type="html">
+                <p>Hi Team,</p>
+                <p>The Below Mentioned patinet Is Not Synced With Odoo, Kindly Look into the below details,</p>
+                <strong>Error Reason:</strong> <br/>
+                <strong><span t-field="object.name"/></strong>
+                <br/>
+                <br/>
+                <strong>Mocdoc Values:</strong><br/>
+                <strong><span t-field="object.mocdoc_api_values"/></strong>
+                <br/>
+                <br/>
+            </field>
+        </record>
+
+        <!--Product API Mail Template -->
+        
+        <record id="product_api_email_template" model="mail.template">
+            <field name="name">Product API Mail Template</field>
+            <field name="model_id" ref="la_clinique_extension.model_api_logs"/>
+            <field name="email_from">sathishkmr12345@gmail.com</field>
+            <field name="email_to">satish@sslconsultingservice.com</field>
+            <field name="subject">Mocdoc - Product Error</field>
+            <field name="auto_delete" eval="False"/>
+            <field name="body_html" type="html">
+                <p>Hi Team,</p>
+                <p>The Below Mentioned Product Is Not Synced With Odoo, Kindly Look into the below details,</p>
+                <strong>Error Reason:</strong> <br/>
+                <strong><span t-field="object.name"/></strong>
+                <br/>
+                <br/>
+                <strong>Mocdoc Values:</strong><br/>
+                <strong><span t-field="object.mocdoc_api_values"/></strong>
+                <br/>
+                <br/>
+            </field>
+        </record>
+
+        <!--Payment API Mail Template -->
+        
+        <record id="payment_api_email_template" model="mail.template">
+            <field name="name">Payment API Mail Template</field>
+            <field name="model_id" ref="la_clinique_extension.model_api_logs"/>
+            <field name="email_from">sathishkmr12345@gmail.com</field>
+            <field name="email_to">satish@sslconsultingservice.com</field>
+            <field name="subject">Mocdoc - Payment Error</field>
+            <field name="auto_delete" eval="False"/>
+            <field name="body_html" type="html">
+                <p>Hi Team,</p>
+                <p>The Below Mentioned payment Is Not Synced With Odoo, Kindly Look into the below details,</p>
+                <strong>Error Reason:</strong> <br/>
+                <strong><span t-field="object.name"/></strong>
+                <br/>
+                <br/>
+                <strong>Mocdoc Values:</strong><br/>
+                <strong><span t-field="object.mocdoc_api_values"/></strong>
+                <br/>
+                <br/>
+            </field>
+        </record>
+
+         <!--Internal Transfer API Mail Template -->
+        
+        <record id="internal_transfer_api_email_template" model="mail.template">
+            <field name="name">Internal Transfer API Mail Template</field>
+            <field name="model_id" ref="la_clinique_extension.model_api_logs"/>
+            <field name="email_from">sathishkmr12345@gmail.com</field>
+            <field name="email_to">satish@sslconsultingservice.com</field>
+            <field name="subject">Mocdoc - Internal Transfer Error</field>
+            <field name="auto_delete" eval="False"/>
+            <field name="body_html" type="html">
+                <p>Hi Team,</p>
+                <p>The Below Mentioned Indent Is Not Synced With Odoo, Kindly Look into the below details,</p>
+                <strong>Error Reason:</strong> <br/>
+                <strong><span t-field="object.name"/></strong>
+                <br/>
+                <br/>
+                <strong>Mocdoc Values:</strong><br/>
+                <strong><span t-field="object.mocdoc_api_values"/></strong>
+                <br/>
+                <br/>
+            </field>
+        </record>
+
+    </data>
+</odoo>
