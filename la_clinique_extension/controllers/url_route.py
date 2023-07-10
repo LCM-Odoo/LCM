@@ -249,6 +249,7 @@ class Authorize2(http.Controller):
                             })
                 if api_log_id:
                     _logger.info("Error Log Created==============================================>" + str(api_log_id))
+
                     # Mail Content
                     try:
                         api_log_id.send_mail_to_clinet(mocdoc_api_values='',api_type='',model='',response='')
@@ -279,6 +280,11 @@ class Authorize2(http.Controller):
                 response = {'Status': 504,'Reason':'Moc Doc Id  Already Exist for Another Patient In Odoo. Kindly provide a Unique One'}
                 self.create_error_logs(mocdoc_api_values=kw,api_type='create',model='customer',response=str(response))
                 return response
+
+            name = str(kw.get('name')).strip()
+            if kw.get('last_name'):
+                name = name + ' '+ str(kw.get('last_name')).strip()
+                
             try:
                 customer_rank = supplier_rank = 0
 
@@ -292,7 +298,7 @@ class Authorize2(http.Controller):
                     'uid': 2, 
                     'allowed_company_ids': [1], 
                     }).create({
-                                'name': kw.get('name'), 
+                                'name': name, 
                                 'company_id': 1, 
                                 'street': kw.get('street'), 
                                 'street2': kw.get('street2'),
