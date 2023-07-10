@@ -10,6 +10,7 @@
 
     'depends': ['base','sale','account','product','purchase'],
     'data': [
+        'data/mail_template.xml',
         'security/ir.model.access.csv',
         'views/api_logs.xml',
         'views/location_view.xml',
