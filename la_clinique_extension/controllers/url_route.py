@@ -355,8 +355,17 @@ class Authorize2(http.Controller):
                     partner_id.sudo().with_context({'lang': 'en_US','allowed_company_ids': [1]}).mobile = kw.get('mobile')
 
                 if kw.get('name'):
+                    name = str(kw.get('name')).strip()
                     update_list.append(kw.get('name'))
-                    partner_id.sudo().with_context({'lang': 'en_US','allowed_company_ids': [1]}).name = kw.get('name')
+                    partner_id.sudo().with_context({'lang': 'en_US','allowed_company_ids': [1]}).name = name
+
+                if kw.get('last_name'):
+                    last_name = str(kw.get('last_name')).strip()
+                    update_list.append(kw.get('last_name'))
+                    full_name = partner_id.name
+                    full_name += +' '+ last_name
+                    partner_id.sudo().with_context({'lang': 'en_US','allowed_company_ids': [1]}).name = full_name
+
                 if kw.get('street'):
                     update_list.append(kw.get('street'))
                     partner_id.sudo().with_context({'lang': 'en_US','allowed_company_ids': [1]}).street = kw.get('street')
