@@ -356,10 +356,11 @@ class Authorize2(http.Controller):
 
                 if kw.get('name'):
                     name = str(kw.get('name')).strip() 
-                    last_name = str(kw.get('last_name')).strip()
-                    update_name = name + ' '+ last_name 
-                    update_list.append(update_name)
-                    partner_id.sudo().with_context({'lang': 'en_US','allowed_company_ids': [1]}).name = update_name.strip()
+                    if kw.get('last_name'):
+                        name = name + ' '+ str(kw.get('last_name')).strip()
+
+                    update_list.append(name)
+                    partner_id.sudo().with_context({'lang': 'en_US','allowed_company_ids': [1]}).name = name
 
                 if kw.get('street'):
                     update_list.append(kw.get('street'))
