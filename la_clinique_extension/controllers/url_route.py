@@ -401,7 +401,7 @@ class Authorize2(http.Controller):
     @http.route('/create_product_template', type='json', auth='none', website=True)
     def create_product_template(self, **kw):
         _logger.info("==============================================>Entering Product Creation===============>" + str(kw))
-        if kw.get('name') and kw.get('detailed_type') and kw.get('invoice_policy') and kw.get('categ_id') and kw.get('default_code') and kw.get('purchase_method') and kw.get('uom_id') and kw.get('uom_po_id'):
+        if kw.get('name') and kw.get('detailed_type') and kw.get('invoice_policy') and kw.get('categ_id') and kw.get('default_code') and kw.get('purchase_method'):
             if not self.product_internal_ref_validation(default_code=kw.get('default_code')):
                 _logger.info("Internal Ref Already Exist==============================================>")
                 response = {'Status': 601,'Reason':'Internal Ref Already Exist.'}
@@ -433,6 +433,7 @@ class Authorize2(http.Controller):
                     self.create_error_logs(mocdoc_api_values=kw,api_type='create',model='product',response=str(response))
                     return response
 
+
                 # customer_tax_list = self.get_tax_ids(kw.get('customer_taxes_id'),tax_type='sale')
                 # if not customer_tax_list[1]:
                 #     return {'Status': 608,'Reason':'Customer Tax Not available in odoo, Kinldy find the List of Sale Taxes in odoo','List':customer_tax_list[0]}
@@ -441,17 +442,17 @@ class Authorize2(http.Controller):
                 # if not vendor_tax_list[1]:
                 #     return {'Status': 609,'Reason':'Vendor Tax Not available in odoo, Kinldy find the List of Purchase Taxes in odoo','List':vendor_tax_list[0]}
 
-                uom_id = self.get_uom_id(kw.get('uom_id'))
-                if not uom_id[1]:
-                    response = {'Status': 610,'Reason':'Uom Not available in odoo, Kindly find the List of UOM in odoo','List':uom_id[0]}
-                    self.create_error_logs(mocdoc_api_values=kw,api_type='create',model='product',response=str(response))
-                    return response
+                # uom_id = self.get_uom_id(kw.get('uom_id'))
+                # if not uom_id[1]:
+                #     response = {'Status': 610,'Reason':'Uom Not available in odoo, Kindly find the List of UOM in odoo','List':uom_id[0]}
+                #     self.create_error_logs(mocdoc_api_values=kw,api_type='create',model='product',response=str(response))
+                #     return response
 
-                uom_po_id = self.get_uom_id(kw.get('uom_po_id'))
-                if not uom_po_id[1]:
-                    response = {'Status': 611,'Reason':' Purchase Uom Not available in odoo, Kindly find the List of UOM in odoo','List':uom_po_id[0]}
-                    self.create_error_logs(mocdoc_api_values=kw,api_type='create',model='product',response=str(response))
-                    return response
+                # uom_po_id = self.get_uom_id(kw.get('uom_po_id'))
+                # if not uom_po_id[1]:
+                #     response = {'Status': 611,'Reason':' Purchase Uom Not available in odoo, Kindly find the List of UOM in odoo','List':uom_po_id[0]}
+                #     self.create_error_logs(mocdoc_api_values=kw,api_type='create',model='product',response=str(response))
+                #     return response
 
                 create_vals = {
                         'name': kw.get('name'),
@@ -466,8 +467,8 @@ class Authorize2(http.Controller):
                         'purchase_ok': True,
                         # 'taxes_id': [(6, 0,customer_tax_list[0])],
                         # 'supplier_taxes_id': [(6, 0,vendor_tax_list[0])],
-                        'uom_id':uom_id[0],
-                        'uom_po_id':uom_po_id[0],
+                        # 'uom_id':uom_id[0],
+                        # 'uom_po_id':uom_po_id[0],
                         'create_api_values': kw
                         }
                         
@@ -486,8 +487,8 @@ class Authorize2(http.Controller):
                 self.create_error_logs(mocdoc_api_values=kw,api_type='create',model='product',response=str(response))
                 return response
         else:
-            _logger.info("name or detailed_type or invoice_policy or categ_id or default_code or purchase_method  or uom id or uom_po_id Is Missing==============================================>")
-            response = {'Status': 600,'Reason':'name or detailed_type or invoice_policy or categ_id or default_code or purchase_method Is Missing or uom id or uom_po_id Is Missing' }
+            _logger.info("name or detailed_type or invoice_policy or categ_id or default_code or purchase_method  Is Missing==============================================>")
+            response = {'Status': 600,'Reason':'name or detailed_type or invoice_policy or categ_id or default_code or purchase_method Is Missing  Is Missing' }
             self.create_error_logs(mocdoc_api_values=kw,api_type='create',model='product',response=str(response))
             return response
 
@@ -516,19 +517,19 @@ class Authorize2(http.Controller):
                 #     if not vendor_tax_list[1]:
                 #         return {'Status': 609,'Reason':'Vendor Tax Not available in odoo, Kinldy find the List of Purchase Taxes in odoo','List':vendor_tax_list[0]}
 
-                if kw.get('uom_id'):
-                    uom_id = self.get_uom_id(kw.get('uom_id'))
-                    if not uom_id[1]:
-                        response = {'Status': 610,'Reason':'Uom Not available in odoo, Kindly find the List of UOM in odoo','List':uom_id[0]}
-                        self.create_error_logs(mocdoc_api_values=kw,api_type='update',model='product',response=str(response))
-                        return response
+                # if kw.get('uom_id'):
+                #     uom_id = self.get_uom_id(kw.get('uom_id'))
+                #     if not uom_id[1]:
+                #         response = {'Status': 610,'Reason':'Uom Not available in odoo, Kindly find the List of UOM in odoo','List':uom_id[0]}
+                #         self.create_error_logs(mocdoc_api_values=kw,api_type='update',model='product',response=str(response))
+                #         return response
 
-                if kw.get('uom_po_id'):
-                    uom_po_id = self.get_uom_id(kw.get('uom_po_id'))
-                    if not uom_po_id[1]:
-                        response = {'Status': 611,'Reason':' Purchase Uom Not available in odoo, Kindly find the List of UOM in odoo','List':uom_po_id[0]}
-                        self.create_error_logs(mocdoc_api_values=kw,api_type='update',model='product',response=str(response))
-                        return response
+                # if kw.get('uom_po_id'):
+                #     uom_po_id = self.get_uom_id(kw.get('uom_po_id'))
+                #     if not uom_po_id[1]:
+                #         response = {'Status': 611,'Reason':' Purchase Uom Not available in odoo, Kindly find the List of UOM in odoo','List':uom_po_id[0]}
+                #         self.create_error_logs(mocdoc_api_values=kw,api_type='update',model='product',response=str(response))
+                #         return response
 
                 if kw.get('name'):
                     update_list.append(kw.get('name'))
@@ -539,12 +540,12 @@ class Authorize2(http.Controller):
                 # if kw.get('standard_price'):
                 #     update_list.append(kw.get('standard_price'))
                 #     product_id.sudo().with_context({'lang': 'en_US','allowed_company_ids': [1]}).standard_price = kw.get('standard_price')
-                if kw.get('uom_id'):
-                    update_list.append(kw.get('uom_id'))
-                    product_id.sudo().with_context({'lang': 'en_US','allowed_company_ids': [1]}).uom_id = uom_id[0]
-                if kw.get('uom_po_id'):
-                    update_list.append(kw.get('uom_po_id'))
-                    product_id.sudo().with_context({'lang': 'en_US','allowed_company_ids': [1]}).uom_po_id = uom_po_id[0]
+                # if kw.get('uom_id'):
+                #     update_list.append(kw.get('uom_id'))
+                #     product_id.sudo().with_context({'lang': 'en_US','allowed_company_ids': [1]}).uom_id = uom_id[0]
+                # if kw.get('uom_po_id'):
+                #     update_list.append(kw.get('uom_po_id'))
+                #     product_id.sudo().with_context({'lang': 'en_US','allowed_company_ids': [1]}).uom_po_id = uom_po_id[0]
                 # if kw.get('customer_taxes_id'):
                 #     update_list.append(kw.get('customer_taxes_id'))
                 #     product_id.sudo().with_context({'lang': 'en_US','allowed_company_ids': [1]}).taxes_id = [(6, 0,[])]
