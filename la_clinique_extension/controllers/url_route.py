@@ -585,12 +585,44 @@ class Authorize2(http.Controller):
 
 
 
+    def search_sale_validation(self,moc_doc_ref=False):
+        if moc_doc_ref:
+            sale_order_list = [i.name for i in request.env["sale.order"].sudo().search([('moc_doc_ref','=',moc_doc_ref),('state','!=','cancel')])]
+            if sale_order_list:
+                return sale_order_list
+            else:
+                return False
+
+
 
     @http.route('/create_sale_order', type='json', auth='none', website=True)
     def create_sale_order(self, **kw):
         _logger.info("Mocdoc Json write_api_valuesues==============================================>"+str(kw))
         if kw.get('product_list') and kw.get('currency_type'):
             try:
+                if not kw.get('bill_type'):
+                    response = {'Status': 714,'Reason':'Bill Type Is Not Sent from Mocdoc'}
+                    self.create_error_logs(mocdoc_api_values=kw,api_type='create',model='sale',response=str(response))
+                    return response
+
+                if kw.get('bill_type') and kw.get('bill_type') not in ['pharmacy','i/p','o/p']:
+                    response = {'Status': 715,'Reason':'Bill Type Is Not Sent from Mocdoc'}
+                    self.create_error_logs(mocdoc_api_values=kw,api_type='create',model='sale',response=str(response))
+                    return response
+
+
+                if kw.get('bill_type') == 'i/p':
+                    sale_list = self.search_sale_validation(kw.get('moc_doc_ref'))
+                    if sale_list:
+                        mail_id = request.env['sale.order'].send_mail_client(sale_list=sale_list,moc_doc_ref=kw.get('moc_doc_ref'))
+                        if mail_id:
+                            return {'Status': 200,'Mail_Sent':True}
+                        else:
+                            response = {'Status': 716,'Reason':'Bill Update Mail Not Sent to Clinet, Kinldy Contact Odoo Support'}
+                            self.create_error_logs(mocdoc_api_values=kw,api_type='create',model='sale',response=str(response))
+                            return response
+
+
                 patient_type = ''
                 if kw.get('patient_type') and kw.get('patient_type') in ('in','out','self'):
                     patient_type = kw.get('patient_type')
@@ -993,8 +1025,3 @@ class Authorize2(http.Controller):
             response = {'Status': 400,'Reason':'From Location or To Location or Product List Is Missing'}
             self.create_error_logs(mocdoc_api_values=kw,api_type='create',model='internal_transfer',response=str(response))
             return response
-
-
-
-
-
