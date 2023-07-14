@@ -7,6 +7,8 @@ import json
 from lxml import etree
 
 
+
+
 class SaleOrder(models.Model):
     _inherit = 'sale.order'
 
@@ -75,6 +77,21 @@ class SaleOrder(models.Model):
                     payment_id.action_post()
                     i.is_payment_created = True
                     return payment_id
+
+    def send_mail_client(self,sale_list,moc_doc_ref):
+        if sale_list and moc_doc_ref:
+            try:
+                mail_template = self.env.ref('la_clinique_extension.email_template_ip_bill_update')
+                mail_template.with_user(2).subject = 'Mocdoc Bill Update In Odoo'
+                body = ('Hi Team' + "<br>" 'The Bill No ' + moc_doc_ref + ' Is Edited in Mocdoc, Kinldy edit the same in Odoo Sale Order ' + str(sale_list) +'Thanks'
+                    )
+                mail_template.with_user(2).body_html = body
+                mail_id = mail_template.with_user(2).send_mail(self.id, force_send=False)
+                return True
+            except Exception as e:
+                _logger.error("Error in Sending Mail==============================================> " + str(e))
+                return False
+
 
 class SaleOrderLine(models.Model):
     _inherit = 'sale.order.line'
