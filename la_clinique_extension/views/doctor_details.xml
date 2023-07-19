@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record model="ir.ui.view" id="doctor_details_form_view">
+        <field name="name">Doctor Details Form</field>
+        <field name="model">doctor.details</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                </header>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="doctor"/>
+                            <field name="bill_ref"/>
+                            <field name="name"/>
+                            <field name="patient_name"/>
+                            <field name="doc_fee"/>
+                        </group>
+                        <group>
+                            <field name="doa"/>
+                            <field name="dod"/>
+                            <field name="ins_provider_id"/>
+                            <field name="ins_agreed_amount"/>
+                            <field name="ins_actual_paid"/>
+                            <field name="total_bill_amount"/>
+                            <field name="total_sale_amount"/>
+                            <field name="outstanding_amount"/>
+                            <field name="reason"/>
+                        </group>
+                    </group>
+                </sheet>
+                <div class="oe_chatter">
+                    <field name="activity_ids"/>
+                    <field name="message_ids"/>
+                </div>
+            </form>
+        </field>
+    </record>
+
+    <record model="ir.ui.view" id="doctor_details_tree_view">
+        <field name="name">Doctor Details Tree</field>
+        <field name="model">doctor.details</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="name" invisible="1"/>
+                <field name="bill_date"/>
+                <field name="bill_ref"/>
+                <field name="doctor"/>
+                <field name="patient_name"/>
+                <field name="doa" invisible="1"/>
+                <field name="dod" invisible="1"/>
+                <field name="ins_provider_id"/>
+                <field name="doc_fee"/>
+                <field name="ins_agreed_amount"/>
+                <field name="ins_actual_paid"/>
+                <field name="total_bill_amount"/>
+                <field name="total_sale_amount"/>
+                <field name="outstanding_amount"/>
+                <field name="reason"/>
+            </tree>
+        </field>
+    </record>
+
+    <record model="ir.actions.act_window" id="doctor_details_action">
+        <field name="name">Doctor Details</field>
+        <field name="res_model">doctor.details</field>
+        <field name="view_mode">tree,form,pivot</field>
+        <!-- <field name="search_view_id" ref="view_printing_lccation_filter"/> -->
+    </record>
+
+
+    <menuitem 
+        id="doctor_details"
+        name="Doctor Details"
+        parent="sale.sale_order_menu"
+        action="doctor_details_action"
+        sequence="3"/>
+
+      <record id="model_update_bulk_sale_details" model="ir.actions.server">
+        <field name="name">Update Bulk Sale Details</field>
+        <field name="model_id" ref="model_doctor_details"/>
+        <field name="binding_model_id" ref="model_doctor_details"/>
+        <field name="binding_view_types">form,list</field>
+        <field name="state">code</field>
+        <field name="code">action = records.action_update_nielsen_image()</field>
+    </record>
+
+</odoo>

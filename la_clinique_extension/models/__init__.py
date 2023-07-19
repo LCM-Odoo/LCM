@@ -1,4 +1,5 @@
 from . import api_logs
+from . import doctor_details
 from . import location
 from . import product_pricelist
 from . import insurance_provider

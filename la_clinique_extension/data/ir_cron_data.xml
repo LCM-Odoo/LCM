@@ -1,0 +1,25 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<odoo>
+    <record id="api_log_remove_cron" model="ir.cron">
+        <field name="name">Api Log Removal Cron</field>
+        <field name="model_id" ref="model_api_logs"/>
+        <field name="state">code</field>
+        <field name="code">model.remove_log_records()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">days</field>
+        <field name="numbercall">-1</field>
+        <field name="doall" eval="True"/>
+    </record>
+
+    <record id="api_doctor_details" model="ir.cron">
+        <field name="name">API Fetch Doctor Details</field>
+        <field name="model_id" ref="model_doctor_details"/>
+        <field name="state">code</field>
+        <field name="code">model.update_doctor_details()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">days</field>
+        <field name="numbercall">-1</field>
+        <field name="doall" eval="True"/>
+    </record>
+    
+</odoo>
