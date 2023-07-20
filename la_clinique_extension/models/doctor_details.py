@@ -17,19 +17,27 @@ class ApiLogs(models.Model):
 
     name = fields.Char(string="Dept")
     bill_ref = fields.Char(string="Bill Ref")
-    patient_name = fields.Char(string='Patient Name')
-    total_bill_amount = fields.Float(string='Payment Amount')
-    total_sale_amount = fields.Float(string='Sale Amount')
-    outstanding_amount = fields.Float(string='Outstanding Amount')
+    patient_name = fields.Char(string='Patient')
+    total_bill_amount = fields.Float(string='Payment Amt')
+    total_sale_amount = fields.Float(string='Sale Amt')
+    outstanding_amount = fields.Float(string='Outstanding Amt')
     bill_date = fields.Date(string='Bill Date')
     doctor = fields.Char(string='Doctor')
-    doc_fee = fields.Float(string='Doctors Fees charged')
+    doc_fee = fields.Float(string='Doc Fees charged')
+    doc_status = fields.Selection([('paid', 'Paid')], string='Doc Status', default='')
+    doc_paid_date = fields.Datetime(string='Doc Paid Date')
     doa = fields.Datetime(string='Date Of Admission')
     dod = fields.Datetime(string='Date Of Discharge')
-    ins_provider_id = fields.Many2one('insurance.provider',string="Insurance Provider",copy=False)
-    ins_agreed_amount = fields.Float(string="Insurance Agreed Amount",copy=False)
-    ins_actual_paid = fields.Float(string="Insurance Actual Paid",copy=False)
+    ins_provider_id = fields.Many2one('insurance.provider',string="Ins Prov",copy=False)
+    ins_agreed_amount = fields.Float(string="Ins Agreed Amount",copy=False)
+    ins_actual_paid = fields.Float(string="Ins Actual Paid",copy=False)
     reason = fields.Char(string='Reason')
+
+
+    @api.onchange('doc_status')
+    def onchange_doc_status(self):
+        if not self.doc_status:
+            self.doc_paid_date = ''
 
 
     def update_doctor_details(self):

@@ -15,6 +15,8 @@
                             <field name="name"/>
                             <field name="patient_name"/>
                             <field name="doc_fee"/>
+                            <field name="doc_status"/>
+                            <field name="doc_paid_date"/>
                         </group>
                         <group>
                             <field name="doa"/>
@@ -41,22 +43,24 @@
         <field name="name">Doctor Details Tree</field>
         <field name="model">doctor.details</field>
         <field name="arch" type="xml">
-            <tree>
+            <tree editable="top">
                 <field name="name" invisible="1"/>
-                <field name="bill_date"/>
-                <field name="bill_ref"/>
-                <field name="doctor"/>
-                <field name="patient_name"/>
-                <field name="doa" invisible="1"/>
-                <field name="dod" invisible="1"/>
-                <field name="doc_fee"/>
-                <field name="ins_provider_id"/>
-                <field name="ins_agreed_amount"/>
-                <field name="ins_actual_paid"/>
-                <field name="total_sale_amount"/>
-                <field name="total_bill_amount"/>
-                <field name="outstanding_amount"/>
-                <field name="reason"/>
+                <field name="bill_date" readonly="1"/>
+                <field name="bill_ref" readonly="1"/>
+                <field name="doctor" readonly="1"/>
+                <field name="patient_name" readonly="1"/>
+                <field name="doa" invisible="1" readonly="1"/>
+                <field name="dod" invisible="1" readonly="1"/>
+                <field name="doc_fee" readonly="1"/>
+                <field name="doc_status" readonly="0"/>
+                <field name="doc_paid_date" readonly="0" attrs="{'required': [('doc_status', '=','paid')]}"/>
+                <field name="ins_provider_id" readonly="1"/>
+                <field name="ins_agreed_amount" readonly="1"/>
+                <field name="ins_actual_paid" readonly="1"/> 
+                <field name="total_sale_amount" readonly="1"/>
+                <field name="total_bill_amount" readonly="1"/>
+                <field name="outstanding_amount" readonly="1"/>
+                <field name="reason" readonly="1"/>
             </tree>
         </field>
     </record>
@@ -64,7 +68,8 @@
     <record model="ir.actions.act_window" id="doctor_details_action">
         <field name="name">Doctor Details</field>
         <field name="res_model">doctor.details</field>
-        <field name="view_mode">tree,form,pivot</field>
+        <field name="view_mode">tree,pivot</field>
+        <field name="context">{'create':False}</field>
         <!-- <field name="search_view_id" ref="view_printing_lccation_filter"/> -->
     </record>
 
