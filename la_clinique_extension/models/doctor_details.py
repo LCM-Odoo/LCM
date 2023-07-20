@@ -50901,7 +50901,6 @@ class ApiLogs(models.Model):
                     if doc_detail_id:
                         doc_detail_id.update_sale_deatils()
 
-
     def update_sale_deatils(self):
         if self.bill_ref:
             _logger.info("Bill Ref==============================================>" + str(self.bill_ref))
@@ -50919,15 +50918,15 @@ class ApiLogs(models.Model):
                             'ins_provider_id':sale_id.insurance_provider_id.id,
                             'ins_agreed_amount':sale_id.agreed_amount,
                             'ins_actual_paid':sale_id.actual_paid,
-                            'reason':False
+                            'reason':'Bill Confirmed In Odoo'
                         })
                 else:
                     sale_list = [i.name for i in sale_id]
                     _logger.info("Two Sale Bill has been found==============================================>" + str(sale_list))
                     self.reason = 'Two Sale Bill has been found' + str(sale_list)
             else:
-                _logger.info("Bill Not Found In Odoo So==============================================>")
-                self.reason = 'Bill Not Found In Odoo So'
+                _logger.info("Invoice Not Confirmed On Odoo==============================================>")
+                self.reason = 'Invoice Not Confirmed On Odoo'
 
     def action_update_nielsen_image(self):
         count = 0

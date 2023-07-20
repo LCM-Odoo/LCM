@@ -49,12 +49,12 @@
                 <field name="patient_name"/>
                 <field name="doa" invisible="1"/>
                 <field name="dod" invisible="1"/>
-                <field name="ins_provider_id"/>
                 <field name="doc_fee"/>
+                <field name="ins_provider_id"/>
                 <field name="ins_agreed_amount"/>
                 <field name="ins_actual_paid"/>
-                <field name="total_bill_amount"/>
                 <field name="total_sale_amount"/>
+                <field name="total_bill_amount"/>
                 <field name="outstanding_amount"/>
                 <field name="reason"/>
             </tree>
