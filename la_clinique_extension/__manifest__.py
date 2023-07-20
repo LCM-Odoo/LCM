@@ -11,8 +11,10 @@
     'depends': ['base','sale','account','product','purchase'],
     'data': [
         'data/mail_template.xml',
+        'data/ir_cron_data.xml',
         'security/ir.model.access.csv',
         'views/api_logs.xml',
+        'views/doctor_details.xml',
         'views/location_view.xml',
         'views/product_pricelist.xml',
         'views/insurance_provider.xml',

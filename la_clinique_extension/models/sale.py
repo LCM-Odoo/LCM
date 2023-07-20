@@ -86,7 +86,7 @@ class SaleOrder(models.Model):
                 body = ('Hi Team' + "<br>" 'The Bill No ' + moc_doc_ref + ' Is Edited in Mocdoc, Kinldy edit the same in Odoo Sale Order ' + str(sale_list) +'Thanks'
                     )
                 mail_template.with_user(2).body_html = body
-                mail_id = mail_template.with_user(2).send_mail(self.id, force_send=False)
+                mail_id = mail_template.with_user(2).send_mail(self.id, force_send=True)
                 return True
             except Exception as e:
                 _logger.error("Error in Sending Mail==============================================> " + str(e))

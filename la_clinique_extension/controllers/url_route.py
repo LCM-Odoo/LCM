@@ -606,7 +606,7 @@ class Authorize2(http.Controller):
                     return response
 
                 if kw.get('bill_type') and kw.get('bill_type') not in ['pharmacy','i/p','o/p']:
-                    response = {'Status': 715,'Reason':'Bill Type Is Not Sent from Mocdoc'}
+                    response = {'Status': 715,'Reason':'Bill Type Is Not in i/p, o/p, pharmacy'}
                     self.create_error_logs(mocdoc_api_values=kw,api_type='create',model='sale',response=str(response))
                     return response
 
