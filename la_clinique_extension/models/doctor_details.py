@@ -46,6 +46,7 @@ class DoctorApiConfig(models.Model):
 	def make_api_post_request(self,url, headers, body):
 		try:
 			response = requests.post(url, headers=headers, data=body)
+			_logger.info("Response==============================================>" + str(response))
 			if response and response.status_code == 200:
 				return response.json()
 			else:
@@ -82,6 +83,7 @@ class DoctorApiConfig(models.Model):
 		response_data = self.make_api_post_request(api_url, api_headers, api_body)
 		if response_data:
 			self.env['doctor.details'].update_doctor_details(json_dict=response_data)
+
 
 	def fetch_bill_details_from_cron(self):
 		config_id = self.env['doctor.api.config'].search([('active','=',True)],limit=1)
@@ -129,7 +131,7 @@ class DoctorDetails(models.Model):
 
 	def update_doctor_details(self,json_dict=False):
 		if json_dict.get('billinglist_detailed'):
-			# _logger.info("Json Dict==============================================>" + str(json_dict.get('billinglist_detailed')))
+			_logger.info("Json Dict==============================================>" + str(json_dict.get('billinglist_detailed')))
 			for i in json_dict.get('billinglist_detailed'):
 				if i.get('dept') == 'CONSULTATION':
 					bill_date = datetime.strptime(i.get('billdate'), "%Y%m%d%H:%M:%S")
