@@ -48,6 +48,7 @@ class DoctorApiConfig(models.Model):
 			response = requests.post(url, headers=headers, data=body)
 			_logger.info("Response==============================================>" + str(response))
 			if response and response.status_code == 200:
+				_logger.info("JSON Response==============================================>" + str(response.json()))
 				return response.json()
 			else:
 				_logger.info("No Data Found==============================================>")
