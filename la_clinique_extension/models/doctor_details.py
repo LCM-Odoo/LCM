@@ -32,9 +32,9 @@ class DoctorApiConfig(models.Model):
 	def btn_deactive(self):
 		return self.write({'active': False})
 
-	def test_connection(self,from_config=True):
-		if self.active:
-			print('helooooooooooooooooooo')
+	# def test_connection(self,from_config=True):
+	# 	if self.active:
+			
 
 	def get_doc_bill_details(self):
 		if not self.bill_date:raise ValidationError('Kinldy Provide The Bill date')
