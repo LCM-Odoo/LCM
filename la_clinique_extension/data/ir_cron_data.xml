@@ -13,9 +13,9 @@
 
     <record id="api_doctor_details" model="ir.cron">
         <field name="name">API Fetch Doctor Details</field>
-        <field name="model_id" ref="model_doctor_details"/>
+        <field name="model_id" ref="model_doctor_api_config"/>
         <field name="state">code</field>
-        <field name="code">model.update_doctor_details()</field>
+        <field name="code">model.fetch_bill_details_from_cron()</field>
         <field name="interval_number">1</field>
         <field name="interval_type">days</field>
         <field name="numbercall">-1</field>
