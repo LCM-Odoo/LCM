@@ -2,6 +2,7 @@
 <odoo>
 
     <!-- Purchase View Inherit -->
+    
     <record id="view_purchase_form_inherit" model="ir.ui.view">
         <field name="name">purchase.form.view.inherit</field>
         <field name="model">purchase.order</field>
@@ -15,6 +16,28 @@
             <xpath expr="//field[@name='order_line']" position="attributes">
                 <attribute name="attrs">{'readonly': ['|',('state', 'in', ('done','cancel')),('make_po_readonly','=',True)]}</attribute>
             </xpath>
+        </field>
+    </record>
+
+    <record id="view_purchase_tree_inherit" model="ir.ui.view">
+        <field name="name">purchase.tree.view.inherit</field>
+        <field name="model">purchase.order</field>
+        <field name="inherit_id" ref="purchase.purchase_order_kpis_tree"/>
+        <field name="arch" type="xml">
+            <field name="name" position="after">
+                <field name="moc_doc_ref"/>
+            </field>
+        </field>
+    </record>
+
+    <record id="view_purchase_tree_inherit" model="ir.ui.view">
+        <field name="name">purchase.tree.view.inherit</field>
+        <field name="model">purchase.order</field>
+        <field name="inherit_id" ref="purchase.purchase_order_view_tree"/>
+        <field name="arch" type="xml">
+            <field name="name" position="after">
+                <field name="moc_doc_ref"/>
+            </field>
         </field>
     </record>
 
