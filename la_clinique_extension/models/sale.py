@@ -25,7 +25,7 @@ class SaleOrder(models.Model):
     sale_bill_type = fields.Many2one('account.journal',string='Moc Doc  Bill Type',domain="[('type','in',('bank','cash'))]")
     sale_bill_currency = fields.Many2one('res.currency',string='Moc Doc  Bill Currency')
     is_payment_created = fields.Boolean(string='Payment Status')
-    payment_created_id = fields.Many2one('account.payment',string='Payment Created ID')
+    payment_created_id = fields.Many2one('account.payment',string='Payment Ref')
 
 
     @api.model
