@@ -25,6 +25,7 @@ class SaleOrder(models.Model):
     sale_bill_type = fields.Many2one('account.journal',string='Moc Doc  Bill Type',domain="[('type','in',('bank','cash'))]")
     sale_bill_currency = fields.Many2one('res.currency',string='Moc Doc  Bill Currency')
     is_payment_created = fields.Boolean(string='Payment Status')
+    payment_created_id = fields.Many2one('account.payment',string='Payment Created ID')
 
 
     @api.model
@@ -76,6 +77,7 @@ class SaleOrder(models.Model):
                     _logger.info("Payment Created==============================================> " + str(payment_id))
                     payment_id.action_post()
                     i.is_payment_created = True
+                    i.payment_created_id = payment_id
                     return payment_id
 
     def send_mail_client(self,sale_list,moc_doc_ref):
