@@ -2,7 +2,7 @@
 <odoo>
 
     <!-- Purchase View Inherit -->
-    
+
     <record id="view_purchase_form_inherit" model="ir.ui.view">
         <field name="name">purchase.form.view.inherit</field>
         <field name="model">purchase.order</field>
@@ -30,7 +30,7 @@
         </field>
     </record>
 
-    <record id="view_purchase_tree_inherit" model="ir.ui.view">
+    <record id="view_purchase_order_tree_inherit" model="ir.ui.view">
         <field name="name">purchase.tree.view.inherit</field>
         <field name="model">purchase.order</field>
         <field name="inherit_id" ref="purchase.purchase_order_view_tree"/>
