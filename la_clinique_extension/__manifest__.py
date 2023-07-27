@@ -16,6 +16,7 @@
         'views/api_logs.xml',
         'views/doctor_details.xml',
         'views/location_view.xml',
+        'views/journal.xml',
         'views/product_pricelist.xml',
         'views/insurance_provider.xml',
         'views/bin_location_view.xml',

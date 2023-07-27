@@ -24,7 +24,9 @@
                 <field name="sale_bill_type" readonly="1" options="{'no_open':True}"/>
                 <field name="sale_bill_currency" readonly="1" options="{'no_open':True}"/>
                 <field name="is_payment_created" readonly="1" invisible="1"/>
-                <field name="payment_created_id" readonly="1" options="{'no_open':True}"/>
+                <!-- <field name="payment_created_id" readonly="1" options="{'no_open':True}"/> -->
+                <field name="is_cards" readonly="0"/>
+                <field name="card_name" readonly="1" attrs="{'invisible': [('is_cards', '=',False)]}"/>
             </field>
 
             <field name="payment_term_id" position="after">

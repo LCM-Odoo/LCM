@@ -27,6 +27,8 @@ class SaleOrder(models.Model):
     is_payment_created = fields.Boolean(string='Payment Status')
     payment_created_id = fields.Many2one('account.payment',string='Payment Ref')
 
+    is_cards = fields.Boolean(string='Is Cards',copy=False)
+    card_name = fields.Char(string='Card Name',copy=False)
 
     @api.model
     def fields_view_get(self, view_id=None, view_type='form', toolbar=False, submenu=False):

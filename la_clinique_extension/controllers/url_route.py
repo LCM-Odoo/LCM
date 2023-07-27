@@ -202,7 +202,14 @@ class Authorize2(http.Controller):
             False
 
     def search_journal(self,journal_type=False,from_sale=False):
-        journal_id = request.env["account.journal"].sudo().search([('name','=',journal_type)],limit =1)
+        if journal_type in ['MCB-CARDS','SBM-CARDS']:
+            if journal_type == 'MCB-CARDS':
+                journal_id = request.env["account.journal"].sudo().search([('is_mcb_journal','=',True)],limit =1)
+            elif journal_type == 'SBM-CARDS':
+                journal_id = request.env["account.journal"].sudo().search([('is_sbm_journal','=',True)],limit =1)
+        else:
+            journal_id = request.env["account.journal"].sudo().search([('name','=',journal_type)],limit =1)
+
         if journal_id:
             if from_sale:
                 return journal_id.id
@@ -703,6 +710,9 @@ class Authorize2(http.Controller):
                 amount = 0.0
                 journal_id = False
 
+                is_cards = False
+                card_name = False
+
                 if kw.get('amount') > 0.0:
                     amount = kw.get('amount')
                     if not kw.get('journal_type'):
@@ -716,6 +726,10 @@ class Authorize2(http.Controller):
                         response = {'Status': 708,'Reason':'Journal Not found in odoo'}
                         self.create_error_logs(mocdoc_api_values=kw,api_type='create',model='sale',response=str(response))
                         return response
+
+                    if kw.get('journal_type') in ['MCB-CARDS','SBM-CARDS']:
+                        is_cards = True
+                        card_name = kw.get('journal_type')
 
 
                 sale_order_id = request.env["sale.order"].with_user(2).create(
@@ -731,7 +745,10 @@ class Authorize2(http.Controller):
                             'patient_type' : patient_type,
                             'sale_bill_amount': amount,
                             'sale_bill_type':journal_id,
-                            'sale_bill_currency': currency_id.id
+                            'sale_bill_currency': currency_id.id,
+                            'is_cards': is_cards,
+                            'card_name':card_name,
+
                         })
 
                 if sale_order_id:

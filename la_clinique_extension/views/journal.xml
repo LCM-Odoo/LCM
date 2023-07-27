@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+
+    <!-- Account Journal View Inherit -->
+
+    <record id="view_account_journal_form_inherit" model="ir.ui.view">
+        <field name="name">account.journal.form.view.inherit</field>
+        <field name="model">account.journal</field>
+        <field name="inherit_id" ref="account.view_account_journal_form"/>
+        <field name="arch" type="xml">
+            <field name="code" position="after">
+                <field name="is_mcb_journal"/>
+                <field name="is_sbm_journal"/>
+            </field>
+        </field>
+    </record>
+
+    <record id="view_account_journal_tree_inherit" model="ir.ui.view">
+        <field name="name">account.journal.tree.view.inherit</field>
+        <field name="model">account.journal</field>
+        <field name="inherit_id" ref="account.view_account_journal_tree"/>
+        <field name="arch" type="xml">
+            <field name="code" position="after">
+                <field name="is_mcb_journal"/>
+                <field name="is_sbm_journal"/>
+            </field>
+        </field>
+    </record>
+
+</odoo>
