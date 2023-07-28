@@ -11,5 +11,15 @@ class AccountJournal(models.Model):
 
 
 
+class AccountPaymentMethodLine(models.Model):
+    _inherit = "account.payment.method.line"
+
+    is_mcb_payment = fields.Boolean(string='Is MCB Card Payment',copy=False)
+    is_sbm_payment = fields.Boolean(string='Is SBM Card Payment',copy=False)
+
+
+
+
+
 
 

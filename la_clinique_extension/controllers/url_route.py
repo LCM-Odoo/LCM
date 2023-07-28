@@ -774,6 +774,7 @@ class Authorize2(http.Controller):
                     if picking_id:
                         picking_id.do_unreserve()
                         picking_id.action_assign()
+                        
                     # if picking_id and picking_id.products_availability == 'Available':
                         # picking_id.action_set_quantities_to_reservation()
                         # picking_id.button_validate()
@@ -929,7 +930,25 @@ class Authorize2(http.Controller):
                 
                 if payment_id:
                     _logger.info("Payment Created==============================================> " + str(payment_id))
-                    payment_id.action_post()
+
+                    post = True
+                    if kw.get('journal_type') in ['MCB-CARDS','SBM-CARDS']:
+                        if kw.get('journal_type') == 'MCB-CARDS':
+                            payment_method_line_id = payment_id.journal_id.inbound_payment_method_line_ids.filtered(lambda m: is_mcb_payment)
+                            if payment_method_line_id:
+                                payment_id.payment_method_line_id = payment_method_line_id[0].id
+                            else:
+                                post =False
+
+                        elif kw.get('journal_type') == 'SBM-CARDS':
+                            payment_method_line_id = payment_id.journal_id.inbound_payment_method_line_ids.filtered(lambda m: m.is_sbm_payment)
+                            if payment_method_line_id:
+                                payment_id.payment_method_line_id = payment_method_line_id[0].id
+                            else:
+                                post =False
+
+                    if post:
+                        payment_id.action_post()
 
                     return {'Status': 200,'record_id':payment_id.name}
 

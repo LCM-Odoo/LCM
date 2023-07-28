@@ -77,7 +77,25 @@ class SaleOrder(models.Model):
 
                 if payment_id:
                     _logger.info("Payment Created==============================================> " + str(payment_id))
-                    payment_id.action_post()
+                    post = True
+                    if i.is_cards:
+                        if i.card_name == 'MCB-CARDS':
+                            payment_method_line_id = payment_id.journal_id.inbound_payment_method_line_ids.filtered(lambda m: is_mcb_payment)
+                            if payment_method_line_id:
+                                payment_id.payment_method_line_id = payment_method_line_id[0].id
+                            else:
+                                post =False
+
+                        elif i.card_name == 'SBM-CARDS':
+                            payment_method_line_id = payment_id.journal_id.inbound_payment_method_line_ids.filtered(lambda m: m.is_sbm_payment)
+                            if payment_method_line_id:
+                                payment_id.payment_method_line_id = payment_method_line_id[0].id
+                            else:
+                                post =False
+
+                    if post:
+                        payment_id.action_post()
+
                     i.is_payment_created = True
                     i.payment_created_id = payment_id
                     return payment_id
