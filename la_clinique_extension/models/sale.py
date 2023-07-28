@@ -80,7 +80,7 @@ class SaleOrder(models.Model):
                     post = True
                     if i.is_cards:
                         if i.card_name == 'MCB-CARDS':
-                            payment_method_line_id = payment_id.journal_id.inbound_payment_method_line_ids.filtered(lambda m: is_mcb_payment)
+                            payment_method_line_id = payment_id.journal_id.inbound_payment_method_line_ids.filtered(lambda m: m.is_mcb_payment)
                             if payment_method_line_id:
                                 payment_id.payment_method_line_id = payment_method_line_id[0].id
                             else:
