@@ -1,5 +1,75 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <odoo>
+
+    <record model="ir.ui.view" id="doctor_api_config_form_view">
+        <field name="name">Doctor API Config Form</field>
+        <field name="model">doctor.api.config</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button  string="Activate" name="btn_active" attrs="{'invisible': [('active', '=', True)]}" type="object" icon="fa-toggle-on fa-2x"/>
+                    <button string="Deactivate" name="btn_deactive" attrs="{'invisible': [('active', '=', False)]}" type="object" icon="fa-toggle-off fa-2x"/>
+                </header>
+
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <!-- <button name="test_connection" type="object" class="oe_stat_button" icon="fa-pencil-square-o" string="Test Connection" invisible="1"/> -->
+                        <button string="Fetch Details" name="get_doc_bill_details" attrs="{'invisible': [('active', '=', False)]}" type="object" icon="fa-toggle-off fa-2x" groups="base.group_no_one"/>
+                    </div>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="url" attrs="{'required': [('active', '=', True)]}"/>
+                            <field name="auth_key" attrs="{'required': [('active', '=', True)]}"/>
+                            <field name="auth_date" attrs="{'required': [('active', '=', True)]}"/>
+                            <field name="content_type" attrs="{'required': [('active', '=', True)]}"/>
+                        </group>
+                        <group>
+                            <field name="bill_date" groups="base.group_no_one"/>
+                            <field name="bill_location" attrs="{'required': [('active', '=', True)]}"/>
+                            <field name="active" invisible="1"/>
+                        </group>
+                    </group>
+                </sheet>
+                <div class="oe_chatter">
+                    <field name="activity_ids"/>
+                    <field name="message_ids"/>
+                </div>
+            </form>
+        </field>
+    </record>
+
+    <record model="ir.ui.view" id="doctor_api_config_tree_view">
+        <field name="name">Doctor API Configuration</field>
+        <field name="model">doctor.api.config</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="name"/>
+                <field name="auth_key"/>
+            </tree>
+        </field>
+    </record>
+
+    <record model="ir.actions.act_window" id="doctor_api_config_action">
+        <field name="name">Doctor API Configuration</field>
+        <field name="res_model">doctor.api.config</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+
+
+    <menuitem 
+        id="doctor_api_config"
+        name="Doctor API Configuration"
+        parent="base.menu_administration"
+        action="doctor_api_config_action"
+        sequence="4"/>
+
+
     <record model="ir.ui.view" id="doctor_details_form_view">
         <field name="name">Doctor Details Form</field>
         <field name="model">doctor.details</field>
