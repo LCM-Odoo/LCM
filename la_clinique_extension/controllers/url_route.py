@@ -644,18 +644,17 @@ class Authorize2(http.Controller):
                     self.create_error_logs(mocdoc_api_values=kw,api_type='create',model='sale',response=str(response))
                     return response
 
-                tax_note = False
                 for i in kw.get('product_list'):
                     if i.get('customer_tax'):
                         customer_tax_list = self.get_tax_ids(i.get('customer_tax'),tax_type='sale')
                         if not customer_tax_list[1]: 
                             response = {'Status': 608,'Reason':'Customer Tax Not available in odoo, Kindly find the List of Sale Taxes in odoo','List':customer_tax_list[0]}
                             self.create_error_logs(mocdoc_api_values=kw,api_type='create',model='sale',response=str(response))
-                            # return response
+                            return response
                     else:
                         response = {'Status': 608,'Reason':'Customer Tax is not sent from Mocdoc Please find the Values','List':str(kw)}
                         self.create_error_logs(mocdoc_api_values=kw,api_type='create',model='sale',response=str(response))
-                        # return response
+                        return response
 
                 if patient_type == 'self':
                     partner_id = self.search_cash_customer_validation()
