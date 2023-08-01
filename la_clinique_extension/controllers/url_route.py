@@ -617,7 +617,6 @@ class Authorize2(http.Controller):
                     self.create_error_logs(mocdoc_api_values=kw,api_type='create',model='sale',response=str(response))
                     return response
 
-
                 if kw.get('bill_type') == 'i/p':
                     sale_list = self.search_sale_validation(kw.get('moc_doc_ref'))
                     if sale_list:
@@ -628,7 +627,6 @@ class Authorize2(http.Controller):
                             response = {'Status': 716,'Reason':'Bill Update Mail Not Sent to Clinet, Kinldy Contact Odoo Support'}
                             self.create_error_logs(mocdoc_api_values=kw,api_type='create',model='sale',response=str(response))
                             return response
-
 
                 patient_type = ''
                 if kw.get('patient_type') and kw.get('patient_type') in ('in','out','self'):
@@ -662,7 +660,6 @@ class Authorize2(http.Controller):
                         response = {'Status': 608,'Reason':'Customer Tax is not sent from Mocdoc Please find the Values','List':str(kw)}
                         self.create_error_logs(mocdoc_api_values=kw,api_type='create',model='sale',response=str(response))
                         return response
-
 
                 if patient_type == 'self':
                     partner_id = self.search_cash_customer_validation()
@@ -706,12 +703,15 @@ class Authorize2(http.Controller):
                 if kw.get('currency_type'):
                     api_pricelist = self.search_pricleist(currency_name=kw.get('currency_type'))
 
-
                 amount = 0.0
+                dual_amount = 0.0
                 journal_id = False
-
+                dual_journal_id = False
                 is_cards = False
+                is_card_two = False
                 card_name = False
+                sec_card_name = False
+                is_dual_mode = False
 
                 if kw.get('amount') > 0.0:
                     amount = kw.get('amount')
@@ -731,26 +731,56 @@ class Authorize2(http.Controller):
                         is_cards = True
                         card_name = kw.get('journal_type')
 
+                if kw.get('is_dual_mode'):
+                    if not kw.get('is_dual_mode') == True:
+                        _logger.info("Dual Mode Is Not True Or False ==============================================>")
+                        response = {'Status': 708,'Reason':'Dual Mode Is Not In True Or False'}
+                        self.create_error_logs(mocdoc_api_values=kw,api_type='create',model='sale',response=str(response))
+                        return response
+
+                    if kw.get('dual_amount') > 0.0:
+                        is_dual_mode = True
+                        dual_amount = kw.get('dual_amount')
+
+                        if not kw.get('dual_journal_type'):
+                            response = {'Status': 717,'Reason':'Second Journal Not Sent From Mocdoc'}
+                            self.create_error_logs(mocdoc_api_values=kw,api_type='create',model='sale',response=str(response))
+                            return response
+
+                        dual_journal_id = self.search_journal(journal_type=kw.get('dual_journal_type'),from_sale=True)
+                        if not dual_journal_id:
+                            _logger.info("Second Journal Not found in odoo ==============================================>")
+                            response = {'Status': 718,'Reason':'Second Journal Not found in odoo'}
+                            self.create_error_logs(mocdoc_api_values=kw,api_type='create',model='sale',response=str(response))
+                            return response
+
+                        if kw.get('dual_journal_type') in ['MCB-CARDS','SBM-CARDS']:
+                            is_card_two = True
+                            sec_card_name = kw.get('dual_journal_type')
 
                 sale_order_id = request.env["sale.order"].with_user(2).create(
-                        {
-                            'partner_id': partner_id.id,
-                            'moc_doc_ref':kw.get('moc_doc_ref') if kw.get('moc_doc_ref') else False,
-                            'create_api_values':kw,
-                            'make_so_readonly':True,
-                            'insurance_provider_id': insurance_provider[0].id if kw.get('insurance_provider_id') else '',
-                            'agreed_amount': kw.get('agreed_amount') if kw.get('agreed_amount') else 0.0,
-                            'actual_paid': kw.get('actual_paid') if kw.get('actual_paid') else 0.0,
-                            'pricelist_id':api_pricelist.id,
-                            'patient_type' : patient_type,
-                            'sale_bill_amount': amount,
-                            'sale_bill_type':journal_id,
-                            'sale_bill_currency': currency_id.id,
-                            'is_cards': is_cards,
-                            'card_name':card_name,
-
-                        })
-
+                    {
+                        'partner_id': partner_id.id,
+                        'moc_doc_ref':kw.get('moc_doc_ref') if kw.get('moc_doc_ref') else False,
+                        'create_api_values':kw,
+                        'make_so_readonly':True,
+                        'insurance_provider_id': insurance_provider[0].id if kw.get('insurance_provider_id') else '',
+                        'agreed_amount': kw.get('agreed_amount') if kw.get('agreed_amount') else 0.0,
+                        'actual_paid': kw.get('actual_paid') if kw.get('actual_paid') else 0.0,
+                        'pricelist_id':api_pricelist.id,
+                        'patient_type' : patient_type,
+                        'sale_bill_amount': amount,
+                        'sale_bill_type':journal_id,
+                        'sale_bill_currency': currency_id.id,
+                        'is_cards': is_cards,
+                        'card_name':card_name,
+                        'is_dual_mode':is_dual_mode,
+                        'sec_bill_amount':dual_amount,
+                        'sec_bill_type': dual_journal_id,
+                        'is_card_two': is_card_two,
+                        'sec_card_name': sec_card_name,  
+                    })
+                
                 if sale_order_id:
                     _logger.info("Sale Order Created==============================================> " + str(sale_order_id))
                     for i in product_id[0]:
@@ -769,7 +799,8 @@ class Authorize2(http.Controller):
 
                     sale_order_id.sudo().action_confirm()
                     sale_order_id.create_payment()
-
+                    if sale_order_id.is_dual_mode:
+                        sale_order_id.create_second_payment()
                     picking_id = request.env["stock.picking"].with_user(2).search([('origin','=',sale_order_id.name)])
                     if picking_id:
                         picking_id.do_unreserve()

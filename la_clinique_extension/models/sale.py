@@ -23,12 +23,23 @@ class SaleOrder(models.Model):
 
     sale_bill_amount = fields.Float(string='Moc Doc Bill Amount')
     sale_bill_type = fields.Many2one('account.journal',string='Moc Doc  Bill Type',domain="[('type','in',('bank','cash'))]")
+
+    is_dual_mode = fields.Boolean(string='Is Dual Mode',copy=False)
+    sec_bill_amount = fields.Float(string='Moc Doc Bill Amount 2')
+    sec_bill_type = fields.Many2one('account.journal',string='Moc Doc  Bill Type 2',domain="[('type','in',('bank','cash'))]")
+
     sale_bill_currency = fields.Many2one('res.currency',string='Moc Doc  Bill Currency')
+
     is_payment_created = fields.Boolean(string='Payment Status')
-    # payment_created_id = fields.Many2one('account.payment',string='Payment Ref')
+    is_sec_payment_created = fields.Boolean(string='Second Payment Status')
 
     is_cards = fields.Boolean(string='Is Cards',copy=False)
     card_name = fields.Char(string='Card Name',copy=False)
+
+    is_card_two = fields.Boolean(string='Is Second Card',copy=False)
+    sec_card_name = fields.Char(string='Card Name 2',copy=False)
+
+    payment_ids = fields.Many2many('account.payment',string='Payments',copy=False)
 
     @api.model
     def fields_view_get(self, view_id=None, view_type='form', toolbar=False, submenu=False):
@@ -92,12 +103,54 @@ class SaleOrder(models.Model):
                                 payment_id.payment_method_line_id = payment_method_line_id[0].id
                             else:
                                 post =False
-
                     if post:
                         payment_id.action_post()
-
                     i.is_payment_created = True
+                    pay_list = [pay.id for pay in i.payment_ids]
+                    pay_list.append(payment_id.id)
+                    i.payment_ids = [(6,0,pay_list)]
                     return payment_id
+
+
+
+    def create_second_payment(self):
+        for i in self:
+            if i.partner_id and i.sec_bill_amount > 0.0 and i.sec_bill_type and i.sale_bill_currency:
+                payment_id = self.env["account.payment"].with_user(2).create(
+                        {
+                            'partner_id': i.partner_id.id,
+                            'payment_type': 'inbound',
+                            'amount': i.sec_bill_amount,
+                            'currency_id': i.sale_bill_currency.id,
+                            'journal_id': i.sec_bill_type.id,
+                            'ref': i.moc_doc_ref if i.moc_doc_ref else False,
+                        })
+
+                if payment_id:
+                    _logger.info("Second Payment Created==============================================> " + str(payment_id))
+                    post = True
+                    if i.is_card_two:
+                        if i.sec_card_name == 'MCB-CARDS':
+                            payment_method_line_id = payment_id.journal_id.inbound_payment_method_line_ids.filtered(lambda m: m.is_mcb_payment)
+                            if payment_method_line_id:
+                                payment_id.payment_method_line_id = payment_method_line_id[0].id
+                            else:
+                                post =False
+
+                        elif i.sec_card_name == 'SBM-CARDS':
+                            payment_method_line_id = payment_id.journal_id.inbound_payment_method_line_ids.filtered(lambda m: m.is_sbm_payment)
+                            if payment_method_line_id:
+                                payment_id.payment_method_line_id = payment_method_line_id[0].id
+                            else:
+                                post =False
+                    if post:
+                        payment_id.action_post()
+                    i.is_sec_payment_created = True
+                    pay_list = [pay.id for pay in i.payment_ids]
+                    pay_list.append(payment_id.id)
+                    i.payment_ids = [(6,0,pay_list)]
+                    return payment_id
+
 
     def send_mail_client(self,sale_list,moc_doc_ref):
         if sale_list and moc_doc_ref:
