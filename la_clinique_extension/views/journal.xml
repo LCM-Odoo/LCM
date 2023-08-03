@@ -11,11 +11,13 @@
             <field name="code" position="after">
                 <field name="is_mcb_journal"/>
                 <field name="is_sbm_journal"/>
+                <field name="is_juice_by_journal"/>
             </field>
 
             <xpath expr="//notebook/page[2]/field/tree/field[@name='name']" position="after">
                 <field name="is_mcb_payment" attrs="{'column_invisible': [('parent.is_mcb_journal', '!=',True)]}"/>
                 <field name="is_sbm_payment" attrs="{'column_invisible': [('parent.is_sbm_journal', '!=',True)]}"/>
+                <field name="is_juice_by_payment" attrs="{'column_invisible': [('parent.is_juice_by_journal', '!=',True)]}"/>
             </xpath>
 
         </field>
@@ -29,6 +31,7 @@
             <field name="code" position="after">
                 <field name="is_mcb_journal"/>
                 <field name="is_sbm_journal"/>
+                <field name="is_juice_by_journal"/>
             </field>
         </field>
     </record>

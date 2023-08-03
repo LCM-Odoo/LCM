@@ -202,11 +202,13 @@ class Authorize2(http.Controller):
             False
 
     def search_journal(self,journal_type=False,from_sale=False):
-        if journal_type in ['MCB-CARDS','SBM-CARDS']:
+        if journal_type in ['MCB-CARDS','SBM-CARDS','JuicebyMCB']:
             if journal_type == 'MCB-CARDS':
                 journal_id = request.env["account.journal"].sudo().search([('is_mcb_journal','=',True)],limit =1)
             elif journal_type == 'SBM-CARDS':
                 journal_id = request.env["account.journal"].sudo().search([('is_sbm_journal','=',True)],limit =1)
+            elif journal_type == 'JuicebyMCB':
+                journal_id = request.env["account.journal"].sudo().search([('is_juice_by_journal','=',True)],limit =1)
         else:
             journal_id = request.env["account.journal"].sudo().search([('name','=',journal_type)],limit =1)
 
@@ -727,7 +729,7 @@ class Authorize2(http.Controller):
                         self.create_error_logs(mocdoc_api_values=kw,api_type='create',model='sale',response=str(response))
                         return response
 
-                    if kw.get('journal_type') in ['MCB-CARDS','SBM-CARDS']:
+                    if kw.get('journal_type') in ['MCB-CARDS','SBM-CARDS','JuicebyMCB']:
                         is_cards = True
                         card_name = kw.get('journal_type')
 

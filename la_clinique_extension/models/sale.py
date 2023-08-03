@@ -34,10 +34,10 @@ class SaleOrder(models.Model):
     is_sec_payment_created = fields.Boolean(string='Second Payment Status')
 
     is_cards = fields.Boolean(string='Is Cards',copy=False)
-    card_name = fields.Char(string='Card Name',copy=False)
+    card_name = fields.Char(string='Mode',copy=False)
 
     is_card_two = fields.Boolean(string='Is Second Card',copy=False)
-    sec_card_name = fields.Char(string='Card Name 2',copy=False)
+    sec_card_name = fields.Char(string='Mode 2',copy=False)
 
     payment_ids = fields.Many2many('account.payment',string='Payments',copy=False)
 
@@ -76,6 +76,9 @@ class SaleOrder(models.Model):
     def create_payment(self):
         for i in self:
             if i.partner_id and i.sale_bill_amount > 0.0 and i.sale_bill_type and i.sale_bill_currency:
+                ref = i.moc_doc_ref if i.moc_doc_ref else False
+                if ref and i.card_name:
+                    ref+= ' - ' + i.card_name
                 payment_id = self.env["account.payment"].with_user(2).create(
                         {
                             'partner_id': i.partner_id.id,
@@ -83,7 +86,7 @@ class SaleOrder(models.Model):
                             'amount': i.sale_bill_amount,
                             'currency_id': i.sale_bill_currency.id,
                             'journal_id': i.sale_bill_type.id,
-                            'ref': i.moc_doc_ref if i.moc_doc_ref else False,
+                            'ref': ref,
                         })
 
                 if payment_id:
@@ -103,6 +106,13 @@ class SaleOrder(models.Model):
                                 payment_id.payment_method_line_id = payment_method_line_id[0].id
                             else:
                                 post =False
+
+                        elif i.card_name == 'JuicebyMCB':
+                            payment_method_line_id = payment_id.journal_id.inbound_payment_method_line_ids.filtered(lambda m: m.is_juice_by_payment)
+                            if payment_method_line_id:
+                                payment_id.payment_method_line_id = payment_method_line_id[0].id
+                            else:
+                                post =False
                     if post:
                         payment_id.action_post()
                     i.is_payment_created = True
@@ -116,6 +126,9 @@ class SaleOrder(models.Model):
     def create_second_payment(self):
         for i in self:
             if i.partner_id and i.sec_bill_amount > 0.0 and i.sec_bill_type and i.sale_bill_currency:
+                ref = i.moc_doc_ref if i.moc_doc_ref else False
+                if ref and i.sec_card_name:
+                    ref+= ' - ' + i.sec_card_name
                 payment_id = self.env["account.payment"].with_user(2).create(
                         {
                             'partner_id': i.partner_id.id,
@@ -123,7 +136,7 @@ class SaleOrder(models.Model):
                             'amount': i.sec_bill_amount,
                             'currency_id': i.sale_bill_currency.id,
                             'journal_id': i.sec_bill_type.id,
-                            'ref': i.moc_doc_ref if i.moc_doc_ref else False,
+                            'ref': ref,
                         })
 
                 if payment_id:
