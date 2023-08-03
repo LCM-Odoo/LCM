@@ -202,7 +202,16 @@ class Authorize2(http.Controller):
             False
 
     def search_journal(self,journal_type=False,from_sale=False):
-        journal_id = request.env["account.journal"].sudo().search([('name','=',journal_type)],limit =1)
+        if journal_type in ['MCB-CARDS','SBM-CARDS','JuicebyMCB']:
+            if journal_type == 'MCB-CARDS':
+                journal_id = request.env["account.journal"].sudo().search([('is_mcb_journal','=',True)],limit =1)
+            elif journal_type == 'SBM-CARDS':
+                journal_id = request.env["account.journal"].sudo().search([('is_sbm_journal','=',True)],limit =1)
+            elif journal_type == 'JuicebyMCB':
+                journal_id = request.env["account.journal"].sudo().search([('is_juice_by_journal','=',True)],limit =1)
+        else:
+            journal_id = request.env["account.journal"].sudo().search([('name','=',journal_type)],limit =1)
+
         if journal_id:
             if from_sale:
                 return journal_id.id
@@ -610,7 +619,6 @@ class Authorize2(http.Controller):
                     self.create_error_logs(mocdoc_api_values=kw,api_type='create',model='sale',response=str(response))
                     return response
 
-
                 if kw.get('bill_type') == 'i/p':
                     sale_list = self.search_sale_validation(kw.get('moc_doc_ref'))
                     if sale_list:
@@ -621,7 +629,6 @@ class Authorize2(http.Controller):
                             response = {'Status': 716,'Reason':'Bill Update Mail Not Sent to Clinet, Kinldy Contact Odoo Support'}
                             self.create_error_logs(mocdoc_api_values=kw,api_type='create',model='sale',response=str(response))
                             return response
-
 
                 patient_type = ''
                 if kw.get('patient_type') and kw.get('patient_type') in ('in','out','self'):
@@ -701,6 +708,8 @@ class Authorize2(http.Controller):
 
                 amount = 0.0
                 journal_id = False
+                is_cards = False
+                card_name = False
 
                 if kw.get('amount') > 0.0:
                     amount = kw.get('amount')
@@ -716,6 +725,10 @@ class Authorize2(http.Controller):
                         self.create_error_logs(mocdoc_api_values=kw,api_type='create',model='sale',response=str(response))
                         return response
 
+                    if kw.get('journal_type') in ['MCB-CARDS','SBM-CARDS','JuicebyMCB']:
+                        is_cards = True
+                        card_name = kw.get('journal_type')
+                
 
                 sale_order_id = request.env["sale.order"].with_user(2).create(
                         {
@@ -730,7 +743,9 @@ class Authorize2(http.Controller):
                             'patient_type' : patient_type,
                             'sale_bill_amount': amount,
                             'sale_bill_type':journal_id,
-                            'sale_bill_currency': currency_id.id
+                            'sale_bill_currency': currency_id.id,
+                            'is_cards': is_cards,
+                            'card_name':card_name,
                         })
 
                 if sale_order_id:
@@ -911,7 +926,32 @@ class Authorize2(http.Controller):
                 
                 if payment_id:
                     _logger.info("Payment Created==============================================> " + str(payment_id))
-                    payment_id.action_post()
+
+                    post = True
+                    if kw.get('journal_type') in ['MCB-CARDS','SBM-CARDS','JuicebyMCB']:
+                        if kw.get('journal_type') == 'MCB-CARDS':
+                            payment_method_line_id = payment_id.journal_id.inbound_payment_method_line_ids.filtered(lambda m: is_mcb_payment)
+                            if payment_method_line_id:
+                                payment_id.payment_method_line_id = payment_method_line_id[0].id
+                            else:
+                                post =False
+
+                        elif kw.get('journal_type') == 'SBM-CARDS':
+                            payment_method_line_id = payment_id.journal_id.inbound_payment_method_line_ids.filtered(lambda m: m.is_sbm_payment)
+                            if payment_method_line_id:
+                                payment_id.payment_method_line_id = payment_method_line_id[0].id
+                            else:
+                                post =False
+
+                        elif i.card_name == 'JuicebyMCB':
+                            payment_method_line_id = payment_id.journal_id.inbound_payment_method_line_ids.filtered(lambda m: m.is_juice_by_payment)
+                            if payment_method_line_id:
+                                payment_id.payment_method_line_id = payment_method_line_id[0].id
+                            else:
+                                post =False
+
+                    if post:
+                        payment_id.action_post()
 
                     return {'Status': 200,'record_id':payment_id.name}
 

@@ -21,17 +21,19 @@
                 <field name="patient_type" attrs="{'readonly': [('state', 'in',('done','sale'))]}"/>
                 <field name="moc_doc_ref" attrs="{'readonly': [('state', 'in',('done','sale'))]}"/>
                 <field name="sale_bill_amount" readonly="1"/>
-                <field name="sale_bill_type" readonly="1"/>
-                <field name="sale_bill_currency" readonly="1"/>
-                <field name="is_payment_created" readonly="1"/>
+                <field name="sale_bill_type" readonly="1" options="{'no_open':True}"/>
+                <field name="sale_bill_currency" readonly="1" options="{'no_open':True}"/>
+                <field name="is_payment_created" readonly="1" invisible="1"/>
+                <field name="is_cards" readonly="1" invisible="1"/>
+                <field name="card_name" readonly="1" attrs="{'invisible': [('is_cards', '=',False)]}"/>
+                <field name="payment_ids" readonly="1" widget="many2many_tags"/>
             </field>
 
             <field name="payment_term_id" position="after">
-                <field name="insurance_provider_id" attrs="{'readonly': [('state', 'in',('done','sale'))]}"/>
+                <field name="insurance_provider_id" attrs="{'readonly': [('state', 'in',('done','sale'))]}" options="{'no_open':True}"/>
                 <field name="agreed_amount" attrs="{'readonly': [('state', 'in',('done','sale'))]}"/>
                 <field name="actual_paid" attrs="{'readonly': [('state', 'in',('done','sale'))]}"/>
             </field>
-
             <xpath expr="//notebook/page[1]/field/tree/field[@name='name']" position="after">
                 <field name="moc_doc_location_id" readonly="1"/>
             </xpath>
@@ -40,7 +42,6 @@
                 <attribute name="attrs">{'readonly': ['|',('state', 'in', ('done','cancel')),('make_so_readonly','=',True)]}</attribute>
             </xpath>
 
-            
         </field>
     </record>
 
@@ -55,6 +56,7 @@
                 <field name="moc_doc_ref"/>
             </xpath>
             <xpath expr="//field[@name='partner_id']" position="after">
+                <field name="payment_ids" readonly="1" widget="many2many_tags" optional="hide"/>
                 <field name="patient_type"/>
             </xpath>
         </field>
@@ -70,6 +72,7 @@
                 <field name="moc_doc_ref"/>
             </xpath>
             <xpath expr="//field[@name='partner_id']" position="after">
+                <field name="payment_ids" readonly="1" widget="many2many_tags" optional="hide"/>
                 <field name="patient_type"/>
             </xpath>
         </field>

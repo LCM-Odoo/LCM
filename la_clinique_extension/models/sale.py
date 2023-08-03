@@ -26,6 +26,9 @@ class SaleOrder(models.Model):
     sale_bill_currency = fields.Many2one('res.currency',string='Moc Doc  Bill Currency')
     is_payment_created = fields.Boolean(string='Payment Status')
 
+    is_cards = fields.Boolean(string='Is Cards',copy=False)
+    card_name = fields.Char(string='Mode',copy=False)
+    payment_ids = fields.Many2many('account.payment',string='Payments',copy=False)
 
     @api.model
     def fields_view_get(self, view_id=None, view_type='form', toolbar=False, submenu=False):
@@ -74,8 +77,34 @@ class SaleOrder(models.Model):
 
                 if payment_id:
                     _logger.info("Payment Created==============================================> " + str(payment_id))
-                    payment_id.action_post()
+                    post = True
+                    if i.is_cards:
+                        if i.card_name == 'MCB-CARDS':
+                            payment_method_line_id = payment_id.journal_id.inbound_payment_method_line_ids.filtered(lambda m: m.is_mcb_payment)
+                            if payment_method_line_id:
+                                payment_id.payment_method_line_id = payment_method_line_id[0].id
+                            else:
+                                post =False
+
+                        elif i.card_name == 'SBM-CARDS':
+                            payment_method_line_id = payment_id.journal_id.inbound_payment_method_line_ids.filtered(lambda m: m.is_sbm_payment)
+                            if payment_method_line_id:
+                                payment_id.payment_method_line_id = payment_method_line_id[0].id
+                            else:
+                                post =False
+
+                        elif i.card_name == 'JuicebyMCB':
+                            payment_method_line_id = payment_id.journal_id.inbound_payment_method_line_ids.filtered(lambda m: m.is_juice_by_payment)
+                            if payment_method_line_id:
+                                payment_id.payment_method_line_id = payment_method_line_id[0].id
+                            else:
+                                post =False
+                    if post:
+                        payment_id.action_post()
                     i.is_payment_created = True
+                    pay_list = [pay.id for pay in i.payment_ids]
+                    pay_list.append(payment_id.id)
+                    i.payment_ids = [(6,0,pay_list)]
                     return payment_id
 
     def send_mail_client(self,sale_list,moc_doc_ref):
