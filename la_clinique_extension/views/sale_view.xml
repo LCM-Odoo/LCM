@@ -62,7 +62,7 @@
                 <field name="moc_doc_ref"/>
             </xpath>
             <xpath expr="//field[@name='partner_id']" position="after">
-                <field name="payment_ids" readonly="1" widget="many2many_tags"/>
+                <field name="payment_ids" readonly="1" widget="many2many_tags" optional="hide"/>
                 <field name="patient_type"/>
             </xpath>
         </field>
@@ -78,7 +78,7 @@
                 <field name="moc_doc_ref"/>
             </xpath>
             <xpath expr="//field[@name='partner_id']" position="after">
-                <field name="payment_ids" readonly="1" widget="many2many_tags"/>
+                <field name="payment_ids" readonly="1" widget="many2many_tags" optional="hide"/>
                 <field name="patient_type"/>
             </xpath>
         </field>

@@ -76,9 +76,6 @@ class SaleOrder(models.Model):
     def create_payment(self):
         for i in self:
             if i.partner_id and i.sale_bill_amount > 0.0 and i.sale_bill_type and i.sale_bill_currency:
-                ref = i.moc_doc_ref if i.moc_doc_ref else False
-                if ref and i.card_name:
-                    ref+= ' - ' + i.card_name
                 payment_id = self.env["account.payment"].with_user(2).create(
                         {
                             'partner_id': i.partner_id.id,
@@ -86,7 +83,7 @@ class SaleOrder(models.Model):
                             'amount': i.sale_bill_amount,
                             'currency_id': i.sale_bill_currency.id,
                             'journal_id': i.sale_bill_type.id,
-                            'ref': ref,
+                            'ref': i.moc_doc_ref if i.moc_doc_ref else False,
                         })
 
                 if payment_id:
@@ -126,9 +123,6 @@ class SaleOrder(models.Model):
     def create_second_payment(self):
         for i in self:
             if i.partner_id and i.sec_bill_amount > 0.0 and i.sec_bill_type and i.sale_bill_currency:
-                ref = i.moc_doc_ref if i.moc_doc_ref else False
-                if ref and i.sec_card_name:
-                    ref+= ' - ' + i.sec_card_name
                 payment_id = self.env["account.payment"].with_user(2).create(
                         {
                             'partner_id': i.partner_id.id,
@@ -136,7 +130,7 @@ class SaleOrder(models.Model):
                             'amount': i.sec_bill_amount,
                             'currency_id': i.sale_bill_currency.id,
                             'journal_id': i.sec_bill_type.id,
-                            'ref': ref,
+                            'ref': i.moc_doc_ref if i.moc_doc_ref else False,
                         })
 
                 if payment_id:
