@@ -14,8 +14,7 @@
 
             <field name="tag_ids" position="after">
                 <field name="create_api_values" readonly="1" groups="base.group_no_one"/>
-                <!-- <field name="make_so_readonly" groups="base.group_no_one"/> -->
-                <field name="make_so_readonly"/>
+                <field name="make_so_readonly" groups="base.group_no_one"/>
             </field>
 
             <field name="partner_id" position="after">
@@ -27,6 +26,13 @@
                 <field name="is_payment_created" readonly="1" invisible="1"/>
                 <field name="is_cards" readonly="1" invisible="1"/>
                 <field name="card_name" readonly="1" attrs="{'invisible': [('is_cards', '=',False)]}"/>
+
+                <field name="is_dual_mode" readonly="1" invisible="1"/>
+                <field name="sec_bill_amount" readonly="1" attrs="{'invisible': [('is_dual_mode', '=',False)]}"/>
+                <field name="sec_bill_type" readonly="1" attrs="{'invisible': [('is_dual_mode', '=',False)]}" options="{'no_open':True}"/>
+                <field name="sec_bill_currency" readonly="1" attrs="{'invisible': [('is_dual_mode', '=',False)]}" options="{'no_open':True}"/>
+                <field name="is_card_two" readonly="1" invisible="1"/>
+                <field name="sec_card_name" readonly="1" attrs="{'invisible': [('is_card_two', '=',False)]}"/>
                 <field name="payment_ids" readonly="1" widget="many2many_tags"/>
             </field>
 
