@@ -709,6 +709,7 @@ class Authorize2(http.Controller):
                 dual_amount = 0.0
                 journal_id = False
                 dual_journal_id = False
+                dual_currency_id = False
                 is_cards = False
                 is_card_two = False
                 card_name = False
@@ -756,6 +757,16 @@ class Authorize2(http.Controller):
                             self.create_error_logs(mocdoc_api_values=kw,api_type='create',model='sale',response=str(response))
                             return response
 
+                        
+                        dual_currency_id = self.search_currency_id_validation(currency_id=kw.get('dual_currency_id'))
+                        if not dual_currency_id:
+                            _logger.info("Second Currency ID Does not Exist in odoo==============================================>")
+                            response = {'Status': 709,'Reason':'Second Currency ID Does not Exist in Odoo, The Currency Be archived or deleted'}
+                            self.create_error_logs(mocdoc_api_values=kw,api_type='create',model='sale',response=str(response))
+                            return response
+
+                        dual_currency_id = dual_currency_id.id
+
                         if kw.get('dual_journal_type') in ['MCB-CARDS','SBM-CARDS']:
                             is_card_two = True
                             sec_card_name = kw.get('dual_journal_type')
@@ -779,6 +790,7 @@ class Authorize2(http.Controller):
                         'is_dual_mode':is_dual_mode,
                         'sec_bill_amount':dual_amount,
                         'sec_bill_type': dual_journal_id,
+                        'sec_bill_currency': dual_currency_id,
                         'is_card_two': is_card_two,
                         'sec_card_name': sec_card_name,  
                     })
@@ -925,6 +937,7 @@ class Authorize2(http.Controller):
             try:
                 partner_id = self.search_customer_id_validation(customer_id=kw.get('customer_id'))
                 currency_id = self.search_currency_id_validation(currency_id=kw.get('currency_id'))
+                count = 1
 
                 if not partner_id:
                     _logger.info("Partner ID Does not Exist in odoo==============================================>")
@@ -951,39 +964,77 @@ class Authorize2(http.Controller):
                     self.create_error_logs(mocdoc_api_values=kw,api_type='create',model='payment',response=str(response))
                     return response
 
-                payment_id = request.env["account.payment"].with_user(2).create(
-                        {
-                            'partner_id': partner_id.id,
-                            'payment_type': 'inbound',
-                            'amount': kw.get('amount'),
-                            'currency_id': currency_id.id,
-                            'journal_id': journal_id[0].id,
-                            'ref': kw.get('ref'),
-                        })
-                
-                if payment_id:
-                    _logger.info("Payment Created==============================================> " + str(payment_id))
 
-                    post = True
-                    if kw.get('journal_type') in ['MCB-CARDS','SBM-CARDS']:
-                        if kw.get('journal_type') == 'MCB-CARDS':
-                            payment_method_line_id = payment_id.journal_id.inbound_payment_method_line_ids.filtered(lambda m: is_mcb_payment)
-                            if payment_method_line_id:
-                                payment_id.payment_method_line_id = payment_method_line_id[0].id
-                            else:
-                                post =False
+                if kw.get('is_dual_mode'):
+                    if kw.get('dual_amount') < 1.0:
+                        _logger.info("Dual Payment Amount Is lesser than 1.0 ==============================================>")
+                        response = {'Status': 304,'Reason':'Dual Payment Amount Is Lesser Than 0.1'}
+                        self.create_error_logs(mocdoc_api_values=kw,api_type='create',model='payment',response=str(response))
+                        return response
 
-                        elif kw.get('journal_type') == 'SBM-CARDS':
-                            payment_method_line_id = payment_id.journal_id.inbound_payment_method_line_ids.filtered(lambda m: m.is_sbm_payment)
-                            if payment_method_line_id:
-                                payment_id.payment_method_line_id = payment_method_line_id[0].id
-                            else:
-                                post =False
+                    dual_currency_id = self.search_currency_id_validation(currency_id=kw.get('dual_currency_id'))
+                    if not dual_currency_id:
+                        _logger.info("Dual Currency ID Does not Exist in odoo==============================================>")
+                        response = {'Status': 306,'Reason':'Dual Currency ID Does not Exist in Odoo, The Currency Be archived or deleted'}
+                        self.create_error_logs(mocdoc_api_values=kw,api_type='create',model='payment',response=str(response))
+                        return response
 
-                    if post:
-                        payment_id.action_post()
+                    dual_journal_id = self.search_journal(journal_type=kw.get('dual_journal_type'))
+                    if dual_journal_id[1]:
+                        _logger.info("Dual Payment Journal Not found in odoo ==============================================>")
+                        response = {'Status': 305,'Reason':'Dual Payment Journal Not found in odoo, Kinldy find the List of Payment Methods','List':dual_journal_id[0]}
+                        self.create_error_logs(mocdoc_api_values=kw,api_type='create',model='payment',response=str(response))
+                        return response
 
-                    return {'Status': 200,'record_id':payment_id.name}
+                    count+=1
+
+                payment_list = []
+                for i in range(0,count):
+                    if i+1 == 1:
+                        currency_id = currency_id.id
+                        journal_id = journal_id[0].id
+                        amount = kw.get('amount')
+                        journal_type = kw.get('journal_type')
+                    elif i+1 == 2:
+                        currency_id = dual_currency_id.id
+                        journal_id = dual_journal_id[0].id
+                        amount = kw.get('dual_amount')
+                        journal_type = kw.get('dual_journal_type')
+
+                    payment_id = request.env["account.payment"].with_user(2).create(
+                            {
+                                'partner_id': partner_id.id,
+                                'payment_type': 'inbound',
+                                'amount': amount,
+                                'currency_id': currency_id,
+                                'journal_id': journal_id,
+                                'ref': kw.get('ref'),
+                            })
+
+                    if payment_id:
+                        _logger.info("Payment Created==============================================> " + str(payment_id))
+                        payment_list.append(payment_id.id)
+
+                        post = True
+                        if journal_type in ['MCB-CARDS','SBM-CARDS']:
+                            if journal_type == 'MCB-CARDS':
+                                payment_method_line_id = payment_id.journal_id.inbound_payment_method_line_ids.filtered(lambda m: m.is_mcb_payment)
+                                if payment_method_line_id:
+                                    payment_id.payment_method_line_id = payment_method_line_id[0].id
+                                else:
+                                    post =False
+
+                            elif journal_type == 'SBM-CARDS':
+                                payment_method_line_id = payment_id.journal_id.inbound_payment_method_line_ids.filtered(lambda m: m.is_sbm_payment)
+                                if payment_method_line_id:
+                                    payment_id.payment_method_line_id = payment_method_line_id[0].id
+                                else:
+                                    post =False
+
+                        if post:
+                            payment_id.action_post()
+
+                return {'Status': 200,'record_id':payment_list}
 
             except Exception as e:
                 _logger.error("Error==============================================> " + str(e))

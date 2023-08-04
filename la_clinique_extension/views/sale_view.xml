@@ -30,6 +30,7 @@
                 <field name="is_dual_mode" readonly="1" invisible="1"/>
                 <field name="sec_bill_amount" readonly="1" attrs="{'invisible': [('is_dual_mode', '=',False)]}"/>
                 <field name="sec_bill_type" readonly="1" attrs="{'invisible': [('is_dual_mode', '=',False)]}" options="{'no_open':True}"/>
+                <field name="sec_bill_currency" readonly="1" attrs="{'invisible': [('is_dual_mode', '=',False)]}" options="{'no_open':True}"/>
                 <field name="is_card_two" readonly="1" invisible="1"/>
                 <field name="sec_card_name" readonly="1" attrs="{'invisible': [('is_card_two', '=',False)]}"/>
                 <field name="payment_ids" readonly="1" widget="many2many_tags"/>

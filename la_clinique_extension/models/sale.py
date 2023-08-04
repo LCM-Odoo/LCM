@@ -29,6 +29,7 @@ class SaleOrder(models.Model):
     sec_bill_type = fields.Many2one('account.journal',string='Moc Doc  Bill Type 2',domain="[('type','in',('bank','cash'))]")
 
     sale_bill_currency = fields.Many2one('res.currency',string='Moc Doc  Bill Currency')
+    sec_bill_currency = fields.Many2one('res.currency',string='Moc Doc  Bill Currency 2')
 
     is_payment_created = fields.Boolean(string='Payment Status')
     is_sec_payment_created = fields.Boolean(string='Second Payment Status')
@@ -128,7 +129,7 @@ class SaleOrder(models.Model):
                             'partner_id': i.partner_id.id,
                             'payment_type': 'inbound',
                             'amount': i.sec_bill_amount,
-                            'currency_id': i.sale_bill_currency.id,
+                            'currency_id': i.sec_bill_currency.id,
                             'journal_id': i.sec_bill_type.id,
                             'ref': i.moc_doc_ref if i.moc_doc_ref else False,
                         })
