@@ -104,11 +104,11 @@ class Authorize2(http.Controller):
             tax_id = request.env["account.tax"].sudo().search([('name','=',i),('type_tax_use','=',tax_type)],limit =1)
             if tax_id:
                 tax_list.append(tax_id.id)
-            else:
-                all_tax_list = [i.name for i in request.env["account.tax"].sudo().search([('type_tax_use','=',tax_type)])]
-                return all_tax_list,False
+            # else:
+            #     all_tax_list = [i.name for i in request.env["account.tax"].sudo().search([('type_tax_use','=',tax_type)])]
+            #     return all_tax_list,False
         _logger.info("Tax List==============================================> " + str(tax_list))
-        return tax_list,True
+        return tax_list
 
 
     def search_location(self,location=False):
@@ -168,7 +168,7 @@ class Authorize2(http.Controller):
                                 'product_id': product_id.id,
                                 'qty': i.get('product_qty'),
                                 'moc_doc_price_unit': i.get('moc_doc_price_unit'),
-                                'tax_id': [(6, 0,tax_list[0])] if tax_list else [(6, 0,tax_list)],
+                                'tax_id': [(6, 0,tax_list)],
                                 'disc': i.get('disc') if i.get('disc') else 0.0,
                                 'moc_doc_location_id':location_id.id if location_id else False
                             })
@@ -651,17 +651,17 @@ class Authorize2(http.Controller):
                     self.create_error_logs(mocdoc_api_values=kw,api_type='create',model='sale',response=str(response))
                     return response
 
-                for i in kw.get('product_list'):
-                    if i.get('customer_tax'):
-                        customer_tax_list = self.get_tax_ids(i.get('customer_tax'),tax_type='sale')
-                        if not customer_tax_list[1]: 
-                            response = {'Status': 608,'Reason':'Customer Tax Not available in odoo, Kindly find the List of Sale Taxes in odoo','List':customer_tax_list[0]}
-                            self.create_error_logs(mocdoc_api_values=kw,api_type='create',model='sale',response=str(response))
-                            return response
-                    else:
-                        response = {'Status': 608,'Reason':'Customer Tax is not sent from Mocdoc Please find the Values','List':str(kw)}
-                        self.create_error_logs(mocdoc_api_values=kw,api_type='create',model='sale',response=str(response))
-                        return response
+                # for i in kw.get('product_list'):
+                #     if i.get('customer_tax'):
+                #         customer_tax_list = self.get_tax_ids(i.get('customer_tax'),tax_type='sale')
+                #         if not customer_tax_list[1]: 
+                #             response = {'Status': 608,'Reason':'Customer Tax Not available in odoo, Kindly find the List of Sale Taxes in odoo','List':customer_tax_list[0]}
+                #             self.create_error_logs(mocdoc_api_values=kw,api_type='create',model='sale',response=str(response))
+                #             return response
+                #     else:
+                #         response = {'Status': 608,'Reason':'Customer Tax is not sent from Mocdoc Please find the Values','List':str(kw)}
+                #         self.create_error_logs(mocdoc_api_values=kw,api_type='create',model='sale',response=str(response))
+                #         return response
 
                 if patient_type == 'self':
                     partner_id = self.search_cash_customer_validation()
@@ -801,17 +801,17 @@ class Authorize2(http.Controller):
                     self.create_error_logs(mocdoc_api_values=kw,api_type='create',model='purchase',response=str(response))
                     return response
 
-                for i in kw.get('product_list'):
-                    if i.get('vendor_tax'):
-                        vendor_tax_list = self.get_tax_ids(i.get('vendor_tax'),tax_type='purchase')
-                        if not vendor_tax_list[1]: 
-                            response = {'Status': 808,'Reason':'Vendor Tax Not available in odoo, Kinldy find the List of Sale Taxes in odoo','List':vendor_tax_list[0]}
-                            self.create_error_logs(mocdoc_api_values=kw,api_type='create',model='purchase',response=str(response))
-                            return response
-                    else:
-                        response = {'Status': 808,'Reason':'Vendor Tax Not send from Mocdoc, Please find the Value','List':str(kw)}
-                        self.create_error_logs(mocdoc_api_values=kw,api_type='create',model='purchase',response=str(response))
-                        return response
+                # for i in kw.get('product_list'):
+                #     if i.get('vendor_tax'):
+                #         vendor_tax_list = self.get_tax_ids(i.get('vendor_tax'),tax_type='purchase')
+                #         if not vendor_tax_list[1]: 
+                #             response = {'Status': 808,'Reason':'Vendor Tax Not available in odoo, Kinldy find the List of Sale Taxes in odoo','List':vendor_tax_list[0]}
+                #             self.create_error_logs(mocdoc_api_values=kw,api_type='create',model='purchase',response=str(response))
+                #             return response
+                #     else:
+                #         response = {'Status': 808,'Reason':'Vendor Tax Not send from Mocdoc, Please find the Value','List':str(kw)}
+                #         self.create_error_logs(mocdoc_api_values=kw,api_type='create',model='purchase',response=str(response))
+                #         return response
 
 
 
