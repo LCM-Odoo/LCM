@@ -193,6 +193,22 @@ class SaleOrderLine(models.Model):
         return values
 
 
+class SaleAdvancePaymentInv(models.TransientModel):
+    _inherit = "sale.advance.payment.inv"
+
+    def create_invoices(self):
+        sale_orders = self.env['sale.order'].browse(self._context.get('active_ids', []))
+        for order in sale_orders:
+            if order.create_api_values:
+                for line in order.order_line:
+                    if not line.tax_id:
+                        raise UserError(_('The Tax Is Not Mapped for the Product: %s , Kinldy Map It.' % (line.product_id.name)))
+        invoice = super(SaleAdvancePaymentInv, self).create_invoices()
+        return invoice
+
+
+
+
 class StockMove(models.Model):
     _inherit = "stock.move"
 
