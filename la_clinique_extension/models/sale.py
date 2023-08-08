@@ -120,7 +120,6 @@ class SaleOrder(models.Model):
                     return payment_id
 
 
-
     def create_second_payment(self):
         for i in self:
             if i.partner_id and i.sec_bill_amount > 0.0 and i.sec_bill_type and i.sale_bill_currency:
@@ -158,7 +157,7 @@ class SaleOrder(models.Model):
                                 payment_id.payment_method_line_id = payment_method_line_id[0].id
                             else:
                                 post =False
-                                
+
                     if post:
                         payment_id.action_post()
                     i.is_sec_payment_created = True
