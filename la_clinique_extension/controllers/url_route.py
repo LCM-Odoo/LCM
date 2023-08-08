@@ -168,7 +168,7 @@ class Authorize2(http.Controller):
                                 'product_id': product_id.id,
                                 'qty': i.get('product_qty'),
                                 'moc_doc_price_unit': i.get('moc_doc_price_unit'),
-                                'tax_id': [(6, 0,tax_list)] if tax_list else [(6, 0,tax_list)],
+                                'tax_id': [(6, 0,tax_list)],
                                 'disc': i.get('disc') if i.get('disc') else 0.0,
                                 'moc_doc_location_id':location_id.id if location_id else False
                             })
@@ -767,7 +767,7 @@ class Authorize2(http.Controller):
 
                         dual_currency_id = dual_currency_id.id
 
-                        if kw.get('dual_journal_type') in ['MCB-CARDS','SBM-CARDS']:
+                        if kw.get('dual_journal_type') in ['MCB-CARDS','SBM-CARDS','JuicebyMCB']:
                             is_card_two = True
                             sec_card_name = kw.get('dual_journal_type')
 
@@ -832,11 +832,44 @@ class Authorize2(http.Controller):
                 self.create_error_logs(mocdoc_api_values=kw,api_type='create',model='sale',response=str(response))
                 return response
         else:
-            _logger.info("currency_type or product_list Is Missing==============================================>")
-            response = {'Status': 700,'Reason':'currency_type or product_list Is Missing'}
-            self.create_error_logs(mocdoc_api_values=kw,api_type='create',model='sale',response=str(response))
-            return response
+            if not kw.get('currency_type'):
+                _logger.info("currency_type Is Missing==============================================>")
+                response = {'Status': 700,'Reason':'currency_type Is Missing'}
+                self.create_error_logs(mocdoc_api_values=kw,api_type='create',model='sale',response=str(response))
+                return response
 
+            if not kw.get('product_list'):
+
+                if not kw.get('bill_type'):
+                    response = {'Status': 720,'Reason':'Bill Type Is Not Sent From Mocdoc'}
+                    self.create_error_logs(mocdoc_api_values=kw,api_type='create',model='sale',response=str(response))
+                    return response
+
+                if kw.get('bill_type') not in ['pharmacy','i/p','o/p']:
+                    response = {'Status': 715,'Reason':'Bill Type Is Not in i/p, o/p, pharmacy'}
+                    self.create_error_logs(mocdoc_api_values=kw,api_type='create',model='sale',response=str(response))
+                    return response
+
+                if kw.get('bill_type') == 'pharmacy':
+                    myobj = {
+                                'customer_id': kw.get('customer_id'), 
+                                'ref': kw.get('moc_doc_ref'),
+                                'amount': kw.get('amount'),
+                                'currency_id': kw.get('currency_type'),
+                                'journal_type': kw.get('journal_type'),
+                                'is_dual_mode' : kw.get('is_dual_mode'),
+                                'dual_amount' : kw.get('dual_amount'),
+                                'dual_journal_type' : kw.get('dual_journal_type'),
+                                'dual_currency_id' : kw.get('dual_currency_id'),
+                            }
+
+                    response = self.create_payment_from_so(kw=myobj)
+                    return response
+                else:
+                    _logger.info("product_list Is Missing==============================================>")
+                    response = {'Status': 700,'Reason':'Product_list Is Missing'}
+                    self.create_error_logs(mocdoc_api_values=kw,api_type='create',model='sale',response=str(response))
+                    return response
 
 
     @http.route('/create_purchase_order', type='json', auth='none', website=True)
@@ -1016,7 +1049,7 @@ class Authorize2(http.Controller):
                         payment_list.append(payment_id.id)
 
                         post = True
-                        if journal_type in ['MCB-CARDS','SBM-CARDS']:
+                        if journal_type in ['MCB-CARDS','SBM-CARDS','JuicebyMCB']:
                             if journal_type == 'MCB-CARDS':
                                 payment_method_line_id = payment_id.journal_id.inbound_payment_method_line_ids.filtered(lambda m: m.is_mcb_payment)
                                 if payment_method_line_id:
@@ -1026,6 +1059,13 @@ class Authorize2(http.Controller):
 
                             elif journal_type == 'SBM-CARDS':
                                 payment_method_line_id = payment_id.journal_id.inbound_payment_method_line_ids.filtered(lambda m: m.is_sbm_payment)
+                                if payment_method_line_id:
+                                    payment_id.payment_method_line_id = payment_method_line_id[0].id
+                                else:
+                                    post =False
+
+                            elif i.card_name == 'JuicebyMCB':
+                                payment_method_line_id = payment_id.journal_id.inbound_payment_method_line_ids.filtered(lambda m: m.is_juice_by_payment)
                                 if payment_method_line_id:
                                     payment_id.payment_method_line_id = payment_method_line_id[0].id
                                 else:
@@ -1144,4 +1184,129 @@ class Authorize2(http.Controller):
             _logger.info("From Location or To Location or Product List Is Missing==============================================>")
             response = {'Status': 400,'Reason':'From Location or To Location or Product List Is Missing'}
             self.create_error_logs(mocdoc_api_values=kw,api_type='create',model='internal_transfer',response=str(response))
+            return response
+
+
+
+    def create_payment_from_so(self,kw):
+        _logger.info("MoCDOC JSON==============================================>"+ str(kw))
+        if kw.get('customer_id') and kw.get('amount') and kw.get('currency_id') and kw.get('journal_type'):
+            try:
+                partner_id = self.search_customer_id_validation(customer_id=kw.get('customer_id'))
+                currency_id = self.search_currency_id_validation(currency_id=kw.get('currency_id'))
+                count = 1
+
+                if not partner_id:
+                    _logger.info("Partner ID Does not Exist in odoo==============================================>")
+                    response = {'Status': 305,'Reason':'Patient ID Does not Exist in Odoo, The Patient May Be archived or deleted'}
+                    self.create_error_logs(mocdoc_api_values=kw,api_type='create',model='payment',response=str(response))
+                    return response
+
+                if not currency_id:
+                    _logger.info("Currency ID Does not Exist in odoo==============================================>")
+                    response = {'Status': 306,'Reason':'Currency ID Does not Exist in Odoo, The Currency Be archived or deleted'}
+                    self.create_error_logs(mocdoc_api_values=kw,api_type='create',model='payment',response=str(response))
+                    return response
+
+                if kw.get('amount') < 1.0:
+                    _logger.info("Amount Is lesser than 1.0 ==============================================>")
+                    response = {'Status': 304,'Reason':'Price Is Lesser Than 0.1'}
+                    self.create_error_logs(mocdoc_api_values=kw,api_type='create',model='payment',response=str(response))
+                    return response
+
+                journal_id = self.search_journal(journal_type=kw.get('journal_type'))
+                if journal_id[1]:
+                    _logger.info("Journal Not found in odoo ==============================================>")
+                    response = {'Status': 305,'Reason':'Journal Not found in odoo, Kinldy find the List of Payment Methods','List':journal_id[0]}
+                    self.create_error_logs(mocdoc_api_values=kw,api_type='create',model='payment',response=str(response))
+                    return response
+
+
+                if kw.get('is_dual_mode'):
+                    if kw.get('dual_amount') < 1.0:
+                        _logger.info("Dual Payment Amount Is lesser than 1.0 ==============================================>")
+                        response = {'Status': 304,'Reason':'Dual Payment Amount Is Lesser Than 0.1'}
+                        self.create_error_logs(mocdoc_api_values=kw,api_type='create',model='payment',response=str(response))
+                        return response
+
+                    dual_currency_id = self.search_currency_id_validation(currency_id=kw.get('dual_currency_id'))
+                    if not dual_currency_id:
+                        _logger.info("Dual Currency ID Does not Exist in odoo==============================================>")
+                        response = {'Status': 306,'Reason':'Dual Currency ID Does not Exist in Odoo, The Currency Be archived or deleted'}
+                        self.create_error_logs(mocdoc_api_values=kw,api_type='create',model='payment',response=str(response))
+                        return response
+
+                    dual_journal_id = self.search_journal(journal_type=kw.get('dual_journal_type'))
+                    if dual_journal_id[1]:
+                        _logger.info("Dual Payment Journal Not found in odoo ==============================================>")
+                        response = {'Status': 305,'Reason':'Dual Payment Journal Not found in odoo, Kinldy find the List of Payment Methods','List':dual_journal_id[0]}
+                        self.create_error_logs(mocdoc_api_values=kw,api_type='create',model='payment',response=str(response))
+                        return response
+
+                    count+=1
+
+                payment_list = []
+                for i in range(0,count):
+                    if i+1 == 1:
+                        currency_id = currency_id.id
+                        journal_id = journal_id[0].id
+                        amount = kw.get('amount')
+                        journal_type = kw.get('journal_type')
+                    elif i+1 == 2:
+                        currency_id = dual_currency_id.id
+                        journal_id = dual_journal_id[0].id
+                        amount = kw.get('dual_amount')
+                        journal_type = kw.get('dual_journal_type')
+
+                    payment_id = request.env["account.payment"].with_user(2).create(
+                            {
+                                'partner_id': partner_id.id,
+                                'payment_type': 'inbound',
+                                'amount': amount,
+                                'currency_id': currency_id,
+                                'journal_id': journal_id,
+                                'ref': kw.get('ref'),
+                            })
+
+                    if payment_id:
+                        _logger.info("Payment Created==============================================> " + str(payment_id))
+                        payment_list.append(payment_id.id)
+
+                        post = True
+                        if journal_type in ['MCB-CARDS','SBM-CARDS','JuicebyMCB']:
+                            if journal_type == 'MCB-CARDS':
+                                payment_method_line_id = payment_id.journal_id.inbound_payment_method_line_ids.filtered(lambda m: m.is_mcb_payment)
+                                if payment_method_line_id:
+                                    payment_id.payment_method_line_id = payment_method_line_id[0].id
+                                else:
+                                    post =False
+
+                            elif journal_type == 'SBM-CARDS':
+                                payment_method_line_id = payment_id.journal_id.inbound_payment_method_line_ids.filtered(lambda m: m.is_sbm_payment)
+                                if payment_method_line_id:
+                                    payment_id.payment_method_line_id = payment_method_line_id[0].id
+                                else:
+                                    post =False
+
+                            elif i.card_name == 'JuicebyMCB':
+                                payment_method_line_id = payment_id.journal_id.inbound_payment_method_line_ids.filtered(lambda m: m.is_juice_by_payment)
+                                if payment_method_line_id:
+                                    payment_id.payment_method_line_id = payment_method_line_id[0].id
+                                else:
+                                    post =False
+
+                        if post:
+                            payment_id.action_post()
+
+                return {'Status': 200,'record_id':payment_list}
+
+            except Exception as e:
+                _logger.error("Error==============================================> " + str(e))
+                response = {'Status': 503,'Reason':str(e)}
+                self.create_error_logs(mocdoc_api_values=kw,api_type='create',model='payment',response=str(response))
+                return response
+        else:
+            _logger.info("partner_id or amount or currency Is Missing==============================================>")
+            response = {'Status': 300,'Reason':'customer_id or amount or currency or journal Type Is Missing'}
+            self.create_error_logs(mocdoc_api_values=kw,api_type='create',model='payment',response=str(response))
             return response
