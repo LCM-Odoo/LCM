@@ -184,6 +184,9 @@ class Authorize2(http.Controller):
         for i in product_list:
             if i.get('moc_doc_price_unit') < 0.1:
                 return True
+            if i.get('product_qty') and int(i.get('product_qty')) < 0.0:
+                return True
+
        
 
     def get_product_template_id(self,product=False):
@@ -646,8 +649,8 @@ class Authorize2(http.Controller):
 
 
                 if self.check_price_validation(product_list=kw.get('product_list')):
-                    _logger.info("Mocdoc Price Is lesser than 0.1 ==============================================>")
-                    response = {'Status': 704,'Reason':'Moc Doc Unit Price Is Lesser Than 0.1'}
+                    _logger.info("Mocdoc Price Is lesser than 0.1 OR Quantity is in negative ==============================================>")
+                    response = {'Status': 704,'Reason':'Moc Doc Unit Price Is Lesser Than 0.1 OR Quantity is in negative'}
                     self.create_error_logs(mocdoc_api_values=kw,api_type='create',model='sale',response=str(response))
                     return response
 
