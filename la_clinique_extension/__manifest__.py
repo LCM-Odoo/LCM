@@ -26,6 +26,7 @@
         'views/sale_view.xml',
         'views/purchase.xml',
         'views/invoice.xml',
+        'views/account_payment.xml',
     ],
     'installable': True,
     'auto_install': False,
