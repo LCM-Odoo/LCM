@@ -823,15 +823,15 @@ class Authorize2(http.Controller):
 					if picking_id:
 						picking_id.do_unreserve()
 						picking_id.action_assign()
-						if picking_id.state == 'assigned':
-							picking_id.action_set_quantities_to_reservation()
-							done = True
-							for i in picking_id.move_ids_without_package:
-								if i.product_uom_qty != i.quantity_done:
-									done = False
-									break
-							if done:
-								picking_id.button_validate()
+						# if picking_id.state == 'assigned':
+						# 	picking_id.action_set_quantities_to_reservation()
+						# 	done = True
+						# 	for i in picking_id.move_ids_without_package:
+						# 		if i.product_uom_qty != i.quantity_done:
+						# 			done = False
+						# 			break
+						# 	if done:
+						# 		picking_id.button_validate()
 
 					return {'Status': 200,'record_id':sale_order_id.name}
 
