@@ -829,6 +829,7 @@ class Authorize2(http.Controller):
 							for i in picking_id.move_ids_without_package:
 								if i.product_uom_qty != i.quantity_done:
 									done = False
+									break
 							if done:
 								picking_id.button_validate()
 
