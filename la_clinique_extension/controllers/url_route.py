@@ -654,6 +654,8 @@ class Authorize2(http.Controller):
 					self.create_error_logs(mocdoc_api_values=kw,api_type='create',model='sale',response=str(response))
 					return response
 
+				
+
 				# for i in kw.get('product_list'):
 				#     if i.get('customer_tax'):
 				#         customer_tax_list = self.get_tax_ids(i.get('customer_tax'),tax_type='sale')
@@ -829,6 +831,7 @@ class Authorize2(http.Controller):
 							for i in picking_id.move_ids_without_package:
 								if i.product_uom_qty != i.quantity_done:
 									done = False
+									break
 							if done:
 								picking_id.button_validate()
 
