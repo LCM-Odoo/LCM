@@ -77,6 +77,11 @@ class SaleOrder(models.Model):
         invoice_vals['inv_moc_doc_ref'] = self.moc_doc_ref if self.moc_doc_ref else False
         return invoice_vals
 
+    def update_bill_amount_status(self):
+        for record in self:
+            record.bill_amt_status = 'yes' if record.amount_total == record.moc_doc_total else 'no'
+        # return True
+
     def create_payment(self):
         for i in self:
             if i.partner_id and i.sale_bill_amount > 0.0 and i.sale_bill_type and i.sale_bill_currency:
