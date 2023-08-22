@@ -42,6 +42,9 @@ class SaleOrder(models.Model):
 
     payment_ids = fields.Many2many('account.payment',string='Payments',copy=False)
 
+    moc_doc_total = fields.Float(string='Mocdoc Total',copy=False,tracking=True) 
+    bill_amt_status = fields.Selection(selection=[('no', 'Not Matched'),('yes', 'Matched')], string='Bill Amount Status',copy=False, tracking=True,default='')
+
     @api.model
     def fields_view_get(self, view_id=None, view_type='form', toolbar=False, submenu=False):
         res = super(SaleOrder, self).fields_view_get(view_id=view_id, view_type=view_type, toolbar=toolbar, submenu=submenu)

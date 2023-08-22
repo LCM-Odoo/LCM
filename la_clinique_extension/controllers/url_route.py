@@ -654,8 +654,6 @@ class Authorize2(http.Controller):
 					self.create_error_logs(mocdoc_api_values=kw,api_type='create',model='sale',response=str(response))
 					return response
 
-				
-
 				# for i in kw.get('product_list'):
 				#     if i.get('customer_tax'):
 				#         customer_tax_list = self.get_tax_ids(i.get('customer_tax'),tax_type='sale')
@@ -798,6 +796,7 @@ class Authorize2(http.Controller):
 						'sec_bill_currency': dual_currency_id,
 						'is_card_two': is_card_two,
 						'sec_card_name': sec_card_name,  
+						'moc_doc_total': kw.get('moc_doc_bill_amt') if kw.get('moc_doc_bill_amt') else 0.0, 
 					})
 				
 				if sale_order_id:
@@ -813,9 +812,9 @@ class Authorize2(http.Controller):
 								'discount': i.get('disc'),
 								'moc_doc_location_id': i.get('moc_doc_location_id'),
 							})
-						
 						_logger.info("Sale Order Line Created==============================================> " + str(sale_order_line_id))
 
+					sale_order_id.sudo().update_bill_amount_status()
 					sale_order_id.sudo().action_confirm()
 					sale_order_id.create_payment()
 					if sale_order_id.is_dual_mode:
