@@ -135,6 +135,20 @@
         </field>
     </record>
 
+    <record id="view_doctor_details_search" model="ir.ui.view">
+        <field name="name">Doctor Details Search</field>
+        <field name="model">doctor.details</field>    
+        <field name="arch" type="xml">
+            <search>
+                <field name="bill_ref"/>
+                <field name="doctor"/>
+                <field name="patient_name"/>
+                <field name="ins_provider_id" string="Insurance Provider"/>
+                <field name="reason"/>
+            </search>
+        </field>
+    </record>
+
     <record model="ir.actions.act_window" id="doctor_details_action">
         <field name="name">Doctor Details</field>
         <field name="res_model">doctor.details</field>
