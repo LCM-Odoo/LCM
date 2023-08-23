@@ -42,6 +42,9 @@ class SaleOrder(models.Model):
 
     payment_ids = fields.Many2many('account.payment',string='Payments',copy=False)
 
+    moc_doc_total = fields.Float(string='Mocdoc Total',copy=False,tracking=True) 
+    bill_amt_status = fields.Selection(selection=[('no', 'Not Matched'),('yes', 'Matched')], string='Bill Amount Status',copy=False, tracking=True,default='')
+
     @api.model
     def fields_view_get(self, view_id=None, view_type='form', toolbar=False, submenu=False):
         res = super(SaleOrder, self).fields_view_get(view_id=view_id, view_type=view_type, toolbar=toolbar, submenu=submenu)
@@ -73,6 +76,11 @@ class SaleOrder(models.Model):
         invoice_vals['inv_actual_paid'] = self.actual_paid if self.actual_paid else 0.0
         invoice_vals['inv_moc_doc_ref'] = self.moc_doc_ref if self.moc_doc_ref else False
         return invoice_vals
+
+    def update_bill_amount_status(self):
+        for record in self:
+            record.bill_amt_status = 'yes' if record.amount_total == record.moc_doc_total else 'no'
+        # return True
 
     def create_payment(self):
         for i in self:
@@ -118,6 +126,7 @@ class SaleOrder(models.Model):
                     pay_list.append(payment_id.id)
                     i.payment_ids = [(6,0,pay_list)]
                     return payment_id
+
 
 
     def create_second_payment(self):
