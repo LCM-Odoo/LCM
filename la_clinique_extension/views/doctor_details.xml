@@ -153,7 +153,7 @@
         <field name="name">Doctor Details</field>
         <field name="res_model">doctor.details</field>
         <field name="view_mode">tree,pivot</field>
-        <field name="context">{'create':True}</field>
+        <field name="context">{'create':False}</field>
         <!-- <field name="search_view_id" ref="view_printing_lccation_filter"/> -->
     </record>
 
