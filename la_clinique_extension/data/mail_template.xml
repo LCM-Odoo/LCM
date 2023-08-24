@@ -179,5 +179,21 @@
             ]]></field>
         </record>
 
+
+        <record id="email_template_doc_details_api" model="mail.template">
+            <field name="name">Doctor Details API Status</field>
+            <field name="email_from">satish@sslconsultingservice.com</field>
+            <field name="subject">Doctor Details API Status</field>
+            <field name="email_to">aarthi@sslconsultingservice.com</field>
+            <field name="email_cc"></field>
+            <field name="model_id" ref="la_clinique_extension.model_doctor_api_config"/>
+            <field name="auto_delete" eval="False"/>
+            <field name="body_html"><![CDATA[
+                <p>Dear Sir/Madam,</p>
+               
+                <p>Thank You</p>    
+            ]]></field>
+        </record>
+
     </data>
 </odoo>

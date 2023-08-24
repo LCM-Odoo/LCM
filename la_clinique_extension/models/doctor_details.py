@@ -33,14 +33,30 @@ class DoctorApiConfig(models.Model):
 		return self.write({'active': False})
 
 	# def test_connection(self,from_config=True):
-	# 	if self.active:
-			
+	#   if self.active:
+	
+
+	def send_mail_notifictaion(self,status_code='',response=''):
+		try:
+			mail_template = self.env.ref('la_clinique_extension.email_template_doc_details_api')
+			previous_day = datetime.now() - timedelta(days=1)
+			date = previous_day.strftime("%Y%m%d")
+			mail_template.subject = str(date) + ' - '+ 'Doctor Details API'+ ' - Status code : '+ str(status_code)
+			body = ('Hi Team' + "<br>" 'Kinldy Look into the below' + "<br>" +'Status Code : '+str(status_code) + "<br>" + 'Values :' +str(response)
+				)
+			mail_template.with_user(2).body_html = body
+			mail_id = mail_template.with_user(2).send_mail(False, force_send=True)
+			_logger.info("Mail Status==============================================>" + str(mail_id))
+			return True
+		except Exception as e:
+			_logger.error("Error in Sending Mail==============================================> " + str(e))
+			return False
+
 
 	def get_doc_bill_details(self):
 		if not self.bill_date:raise ValidationError('Kinldy Provide The Bill date')
 		if not self.bill_location:raise ValidationError('Kinldy Provide The Bill Location')
 		self.fetch_bill_details(from_config=True)
-
 
 
 	def make_api_post_request(self,url, headers, body):
@@ -49,12 +65,14 @@ class DoctorApiConfig(models.Model):
 			_logger.info("Response==============================================>" + str(response))
 			if response and response.status_code == 200:
 				_logger.info("JSON Response==============================================>" + str(response.json()))
+				self.send_mail_notifictaion(status_code=str(response.status_code),response=str(response.json()))
 				return response.json()
 			else:
+				self.send_mail_notifictaion(status_code=str(response.status_code),response=str(response.json()))
 				_logger.info("No Data Found==============================================>")
 				return False
-
 		except Exception as e:
+			self.send_mail_notifictaion(response=str(e))
 			_logger.error("Error==============================================> " + str(e))
 			return None
 
