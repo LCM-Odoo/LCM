@@ -10,14 +10,14 @@
         <field name="arch" type="xml">
             <button name="action_cancel" position="after">
                 <button name="create_payment" icon="fa-money" string="Create Payment" invisible="1" type="object" class="oe_stat_button"/>
-                <button name="update_bill_amount_status" string="Update Bill Amt Status" type="object" class="oe_stat_button"/>
+                <button name="update_bill_amount_status" string="Update Bill Amt Status" type="object" class="oe_stat_button" groups="base.group_no_one"/>
             </button>
 
             <field name="tag_ids" position="after">
                 <field name="create_api_values" readonly="1" groups="base.group_no_one"/>
                 <field name="make_so_readonly"/>
-                <field name="moc_doc_total"/>
-                <field name="bill_amt_status" readonly="1"/>
+                <field name="moc_doc_total" groups="base.group_no_one"/>
+                <field name="bill_amt_status" readonly="1" groups="base.group_no_one"/>
             </field>
 
             <field name="partner_id" position="after">
@@ -70,8 +70,8 @@
                 <field name="patient_type"/>
             </xpath>
             <xpath expr="//field[@name='amount_total']" position="after">
-                <field name="moc_doc_total" optional="hide" groups="base.group_erp_manager"/>
-                <field name="bill_amt_status" decoration-success="bill_amt_status == 'yes'" decoration-danger="bill_amt_status == 'no'" widget="badge" optional="hide" groups="base.group_erp_manager"/>
+                <field name="moc_doc_total" optional="hide" groups="base.group_no_one"/>
+                <field name="bill_amt_status" decoration-success="bill_amt_status == 'yes'" decoration-danger="bill_amt_status == 'no'" widget="badge" optional="hide" groups="base.group_no_one"/>
             </xpath>
         </field>
     </record>
@@ -90,8 +90,8 @@
                 <field name="patient_type"/>
             </xpath>
             <xpath expr="//field[@name='amount_total']" position="after">
-                <field name="moc_doc_total" optional="hide" groups="base.group_erp_manager"/>
-                <field name="bill_amt_status" decoration-success="bill_amt_status == 'yes'" decoration-danger="bill_amt_status == 'no'" widget="badge" optional="hide" groups="base.group_erp_manager"/>
+                <field name="moc_doc_total" optional="hide" groups="base.group_no_one"/>
+                <field name="bill_amt_status" decoration-success="bill_amt_status == 'yes'" decoration-danger="bill_amt_status == 'no'" widget="badge" optional="hide" groups="base.group_no_one"/>
             </xpath>
         </field>
     </record>
