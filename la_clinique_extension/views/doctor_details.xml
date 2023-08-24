@@ -117,6 +117,8 @@
                 <field name="name" invisible="1"/>
                 <field name="bill_date" readonly="1"/>
                 <field name="bill_ref" readonly="1"/>
+                <field name="sale_order_id" readonly="1"/>
+                <!-- <field name="invoice_ids" widget="many2many_tags"/> -->
                 <field name="doctor" readonly="1"/>
                 <field name="patient_name" readonly="1"/>
                 <field name="doa" invisible="1" readonly="1"/>
@@ -141,6 +143,7 @@
         <field name="arch" type="xml">
             <search>
                 <field name="bill_ref"/>
+                <field name="sale_order_id"/>
                 <field name="doctor"/>
                 <field name="patient_name"/>
                 <field name="ins_provider_id" string="Insurance Provider"/>

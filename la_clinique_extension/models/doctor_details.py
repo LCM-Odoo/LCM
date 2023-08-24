@@ -101,7 +101,7 @@ class DoctorDetails(models.Model):
 	_name = 'doctor.details'
 	_description = "Doctor Details"
 	_inherit = ['portal.mixin','mail.thread', 'mail.activity.mixin']
-	_order = 'id desc'
+	_order = 'bill_date desc'
 
 
 	name = fields.Char(string="Dept")
@@ -121,6 +121,8 @@ class DoctorDetails(models.Model):
 	ins_agreed_amount = fields.Float(string="Ins Agreed Amount",copy=False)
 	ins_actual_paid = fields.Float(string="Ins Actual Paid",copy=False)
 	reason = fields.Char(string='Reason')
+	sale_order_id = fields.Many2one('sale.order',string='Sale Order',copy=False)
+	# invoice_ids = fields.Many2many('account.move',string='Invoices',related='sale_order_id.invoice_ids',copy=False)
 
 
 	@api.onchange('doc_status')
@@ -177,20 +179,22 @@ class DoctorDetails(models.Model):
 							'ins_agreed_amount':sale_id.agreed_amount,
 							'ins_actual_paid':sale_id.actual_paid,
 							'reason':reason,
+							'sale_order_id':sale_id.id,
 						})
 				else:
 					sale_list = [i.name for i in sale_id]
-					_logger.info("Two Sale Bill has been found==============================================>" + str(sale_list))
-					self.reason = 'Two Sale Bill has been found' + str(sale_list)
+					_logger.info("More than one Sale Bill has been found==============================================>" + str(sale_list))
+					self.reason = 'More than one Sale Bill has been found' + str(sale_list)
 			else:
 				_logger.info("Sale Not Created On Odoo==============================================>")
 				self.total_bill_amount = 0.0
 				self.total_sale_amount = 0.0
 				self.outstanding_amount = 0.0
 				self.ins_provider_id = False
+				self.sale_order_id = False
 				self.ins_agreed_amount = 0.0
 				self.ins_actual_paid = 0.0
-				self.reason = 'Sale Not Created On Odoo'
+				self.reason = 'Sale Not Created On Odoo'	
 
 	def action_update_nielsen_image(self):
 		count = 0
