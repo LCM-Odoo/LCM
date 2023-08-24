@@ -156,25 +156,41 @@ class DoctorDetails(models.Model):
 			_logger.info("Sale Id==============================================>" + str(sale_id))
 			if sale_id:
 				if len(sale_id) == 1:
-					sale_total_dict = json.loads(sale_id.tax_totals_json)
-					sale_amount = sale_total_dict.get('amount_total') or 0.0
+					pay_amount = 0.0
+					reason = 'Sale Created'
+					_logger.info("Sale Created On Odoo==============================================>")
+					sale_amount = sale_id.amount_total
+					for inv in sale_id.invoice_ids:
+						if inv.move_type == 'out_invoice' and inv.state =='posted':
+							reason = 'Invoice Posted'
+							_logger.info("Invoice Posted On Odoo==============================================>")
+							if inv.invoice_payments_widget and json.loads(inv.invoice_payments_widget) and json.loads(inv.invoice_payments_widget).get('content'):
+								for j in json.loads(inv.invoice_payments_widget).get('content'):
+									pay_amount +=  j.get('amount') if j.get('account_payment_id') else 0.0
+
 					self.write(
 						{
-							'total_bill_amount':sale_id.sale_bill_amount,
+							'total_bill_amount':pay_amount,
 							'total_sale_amount':sale_amount,
-							'outstanding_amount': sale_amount - (sale_id.sale_bill_amount + sale_id.actual_paid),
+							'outstanding_amount': sale_amount - pay_amount,
 							'ins_provider_id':sale_id.insurance_provider_id.id,
 							'ins_agreed_amount':sale_id.agreed_amount,
 							'ins_actual_paid':sale_id.actual_paid,
-							'reason':'Bill Confirmed In Odoo'
+							'reason':reason,
 						})
 				else:
 					sale_list = [i.name for i in sale_id]
 					_logger.info("Two Sale Bill has been found==============================================>" + str(sale_list))
 					self.reason = 'Two Sale Bill has been found' + str(sale_list)
 			else:
-				_logger.info("Invoice Not Confirmed On Odoo==============================================>")
-				self.reason = 'Invoice Not Confirmed On Odoo'
+				_logger.info("Sale Not Created On Odoo==============================================>")
+				self.total_bill_amount = 0.0
+				self.total_sale_amount = 0.0
+				self.outstanding_amount = 0.0
+				self.ins_provider_id = False
+				self.ins_agreed_amount = 0.0
+				self.ins_actual_paid = 0.0
+				self.reason = 'Sale Not Created On Odoo'
 
 	def action_update_nielsen_image(self):
 		count = 0
