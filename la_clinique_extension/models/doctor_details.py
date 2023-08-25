@@ -80,11 +80,13 @@ class DoctorApiConfig(models.Model):
 	def fetch_bill_details(self,from_config=False):
 		if from_config:
 			date = self.bill_date.strftime("%Y%m%d")
+			api_date = self.bill_date
 		else:
 			_logger.info("Cron Current Date==============================================>" +str(datetime.now()))
 			_logger.info("Prevoius Day==============================================>" +str(datetime.now() - timedelta(days=1)))
 			previous_day = datetime.now() - timedelta(days=1)
 			date = previous_day.strftime("%Y%m%d")
+			api_date = previous_day
 
 		api_url = self.url
 
@@ -101,7 +103,7 @@ class DoctorApiConfig(models.Model):
 
 		response_data = self.make_api_post_request(api_url, api_headers, api_body)
 		if response_data:
-			self.env['doctor.details'].update_doctor_details(json_dict=response_data)
+			self.env['doctor.details'].update_doctor_details(json_dict=response_data,api_date=api_date)
 
 
 	def fetch_bill_details_from_cron(self):
@@ -140,6 +142,7 @@ class DoctorDetails(models.Model):
 	ins_actual_paid = fields.Float(string="Ins Actual Paid",copy=False)
 	reason = fields.Char(string='Reason')
 	sale_order_id = fields.Many2one('sale.order',string='Sale Order',copy=False)
+	api_date = fields.Date(string='API Date',copy=False)
 	# invoice_ids = fields.Many2many('account.move',string='Invoices',related='sale_order_id.invoice_ids',copy=False)
 
 
@@ -150,9 +153,9 @@ class DoctorDetails(models.Model):
 
 
 
-	def update_doctor_details(self,json_dict=False):
+	def update_doctor_details(self,json_dict=False,api_date=False):
 		if json_dict.get('billinglist_detailed'):
-			_logger.info("Json Dict==============================================>" + str(json_dict.get('billinglist_detailed')))
+			# _logger.info("Json Dict==============================================>" + str(json_dict.get('billinglist_detailed')))
 			for i in json_dict.get('billinglist_detailed'):
 				if i.get('dept') == 'CONSULTATION':
 					bill_date = datetime.strptime(i.get('billdate'), "%Y%m%d%H:%M:%S")
@@ -164,7 +167,8 @@ class DoctorDetails(models.Model):
 							'bill_ref': i.get('bill_no'),
 							'doctor': i.get('subdept'),
 							'doc_fee': i.get('amt'),
-							'bill_date': bill_date.date()
+							'bill_date': bill_date.date(),
+							'api_date': api_date,
 						})
 					if doc_detail_id:
 						doc_detail_id.update_sale_deatils()
