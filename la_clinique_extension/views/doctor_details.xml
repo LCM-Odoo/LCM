@@ -115,6 +115,7 @@
         <field name="arch" type="xml">
             <tree editable="top">
                 <field name="name" invisible="1"/>
+                <field name="api_date" readonly="1"/>
                 <field name="bill_date" readonly="1"/>
                 <field name="bill_ref" readonly="1"/>
                 <field name="sale_order_id" readonly="1"/>
