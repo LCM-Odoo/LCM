@@ -11,7 +11,7 @@
             <field name="incoterm_id" position="after">
                 <field name="moc_doc_ref" readonly="1"/>
                 <field name="create_api_values" readonly="1" groups="base.group_no_one"/>
-                <field name="make_po_readonly" groups="base.group_no_one"/>
+                <field name="make_po_readonly"/>
             </field>
             <xpath expr="//field[@name='order_line']" position="attributes">
                 <attribute name="attrs">{'readonly': ['|',('state', 'in', ('done','cancel')),('make_po_readonly','=',True)]}</attribute>
