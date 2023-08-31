@@ -59,8 +59,6 @@ class Authorize2(http.Controller):
 		else:
 			return False
 
-	
-
 	def get_country_id(self,country_name=False):
 		country_id = request.env["res.country"].sudo().search([('name','=',country_name)],limit =1)
 		if country_id:
@@ -76,7 +74,6 @@ class Authorize2(http.Controller):
 			categ_list = [i.name for i in request.env["product.category"].sudo().search([])]
 			return categ_list,False
 
-	
 
 	def get_uom_id(self,uom=False):
 		if uom:
@@ -128,8 +125,6 @@ class Authorize2(http.Controller):
 		else:
 			stock_location_id = [i.name for i in request.env["stock.location"].sudo().search([])]
 			return stock_location_id,False
-
-
 
 
 	def product_id_validation(self,product_list=False,internal_transfer=False):
@@ -955,9 +950,10 @@ class Authorize2(http.Controller):
 
 					purchase_order_id.sudo().button_confirm()
 
-					# picking_id = request.env["stock.picking"].with_user(2).search([('origin','=',purchase_order_id.name)])
-					# picking_id.action_set_quantities_to_reservation()
-					# picking_id.button_validate()
+					picking_id = request.env["stock.picking"].with_user(2).search([('origin','=',purchase_order_id.name)])
+					if picking_id and len(picking_id) == 1:
+						picking_id.action_set_quantities_to_reservation()
+						picking_id.button_validate()
 
 					return {'Status': 200,'record_id':purchase_order_id.name}
 
