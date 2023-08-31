@@ -179,7 +179,7 @@ class Authorize2(http.Controller):
 		for i in product_list:
 			if i.get('moc_doc_price_unit') < 0.1:
 				return True
-			if i.get('product_qty') and '-' in i.get('product_qty'):
+			if i.get('product_qty') and '-' in str(i.get('product_qty')):
 				return True
 
 	   
