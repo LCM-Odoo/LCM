@@ -10,5 +10,6 @@ from . import product_profile
 from . import partner
 from . import product
 from . import sale
+from . import stock_picking_type
 from . import purchase
 from . import invoice

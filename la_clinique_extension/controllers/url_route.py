@@ -231,6 +231,17 @@ class Authorize2(http.Controller):
 		else:
 			return False
 
+	def get_picking_type(self,location=''):
+		if location == 'PHARM':
+			picking_type_id = request.env["stock.picking.type"].sudo().search([('is_pharm_receipt','=',True)],limit=1)
+		elif location == 'OT':
+			picking_type_id = request.env["stock.picking.type"].sudo().search([('is_ot_receipt','=',True)],limit=1)
+
+		if picking_type_id:
+			return picking_type_id
+		else:
+			return False
+
 	def create_error_logs(self,mocdoc_api_values='',api_type='',model='',response=''):
 		try:
 			if mocdoc_api_values and api_type and model and response:
@@ -882,6 +893,25 @@ class Authorize2(http.Controller):
 		_logger.info("Mocdoc Json create_api_valuesues==============================================>"+str(kw))
 		if kw.get('customer_id') and kw.get('product_list') and kw.get('currency_type'):
 			try:
+				if not kw.get('moc_doc_location'):
+					_logger.info("Moc Doc Location is Not Sent==============================================>")
+					response = {'Status': 802,'Reason':'Moc Doc Location is Not Sent'}
+					self.create_error_logs(mocdoc_api_values=kw,api_type='create',model='purchase',response=str(response))
+					return response
+
+				if kw.get('moc_doc_location') not in ['PHARM','OT']:
+					_logger.info("Moc Doc Location Not In  ['PHARM','OT']==============================================>")
+					response = {'Status': 803,'Reason':'Moc Doc Location Not In  [PHARM,OT]'}
+					self.create_error_logs(mocdoc_api_values=kw,api_type='create',model='purchase',response=str(response))
+					return response
+
+				location = self.get_picking_type(location=kw.get('moc_doc_location'))
+				if not location:
+					_logger.info("Receipt Configuration is not done in Odoo,==============================================>")
+					response = {'Status': 801,'Reason':'Receipt Configuration is not done in Odoo'}
+					self.create_error_logs(mocdoc_api_values=kw,api_type='create',model='purchase',response=str(response))
+					return response
+
 				if self.check_price_validation(product_list=kw.get('product_list')):
 					_logger.info("Mocdoc Price Is lesser than 0.1 ==============================================>")
 					response = {'Status': 804,'Reason':'Moc Doc Unit Price Is Lesser Than 0.1'}
@@ -930,6 +960,7 @@ class Authorize2(http.Controller):
 						{
 							'partner_id': partner_id.id,
 							'currency_id': currency_id.id,
+							'picking_type_id': location.id,
 							'moc_doc_ref':kw.get('moc_doc_ref') if kw.get('moc_doc_ref') else False,
 							'create_api_values':kw,
 							'make_po_readonly':True

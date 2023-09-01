@@ -24,6 +24,7 @@
         'views/partner.xml',
         'views/product.xml',
         'views/sale_view.xml',
+        'views/stock_picking_type.xml',
         'views/purchase.xml',
         'views/invoice.xml',
         'views/account_payment.xml',
