@@ -45,12 +45,21 @@ class Authorize2(http.Controller):
 			return False
 
 	def search_insurance_provider_id_validation(self,provider_id=False):
-		provider_id = request.env["insurance.provider"].sudo().search([('active','=',True),('name','=',provider_id)],limit=1)
+		provider = provider_id
+		provider_id = request.env["insurance.provider"].sudo().search([('active','=',True),('name','=',provider)],limit=1)
 		if provider_id:
 			return provider_id,True
 		else:
-			all_list = [i.name for i in request.env["insurance.provider"].sudo().search([('active','=',True)])]
-			return all_list,False
+			provider_id = request.env["insurance.provider"].with_user(2).with_context(
+				   	{'lang': 'en_US', 
+					'uid': 2, 
+					'allowed_company_ids': [1], 
+					}).create({
+								'name': provider, 
+							})
+			return provider_id,True
+			# all_list = [i.name for i in request.env["insurance.provider"].sudo().search([('active','=',True)])]
+			# return all_list,False
 
 	def search_currency_id_validation(self,currency_id=False):
 		currency_id = request.env["res.currency"].sudo().search([('active','=',True),('name','=',currency_id)],limit=1)
