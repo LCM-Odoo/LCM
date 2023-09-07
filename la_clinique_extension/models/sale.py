@@ -201,6 +201,20 @@ class SaleOrderLine(models.Model):
         values.update({'moc_doc_ref':self.order_id.moc_doc_ref if self.order_id.moc_doc_ref else False})
         return values
 
+    def update_line_tax(self):
+        tax_no_list = self.search([('tax_id','=',False)])
+        update_list = []
+        for rec in tax_no_list:
+            _logger.info("rec==============================================> " + str(rec))
+            if rec.order_id.state == 'done':
+                rec.order_id.action_unlock()
+                update_list.append(rec.order_id)
+            rec.tax_id = [(6,0,rec.product_id.product_tmpl_id.taxes_id.ids)]
+            _logger.info("Tax==============================================> " + str(rec.tax_id))
+
+        for order in update_list:
+            order.action_done()
+
     # 1.This fucntion will pass the P&D value from SO Line To Stock Move P&D Line
 
     def _prepare_procurement_values(self, group_id=False):
