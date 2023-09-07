@@ -155,6 +155,7 @@
                     <field name="product_uom" string="Unit of Measure" groups="uom.group_uom"/>
                     <field name="price_subtotal" sum="Total" widget="monetary"/>
                     <field name="currency_id" invisible="1"/>
+                    <button name="update_line_tax" string="Update Tax" type="object" class="oe_stat_button"/>
                 </tree>
             </field>
         </record>
