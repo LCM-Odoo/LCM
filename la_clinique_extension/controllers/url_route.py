@@ -50,7 +50,7 @@ class Authorize2(http.Controller):
 		if provider_id:
 			return provider_id,True
 		else:
-			provider_id = request.env["insurance.provider"].with_user(2).with_context(
+			provider_id = request.env["insurance.provider"].with_user(14).with_context(
 				   	{'lang': 'en_US', 
 					'uid': 2, 
 					'allowed_company_ids': [1], 
@@ -250,7 +250,7 @@ class Authorize2(http.Controller):
 					for i in mocdoc_api_values.get('product_list'):
 						  body += (str(i) + "<br>")
 
-				api_log_id = request.env["api.logs"].with_user(2).with_context(
+				api_log_id = request.env["api.logs"].with_user(14).with_context(
 							{
 							   'lang': 'en_US', 
 								'uid': 2, 
@@ -309,7 +309,7 @@ class Authorize2(http.Controller):
 				else:
 					supplier_rank = 1
 
-				partner_id = request.env["res.partner"].with_user(2).with_context(
+				partner_id = request.env["res.partner"].with_user(14).with_context(
 				   {'lang': 'en_US', 
 					'uid': 2, 
 					'allowed_company_ids': [1], 
@@ -488,7 +488,7 @@ class Authorize2(http.Controller):
 						'create_api_values': kw
 						}
 						
-				product_template_id = request.env["product.template"].with_user(2).with_context(
+				product_template_id = request.env["product.template"].with_user(14).with_context(
 						{
 						   'lang': 'en_US', 
 							'uid': 2, 
@@ -778,7 +778,7 @@ class Authorize2(http.Controller):
 							is_card_two = True
 							sec_card_name = kw.get('dual_journal_type')
 
-				sale_order_id = request.env["sale.order"].with_user(2).create(
+				sale_order_id = request.env["sale.order"].with_user(14).create(
 					{
 						'partner_id': partner_id.id,
 						'moc_doc_ref':kw.get('moc_doc_ref') if kw.get('moc_doc_ref') else False,
@@ -806,7 +806,7 @@ class Authorize2(http.Controller):
 				if sale_order_id:
 					_logger.info("Sale Order Created==============================================> " + str(sale_order_id))
 					for i in product_id[0]:
-						sale_order_line_id = request.env["sale.order.line"].with_user(2).create(
+						sale_order_line_id = request.env["sale.order.line"].with_user(14).create(
 							{
 								'product_id': i.get('product_id'),
 								'order_id':sale_order_id.id,
@@ -824,7 +824,7 @@ class Authorize2(http.Controller):
 					if sale_order_id.is_dual_mode:
 						sale_order_id.create_second_payment()
 
-					picking_id = request.env["stock.picking"].with_user(2).search([('origin','=',sale_order_id.name)])
+					picking_id = request.env["stock.picking"].with_user(14).search([('origin','=',sale_order_id.name)])
 					if picking_id:
 						picking_id.do_unreserve()
 						picking_id.action_assign()
@@ -935,7 +935,7 @@ class Authorize2(http.Controller):
 					return response
 
 
-				purchase_order_id = request.env["purchase.order"].with_user(2).create(
+				purchase_order_id = request.env["purchase.order"].with_user(14).create(
 						{
 							'partner_id': partner_id.id,
 							'currency_id': currency_id.id,
@@ -947,7 +947,7 @@ class Authorize2(http.Controller):
 				if purchase_order_id:
 					_logger.info("Purchase Order Created==============================================> " + str(purchase_order_id))
 					for i in product_id[0]:
-						purchase_order_line_id = request.env["purchase.order.line"].with_user(2).create(
+						purchase_order_line_id = request.env["purchase.order.line"].with_user(14).create(
 							{
 								'product_id': i.get('product_id'),
 								'order_id':purchase_order_id.id,
@@ -959,7 +959,7 @@ class Authorize2(http.Controller):
 
 					purchase_order_id.sudo().button_confirm()
 
-					picking_id = request.env["stock.picking"].with_user(2).search([('origin','=',purchase_order_id.name)])
+					picking_id = request.env["stock.picking"].with_user(14).search([('origin','=',purchase_order_id.name)])
 					if picking_id and len(picking_id) == 1:
 						picking_id.action_set_quantities_to_reservation()
 						picking_id.button_validate()
@@ -1049,7 +1049,7 @@ class Authorize2(http.Controller):
 						amount = kw.get('dual_amount')
 						journal_type = kw.get('dual_journal_type')
 
-					payment_id = request.env["account.payment"].with_user(2).create(
+					payment_id = request.env["account.payment"].with_user(14).create(
 							{
 								'partner_id': partner_id.id,
 								'payment_type': 'inbound',
@@ -1139,7 +1139,7 @@ class Authorize2(http.Controller):
 					return response
 
 
-				picking_id = request.env["stock.picking"].with_user(2).create(
+				picking_id = request.env["stock.picking"].with_user(14).create(
 						{
 							'location_id': from_location_id[0].id,
 							'location_dest_id': to_location_id[0].id,
@@ -1152,7 +1152,7 @@ class Authorize2(http.Controller):
 				if picking_id:
 					_logger.info("Transfer Created==============================================> " + str(picking_id))
 					for i in product_id[0]:
-						move_id = request.env["stock.move"].with_user(2).create(
+						move_id = request.env["stock.move"].with_user(14).create(
 							{
 								'product_id': i.get('product_id'),
 								'product_uom_qty':i.get('qty_done'),
@@ -1273,7 +1273,7 @@ class Authorize2(http.Controller):
 						amount = kw.get('dual_amount')
 						journal_type = kw.get('dual_journal_type')
 
-					payment_id = request.env["account.payment"].with_user(2).create(
+					payment_id = request.env["account.payment"].with_user(14).create(
 							{
 								'partner_id': partner_id.id,
 								'payment_type': 'inbound',
