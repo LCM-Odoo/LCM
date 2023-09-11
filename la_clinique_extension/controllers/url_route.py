@@ -849,12 +849,14 @@ class Authorize2(http.Controller):
                                     invoice_id = sale_order_id._create_invoices(final=True)
                                     if invoice_id and len(invoice_id) == 1:
                                         invoice_id.action_post()
+                                        sale_order_id.action_unlock()
 
                     if not picking_id:
                         if self.check_tax_validation(order=sale_order_id):
                             invoice_id = sale_order_id._create_invoices(final=True)
                             if invoice_id and len(invoice_id) == 1:
                                 invoice_id.action_post()
+                                sale_order_id.action_unlock()
 
                     return {'Status': 200,'record_id':sale_order_id.name}
 
