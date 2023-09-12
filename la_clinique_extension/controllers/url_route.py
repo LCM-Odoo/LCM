@@ -143,9 +143,13 @@ class Authorize2(http.Controller):
         for i in product_list:
             location_id = False
             tax_list = []
-            if i.get('product_id'):
-                product_template_id = request.env["product.template"].sudo().search([('active','=',True),('id','=',i.get('product_id'))])
-                if not product_template_id:Product_missing_list.append(i.get('product_id'))
+            product_id = i.get('product_id')
+            
+            if not product_id and i.get('is_consultant'):
+                product_id = request.env["product.template"].sudo().search([('active','=',True),('id','=',83635)]).id
+            if product_id:
+                product_template_id = request.env["product.template"].sudo().search([('active','=',True),('id','=',product_id)])
+                if not product_template_id:Product_missing_list.append(product_id)
                 if product_template_id:
                     product_id = request.env["product.product"].sudo().search([('active','=',True),('product_tmpl_id','=',product_template_id.id)])
 
