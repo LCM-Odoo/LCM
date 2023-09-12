@@ -21,8 +21,12 @@ class PurchaseOrder(models.Model):
         for order in self:
             if order.create_api_values:
                 for line in order.order_line:
+                    context = dict(self._context)
                     if not line.taxes_id:
-                        raise UserError(_('The Tax Is Not Mapped for the Product: %s , Kinldy Map It.' % (line.product_id.name)))
+                        if not context.get('from_api'):
+                            raise UserError(_('The Tax Is Not Mapped for the Product: %s , Kinldy Map It.' % (line.product_id.name)))
+                        else:
+                            return False
         values = super(PurchaseOrder, self).action_create_invoice()
         return values
 
