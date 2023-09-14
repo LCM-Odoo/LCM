@@ -143,9 +143,13 @@ class Authorize2(http.Controller):
         for i in product_list:
             location_id = False
             tax_list = []
-            if i.get('product_id'):
-                product_template_id = request.env["product.template"].sudo().search([('active','=',True),('id','=',i.get('product_id'))])
-                if not product_template_id:Product_missing_list.append(i.get('product_id'))
+            product_id = i.get('product_id')
+            
+            if not product_id and i.get('is_consultant'):
+                product_id = request.env["product.template"].sudo().search([('active','=',True),('id','=',83635)]).id
+            if product_id:
+                product_template_id = request.env["product.template"].sudo().search([('active','=',True),('id','=',product_id)])
+                if not product_template_id:Product_missing_list.append(product_id)
                 if product_template_id:
                     product_id = request.env["product.product"].sudo().search([('active','=',True),('product_tmpl_id','=',product_template_id.id)])
 
@@ -978,11 +982,27 @@ class Authorize2(http.Controller):
                         _logger.info("Purchase Order Line Created==============================================> " + str(purchase_order_line_id))
 
                     purchase_order_id.sudo().button_confirm()
-
                     picking_id = request.env["stock.picking"].with_user(14).search([('origin','=',purchase_order_id.name)])
+
                     if picking_id and len(picking_id) == 1:
                         picking_id.action_set_quantities_to_reservation()
                         picking_id.button_validate()
+                        bill_id = purchase_order_id.with_context({ 
+                                                        'lang': 'en_US', 
+                                                        'edit_translations': False,
+                                                        'from_api': True, 
+                        }).action_create_invoice()
+                        print(bill_id,'22222222222222222222222222222222222222222222222222')
+                        if bill_id and bill_id.get('res_id'):
+                            move_id = request.env["account.move"].with_user(14).search([('id','=',bill_id.get('res_id'))])
+                            if move_id and len(move_id) == 1:
+                                move_id.invoice_date = datetime.now()
+                                move_id.action_post()
+
+
+                    # picking_id = request.env["stock.picking"].with_user(14).search([('origin','=',purchase_order_id.name)])
+                    # picking_id.action_set_quantities_to_reservation()
+                    # picking_id.button_validate()
 
                     return {'Status': 200,'record_id':purchase_order_id.name}
 
