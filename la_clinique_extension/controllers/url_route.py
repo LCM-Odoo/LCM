@@ -6,7 +6,7 @@ from odoo.http import request
 import logging, requests
 _logger = logging.getLogger(__name__)
 from odoo import http, SUPERUSER_ID, _
-
+from datetime import datetime, time
 
 # from requests_oauthlib import OAuth2Session
 
