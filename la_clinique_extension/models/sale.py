@@ -295,7 +295,10 @@ class StockPicking(models.Model):
             for i in self.move_line_ids_without_package:
                 if i.move_line_moc_doc_location_id:
                     if i.move_line_moc_doc_location_id.id != i.location_id.id:
-                        raise UserError(_('The From Location Is Not Same As The Mocdoc Location, Kinldy Check It'))
+                        self.do_unreserve()
+                        self.action_assign()
+                        return True
+                        
         values = super(StockPicking, self).button_validate()
         return values
 

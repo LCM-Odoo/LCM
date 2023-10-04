@@ -830,7 +830,8 @@ class Authorize2(http.Controller):
                             })
                         _logger.info("Sale Order Line Created==============================================> " + str(sale_order_line_id))
 
-                    sale_order_id.sudo().update_bill_amount_status()
+                    # sale_order_id.sudo().update_bill_amount_status()
+                    request.env.cr.commit()
                     sale_order_id.sudo().action_confirm()
                     sale_order_id.create_payment()
                     if sale_order_id.is_dual_mode:
@@ -963,6 +964,7 @@ class Authorize2(http.Controller):
                         {
                             'partner_id': partner_id.id,
                             'currency_id': currency_id.id,
+                            'picking_type_id': location.id,
                             'moc_doc_ref':kw.get('moc_doc_ref') if kw.get('moc_doc_ref') else False,
                             'create_api_values':kw,
                             'make_po_readonly':True
@@ -981,6 +983,7 @@ class Authorize2(http.Controller):
                             })
                         _logger.info("Purchase Order Line Created==============================================> " + str(purchase_order_line_id))
 
+                    request.env.cr.commit()
                     purchase_order_id.sudo().button_confirm()
                     picking_id = request.env["stock.picking"].with_user(14).search([('origin','=',purchase_order_id.name)])
 
@@ -1101,6 +1104,7 @@ class Authorize2(http.Controller):
 
                     if payment_id:
                         _logger.info("Payment Created==============================================> " + str(payment_id))
+                        request.env.cr.commit()
                         payment_list.append(payment_id.id)
 
                         post = True
@@ -1206,6 +1210,7 @@ class Authorize2(http.Controller):
                         _logger.info("Move Line Created==============================================> " + str(move_id))
 
                     if picking_id:
+                        request.env.cr.commit()
                         picking_id.action_confirm()
                         if picking_id.state == 'assigned':
                             quant_check = False
@@ -1325,6 +1330,7 @@ class Authorize2(http.Controller):
 
                     if payment_id:
                         _logger.info("Payment Created==============================================> " + str(payment_id))
+                        request.env.cr.commit()
                         payment_list.append(payment_id.id)
 
                         post = True
