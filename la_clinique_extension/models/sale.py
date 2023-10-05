@@ -45,6 +45,8 @@ class SaleOrder(models.Model):
     moc_doc_total = fields.Float(string='Mocdoc Total',copy=False,tracking=True) 
     bill_amt_status = fields.Selection(selection=[('no', 'Not Matched'),('yes', 'Matched')], string='Bill Amount Status',copy=False, tracking=True,default='')
 
+    pharm_loc_ref = fields.Char(string='Pharm Loc Ref',copy=False,readonly=True) 
+
     @api.model
     def fields_view_get(self, view_id=None, view_type='form', toolbar=False, submenu=False):
         res = super(SaleOrder, self).fields_view_get(view_id=view_id, view_type=view_type, toolbar=toolbar, submenu=submenu)
@@ -78,9 +80,10 @@ class SaleOrder(models.Model):
         return invoice_vals
 
     def update_bill_amount_status(self):
-        for record in self:
-            record.bill_amt_status = 'yes' if record.amount_total == record.moc_doc_total else 'no'
-        # return True
+        for i in self.search([('moc_doc_ref','like','PHARM')]):
+            for line in i.order_line:
+                i.pharm_loc_ref = str(line.moc_doc_location_id.name) +' - '+ i.moc_doc_ref
+                break
 
     def create_payment(self):
         for i in self:
