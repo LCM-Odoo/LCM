@@ -37,6 +37,7 @@
                 <field name="is_card_two" readonly="1" invisible="1"/>
                 <field name="sec_card_name" readonly="1" attrs="{'invisible': [('is_card_two', '=',False)]}"/>
                 <field name="payment_ids" readonly="1" widget="many2many_tags"/>
+                <field name="pharm_loc_ref"/>
             </field>
 
             <field name="payment_term_id" position="after">
