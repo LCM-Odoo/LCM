@@ -964,7 +964,7 @@ class Authorize2(http.Controller):
                         {
                             'partner_id': partner_id.id,
                             'currency_id': currency_id.id,
-                            'picking_type_id': location.id,
+                            # 'picking_type_id': location.id,
                             'moc_doc_ref':kw.get('moc_doc_ref') if kw.get('moc_doc_ref') else False,
                             'create_api_values':kw,
                             'make_po_readonly':True
