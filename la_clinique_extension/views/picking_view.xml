@@ -4,6 +4,7 @@
 	<record id="view_move_search_filter_inheirt" model="ir.ui.view">
         <field name="name">stock.move.search.view.inherit</field>
         <field name="model">stock.move</field>
+        <field name="inherit_id" ref="stock.view_move_search"/>
         <field name="arch" type="xml">
             <xpath expr="//search" type="inside">
                 <field name="origin" string="Odoo SO Ref"/>
@@ -22,58 +23,30 @@
         <field name="model">stock.move</field>
         <field eval="8" name="priority"/>
         <field name="arch" type="xml">
-                <tree string="Delivery lines Moves" create="0" >
-                    <field name="date" groups="base.group_no_one" decoration-danger="(state not in ('cancel','done')) and date > current_date" />
-                    <field name="partner_id" string="Customer"/>
-                    <field name="moc_doc_ref" string="Moc Doc Ref"/>
-                    <field name="origin" string="Odoo SO Ref"/>
-                    <field name="reference" string="Transfer Ref"/>
-                    <field name="picking_type_id" invisible="1"/>
-                    <field name="is_quantity_done_editable" invisible="1"/>
-                    <field name="product_id"/>
-                    <field name="location_id" options="{'no_create': True}" string="From" invisible="1"/>
-                    <field name="move_moc_doc_location_id" options="{'no_create': True}" string="Moc Doc Location"/>
-                    <field name="location_dest_id" options="{'no_create': True}" string="To"/>
-                    <field name="product_packaging_id" optional="hide" groups="product.group_stock_packaging"/>
-                    <field name="product_uom_qty" string="Ordered Qty"/>
-                    <field name="reserved_availability" string="Reserved Qty"/>
-                    <field name="quantity_done" string="Done" attrs="{'readonly': [('is_quantity_done_editable', '=', False)]}"/>
-                    <field name="missing_qty" string="Missing Qty"/>
-                    <field name="product_uom" options="{'no_open': True, 'no_create': True}" string="Unit of Measure" groups="uom.group_uom"/>
+            <tree string="Delivery lines Moves" create="0" >
+                <field name="date" groups="base.group_no_one" decoration-danger="(state not in ('cancel','done')) and date > current_date" />
+                <field name="partner_id" string="Customer"/>
+                <field name="moc_doc_ref" string="Moc Doc Ref"/>
+                <field name="origin" string="Odoo SO Ref"/>
+                <field name="reference" string="Transfer Ref"/>
+                <field name="picking_type_id" invisible="1"/>
+                <field name="is_quantity_done_editable" invisible="1"/>
+                <field name="product_id"/>
+                <field name="location_id" options="{'no_create': True}" string="From" invisible="1"/>
+                <field name="move_moc_doc_location_id" options="{'no_create': True}" string="Moc Doc Location"/>
+                <field name="location_dest_id" options="{'no_create': True}" string="To"/>
+                <field name="product_packaging_id" optional="hide" groups="product.group_stock_packaging"/>
+                <field name="product_uom_qty" string="Ordered Qty"/>
+                <field name="reserved_availability" string="Reserved Qty"/>
+                <field name="quantity_done" string="Done" attrs="{'readonly': [('is_quantity_done_editable', '=', False)]}"/>
+                <field name="missing_qty" string="Missing Qty"/>
+                <field name="product_uom" options="{'no_open': True, 'no_create': True}" string="Unit of Measure" groups="uom.group_uom"/>
 
-                    <field name="company_id" groups="base.group_multi_company"/>
-                    <field name="state" widget='badge' decoration-success="state == 'done'" decoration-info="state not in ('done', 'cancel')"/>
-                </tree>
-            </field>
-        </record>
-
-	<!-- <record id="action_delivery_order_lines_view" model="ir.actions.act_window">
-        <field name="name">Delivery Order Lines</field>
-        <field name="res_model">stock.move</field>
-        <field name="type">ir.actions.act_window</field>
-        <field name="view_id" ref="view_delivery_order_lines_tree_new"/>
-        <field name="view_mode">tree</field>
-        <field name="context">{'search_default_reference': 1}</field>
-        <field name="help" type="html">
-          <p class="o_view_nocontent_smiling_face">
-            No stock move found
-          </p><p>
-            This menu gives you the full traceability of inventory
-            operations on a specific product. You can filter on the product
-            to see all the past or future movements for the product.
-          </p>
+                <field name="company_id" groups="base.group_multi_company"/>
+                <field name="state" widget='badge' decoration-success="state == 'done'" decoration-info="state not in ('done', 'cancel')"/>
+            </tree>
         </field>
-    </record> -->
-
-	<!-- <record id="action_delivery_order_lines_view" model="ir.actions.act_window">
-        <field name="name">Delivery Order Line</field>
-        <field name="type">ir.actions.act_window</field>
-        <field name="res_model">stock.move</field>
-        <field name="context">{'search_default_picking_type_id': [('picking_code', '=', 'outgoing')]}</field>
-        <field name="domain">[('picking_code', '=', 'outgoing')]</field>
-        <field name="view_id" ref="view_delivery_order_lines_tree_new"/>
-        <field name="view_mode">tree</field>
-    </record> -->
+    </record>
 
     <record id="delivery_order_lines_func" model="ir.actions.server">
         <field name="name">Pending Delivery Lines</field>
