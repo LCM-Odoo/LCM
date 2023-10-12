@@ -8,7 +8,7 @@
     'website': '',
     'maintainer': '',
 
-    'depends': ['base','sale','account','product','purchase'],
+    'depends': ['base','sale','account','product','purchase', 'stock'],
     'data': [
         'data/mail_template.xml',
         'data/ir_cron_data.xml',
@@ -28,6 +28,7 @@
         'views/purchase.xml',
         'views/invoice.xml',
         'views/account_payment.xml',
+        'views/picking_view.xml',
     ],
     'installable': True,
     'auto_install': False,

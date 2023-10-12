@@ -13,3 +13,4 @@ from . import sale
 from . import stock_picking_type
 from . import purchase
 from . import invoice
+from . import picking
