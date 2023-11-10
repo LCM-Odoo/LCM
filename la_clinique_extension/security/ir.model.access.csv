@@ -5,3 +5,4 @@ access_insurance_provider,insurance.provider,model_insurance_provider,,1,1,1,1
 access_api_logs,api.logs,model_api_logs,,1,1,1,1
 access_doctor_details,doctor_details,model_doctor_details,,1,1,1,1
 access_doctor_api_config,access_doctor_api_config,model_doctor_api_config,,1,1,1,1
+access_mocdoc_bills,access_mocdoc_bills,model_mocdoc_bills,,1,1,1,1

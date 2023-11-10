@@ -1,4 +1,5 @@
 from . import api_logs
+from . import mocdoc_bills
 from . import doctor_details
 from . import location
 from . import journal

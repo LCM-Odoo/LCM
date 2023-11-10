@@ -639,10 +639,17 @@ class Authorize2(http.Controller):
         _logger.info("Mocdoc Json write_api_valuesues==============================================>"+str(kw))
         if kw.get('product_list') and kw.get('currency_type'):
             try:
+
+                if not kw.get('moc_doc_unique_ref'):
+                    response = {'Status': 750,'Reason':'Mocdoc Unique Ref Is Not Sent from Mocdoc'}
+                    self.create_error_logs(mocdoc_api_values=kw,api_type='create',model='sale',response=str(response))
+                    return response
+
                 if not kw.get('bill_type'):
                     response = {'Status': 714,'Reason':'Bill Type Is Not Sent from Mocdoc'}
                     self.create_error_logs(mocdoc_api_values=kw,api_type='create',model='sale',response=str(response))
                     return response
+
 
                 if kw.get('bill_type') and kw.get('bill_type') not in ['pharmacy','i/p','o/p']:
                     response = {'Status': 715,'Reason':'Bill Type Is Not in i/p, o/p, pharmacy'}
@@ -801,80 +808,93 @@ class Authorize2(http.Controller):
                             is_card_two = True
                             sec_card_name = kw.get('dual_journal_type')
 
-                sale_order_id = request.env["sale.order"].with_user(14).create(
-                    {
-                        'partner_id': partner_id.id,
-                        'moc_doc_ref':kw.get('moc_doc_ref') if kw.get('moc_doc_ref') else False,
-                        'create_api_values':kw,
-                        'make_so_readonly':True,
-                        'insurance_provider_id': insurance_provider[0].id if kw.get('insurance_provider_id') else '',
-                        'agreed_amount': kw.get('agreed_amount') if kw.get('agreed_amount') else 0.0,
-                        'actual_paid': kw.get('actual_paid') if kw.get('actual_paid') else 0.0,
-                        'pricelist_id':api_pricelist.id,
-                        'patient_type' : patient_type,
-                        'sale_bill_amount': amount,
-                        'sale_bill_type':journal_id,
-                        'sale_bill_currency': currency_id.id,
-                        'is_cards': is_cards,
-                        'card_name':card_name,
-                        'is_dual_mode':is_dual_mode,
-                        'sec_bill_amount':dual_amount,
-                        'sec_bill_type': dual_journal_id,
-                        'sec_bill_currency': dual_currency_id,
-                        'is_card_two': is_card_two,
-                        'sec_card_name': sec_card_name,  
-                        'moc_doc_total': kw.get('moc_doc_bill_amt') if kw.get('moc_doc_bill_amt') else 0.0, 
-                    })
-                
-                if sale_order_id:
-                    _logger.info("Sale Order Created==============================================> " + str(sale_order_id))
-                    for i in product_id[0]:
-                        sale_order_line_id = request.env["sale.order.line"].with_user(14).create(
-                            {
-                                'product_id': i.get('product_id'),
-                                'order_id':sale_order_id.id,
-                                'product_uom_qty':i.get('qty'),
-                                'price_unit':i.get('moc_doc_price_unit'),
-                                'tax_id': i.get('tax_id'),
-                                'discount': i.get('disc'),
-                                'moc_doc_location_id': i.get('moc_doc_location_id'),
-                            })
-                        _logger.info("Sale Order Line Created==============================================> " + str(sale_order_line_id))
+                if kw.get('allow_create'):
+                    sale_order_id = request.env["sale.order"].with_user(14).create(
+                        {
+                            'partner_id': partner_id.id,
+                            'moc_doc_ref':kw.get('moc_doc_ref') if kw.get('moc_doc_ref') else False,
+                            'create_api_values':kw,
+                            'make_so_readonly':True,
+                            'insurance_provider_id': insurance_provider[0].id if kw.get('insurance_provider_id') else '',
+                            'agreed_amount': kw.get('agreed_amount') if kw.get('agreed_amount') else 0.0,
+                            'actual_paid': kw.get('actual_paid') if kw.get('actual_paid') else 0.0,
+                            'pricelist_id':api_pricelist.id,
+                            'patient_type' : patient_type,
+                            'sale_bill_amount': amount,
+                            'sale_bill_type':journal_id,
+                            'sale_bill_currency': currency_id.id,
+                            'is_cards': is_cards,
+                            'card_name':card_name,
+                            'is_dual_mode':is_dual_mode,
+                            'sec_bill_amount':dual_amount,
+                            'sec_bill_type': dual_journal_id,
+                            'sec_bill_currency': dual_currency_id,
+                            'is_card_two': is_card_two,
+                            'sec_card_name': sec_card_name,  
+                            'moc_doc_total': kw.get('moc_doc_bill_amt') if kw.get('moc_doc_bill_amt') else 0.0, 
+                        })
+                    
+                    if sale_order_id:
+                        _logger.info("Sale Order Created==============================================> " + str(sale_order_id))
+                        for i in product_id[0]:
+                            sale_order_line_id = request.env["sale.order.line"].with_user(14).create(
+                                {
+                                    'product_id': i.get('product_id'),
+                                    'order_id':sale_order_id.id,
+                                    'product_uom_qty':i.get('qty'),
+                                    'price_unit':i.get('moc_doc_price_unit'),
+                                    'tax_id': i.get('tax_id'),
+                                    'discount': i.get('disc'),
+                                    'moc_doc_location_id': i.get('moc_doc_location_id'),
+                                })
+                            _logger.info("Sale Order Line Created==============================================> " + str(sale_order_line_id))
 
-                    # sale_order_id.sudo().update_bill_amount_status()
-                    request.env.cr.commit()
-                    sale_order_id.sudo().action_confirm()
-                    sale_order_id.create_payment()
-                    if sale_order_id.is_dual_mode:
-                        sale_order_id.create_second_payment()
+                        # sale_order_id.sudo().update_bill_amount_status()
+                        request.env.cr.commit()
+                        sale_order_id.sudo().action_confirm()
+                        sale_order_id.create_payment()
+                        if sale_order_id.is_dual_mode:
+                            sale_order_id.create_second_payment()
 
-                    picking_id = request.env["stock.picking"].with_user(14).search([('origin','=',sale_order_id.name)])
-                    if picking_id:
-                        picking_id.do_unreserve()
-                        picking_id.action_assign()
-                        if picking_id.state == 'assigned':
-                            picking_id.action_set_quantities_to_reservation()
-                            done = True
-                            for i in picking_id.move_ids_without_package:
-                                if i.product_uom_qty != i.quantity_done:
-                                    done = False
-                                    break
-                            if done:
-                                picking_id.button_validate()
-                                if self.check_tax_validation(order=sale_order_id):
-                                    invoice_id = sale_order_id._create_invoices(final=True)
-                                    if invoice_id and len(invoice_id) == 1:
-                                        invoice_id.action_post()
-                                        sale_order_id.action_unlock()
+                        picking_id = request.env["stock.picking"].with_user(14).search([('origin','=',sale_order_id.name)])
+                        if picking_id:
+                            picking_id.do_unreserve()
+                            picking_id.action_assign()
+                            if picking_id.state == 'assigned':
+                                picking_id.action_set_quantities_to_reservation()
+                                done = True
+                                for i in picking_id.move_ids_without_package:
+                                    if i.product_uom_qty != i.quantity_done:
+                                        done = False
+                                        break
+                                if done:
+                                    picking_id.button_validate()
+                                    if self.check_tax_validation(order=sale_order_id):
+                                        invoice_id = sale_order_id._create_invoices(final=True)
+                                        if invoice_id and len(invoice_id) == 1:
+                                            invoice_id.action_post()
+                                            sale_order_id.action_unlock()
 
-                    if not picking_id:
-                        if self.check_tax_validation(order=sale_order_id):
-                            invoice_id = sale_order_id._create_invoices(final=True)
-                            if invoice_id and len(invoice_id) == 1:
-                                invoice_id.action_post()
-                                sale_order_id.action_unlock()
+                        if not picking_id:
+                            if self.check_tax_validation(order=sale_order_id):
+                                invoice_id = sale_order_id._create_invoices(final=True)
+                                if invoice_id and len(invoice_id) == 1:
+                                    invoice_id.action_post()
+                                    sale_order_id.action_unlock()
 
-                    return {'Status': 200,'record_id':sale_order_id.name}
+                        return {'Status': 200,'record_id':sale_order_id.name}
+                else:
+                    mocdoc_bill_exist_id = request.env["mocdoc.bills"].sudo().search([('name','=',kw.get('moc_doc_unique_ref'))])
+                    for rec in mocdoc_bill_exist_id:
+                        if not rec.sale_order_id:rec.unlink()
+                    mocdoc_bill_id = request.env["mocdoc.bills"].with_user(14).create(
+                        {
+                            'name': kw.get('moc_doc_unique_ref'),
+                            'model':'sale',
+                            'mocdoc_json_values':kw,
+                        })
+
+                    return {'Status': 200,'record_id':mocdoc_bill_id.id}
 
             except Exception as e:
                 _logger.error("Error==============================================> " + str(e))
@@ -887,6 +907,12 @@ class Authorize2(http.Controller):
                 response = {'Status': 700,'Reason':'currency_type Is Missing'}
                 self.create_error_logs(mocdoc_api_values=kw,api_type='create',model='sale',response=str(response))
                 return response
+
+            if not kw.get('moc_doc_unique_ref'):
+                response = {'Status': 750,'Reason':'Mocdoc Unique Ref Is Not Sent from Mocdoc'}
+                self.create_error_logs(mocdoc_api_values=kw,api_type='create',model='sale',response=str(response))
+                return response
+
 
             if not kw.get('product_list'):
 
@@ -901,20 +927,35 @@ class Authorize2(http.Controller):
                     return response
 
                 if kw.get('bill_type') == 'pharmacy':
-                    myobj = {
-                                'customer_id': kw.get('customer_id'), 
-                                'ref': kw.get('moc_doc_ref'),
-                                'amount': kw.get('amount'),
-                                'currency_id': kw.get('currency_type'),
-                                'journal_type': kw.get('journal_type'),
-                                'is_dual_mode' : kw.get('is_dual_mode'),
-                                'dual_amount' : kw.get('dual_amount'),
-                                'dual_journal_type' : kw.get('dual_journal_type'),
-                                'dual_currency_id' : kw.get('dual_currency_id'),
-                            }
+                    if kw.get('allow_create'):
+                        myobj = {
+                                    'customer_id': kw.get('customer_id'), 
+                                    'ref': kw.get('moc_doc_ref'),
+                                    'amount': kw.get('amount'),
+                                    'currency_id': kw.get('currency_type'),
+                                    'journal_type': kw.get('journal_type'),
+                                    'is_dual_mode' : kw.get('is_dual_mode'),
+                                    'dual_amount' : kw.get('dual_amount'),
+                                    'dual_journal_type' : kw.get('dual_journal_type'),
+                                    'dual_currency_id' : kw.get('dual_currency_id'),
+                                }
 
-                    response = self.create_payment_from_so(kw=myobj)
-                    return response
+                        response = self.create_payment_from_so(kw=myobj)
+                        return response
+                    else:
+                        mocdoc_bill_exist_id = request.env["mocdoc.bills"].sudo().search([('name','=',kw.get('moc_doc_unique_ref'))])
+                        for rec in mocdoc_bill_exist_id:
+                            if not rec.sale_order_id:rec.unlink()
+                        mocdoc_bill_id = request.env["mocdoc.bills"].with_user(14).create(
+                            {
+                                'name': kw.get('moc_doc_unique_ref'),
+                                'model':'sale',
+                                'mocdoc_json_values':kw,
+                            })
+
+                        return {'Status': 200,'record_id':mocdoc_bill_id.id}
+
+
                 else:
                     _logger.info("product_list Is Missing==============================================>")
                     response = {'Status': 700,'Reason':'Product_list Is Missing'}

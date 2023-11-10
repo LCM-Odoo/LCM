@@ -15,6 +15,7 @@
         'security/ir.model.access.csv',
         'views/api_logs.xml',
         'views/doctor_details.xml',
+        'views/mocdoc_bills.xml',
         'views/location_view.xml',
         'views/journal.xml',
         'views/product_pricelist.xml',
