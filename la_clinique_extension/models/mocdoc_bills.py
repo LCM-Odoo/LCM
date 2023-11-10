@@ -19,7 +19,7 @@ class MocdocBills(models.Model):
 	name = fields.Char(string="Mocdoc Unique Ref")
 	model = fields.Selection([('sale', 'Sale'), ('purchase','Purchase'), ('customer','Customer'), ('product','Product'),('payment','Payment'), ('internal_transfer','Internal Transfer')], string='Model', copy=False, tracking=True)
 	mocdoc_json_values = fields.Text(string="Mocdoc Json Values",tracking=True)
-	
+	sale_order_id = fields.Many2one('sale.order',string='sale order')
 
 	# def send_mail_notifictaion(self,status_code='',response=''):
 	#   try:

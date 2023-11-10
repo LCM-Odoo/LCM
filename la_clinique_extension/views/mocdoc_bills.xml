@@ -35,6 +35,7 @@
                 <field name="name" readonly="1"/>
                 <field name="model" readonly="1"/>
                 <field name="mocdoc_json_values" readonly="1"/>
+                <field name="sale_order_id" readonly="1"/>
             </tree>
         </field>
     </record>
