@@ -1,6 +1,9 @@
 from odoo import api, fields, models, SUPERUSER_ID, _
 from odoo.exceptions import UserError
 import logging
+from odoo import http
+from odoo.http import request
+import logging, requests
 _logger = logging.getLogger(__name__)
 
 import json
@@ -169,7 +172,6 @@ class SaleOrder(models.Model):
                                 payment_id.payment_method_line_id = payment_method_line_id[0].id
                             else:
                                 post =False
-
                     if post:
                         payment_id.action_post()
                     i.is_sec_payment_created = True
@@ -191,6 +193,28 @@ class SaleOrder(models.Model):
                 return True
             except Exception as e:
                 _logger.error("Error in Sending Mail==============================================> " + str(e))
+                return False
+
+
+    def fetch_quotation_details_using_cron(self):
+        quotation_config_id = self.env['sale.order'].search([('state', '=' ,'draft'),('create_api_values', '!=', False)])
+        if quotation_config_id:
+            mail_id = request.env['sale.order'].send_mail_for_quotation(sale_list=quotation_config_id)
+
+    def send_mail_for_quotation(self,sale_list):
+        if sale_list:
+            try:
+                _logger.error("Entered in Email API Quotation==============================================> ")
+                sale_order_names = ', '.join(sale_list.mapped('name'))
+                mail_template = self.env.ref('la_clinique_extension.email_template_quotation_creation')
+                mail_template.with_user(2).subject = 'Quotation Created in Odoo from MOCDOC'
+                body = ('Hi Team' + "<br>" 'The Quotation No ' + sale_order_names + ' is created from Mocdoc, Kinldy confirm the same in Odoo, Thanks.'
+                    )
+                mail_template.with_user(2).body_html = body
+                mail_id = mail_template.with_user(2).send_mail(self.id, force_send=True)
+                return True
+            except Exception as e:
+                _logger.error("Error in Sending Mail for API Quotation==============================================> " + str(e))
                 return False
 
 
