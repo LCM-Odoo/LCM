@@ -1,6 +1,9 @@
 from odoo import api, fields, models, SUPERUSER_ID, _
 from odoo.exceptions import UserError
 import logging
+from odoo import http
+from odoo.http import request
+import logging, requests
 _logger = logging.getLogger(__name__)
 
 import json
