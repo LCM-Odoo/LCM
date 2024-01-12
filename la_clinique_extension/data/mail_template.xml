@@ -162,6 +162,24 @@
             </field>
         </record>
 
+        <!-- API Quotation Mail Template -->
+
+        <record id="email_template_quotation_creation" model="mail.template">
+            <field name="name">Quotation creation from API</field>
+            <field name="email_from">sslsuppo@gmail.com</field>
+            <field name="subject">Mocdoc Quotaion In Odoo</field>
+            <field name="email_to">aarthi@sslconsultingservice.com</field>
+            <field name="email_cc">satish@sslconsultingservice.com</field>
+            <field name="model_id" ref="la_clinique_extension.model_sale_order"/>
+            <field name="auto_delete" eval="False"/>
+            <field name="body_html"><![CDATA[
+                <p>Dear Sir/Madam,</p>
+               
+                <p>Thank You</p>    
+            ]]></field>
+        </record>
+
+
         <!-- Sale Mail Template -->
 
         <record id="email_template_ip_bill_update" model="mail.template">
