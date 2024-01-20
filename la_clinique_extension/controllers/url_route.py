@@ -639,11 +639,10 @@ class Authorize2(http.Controller):
         _logger.info("Mocdoc Json write_api_valuesues==============================================>"+str(kw))
         if kw.get('product_list') and kw.get('currency_type'):
             try:
-
-                if not kw.get('moc_doc_unique_ref'):
-                    response = {'Status': 750,'Reason':'Mocdoc Unique Ref Is Not Sent from Mocdoc'}
-                    self.create_error_logs(mocdoc_api_values=kw,api_type='create',model='sale',response=str(response))
-                    return response
+                # if not kw.get('moc_doc_unique_ref'):
+                #     response = {'Status': 750,'Reason':'Mocdoc Unique Ref Is Not Sent from Mocdoc'}
+                #     self.create_error_logs(mocdoc_api_values=kw,api_type='create',model='sale',response=str(response))
+                #     return response
 
                 if not kw.get('bill_type'):
                     response = {'Status': 714,'Reason':'Bill Type Is Not Sent from Mocdoc'}
@@ -884,15 +883,28 @@ class Authorize2(http.Controller):
 
                         return {'Status': 200,'record_id':sale_order_id.name}
                 else:
+
                     mocdoc_bill_exist_id = request.env["mocdoc.bills"].sudo().search([('name','=',kw.get('moc_doc_unique_ref'))])
-                    for rec in mocdoc_bill_exist_id:
-                        if not rec.sale_order_id:rec.unlink()
-                    mocdoc_bill_id = request.env["mocdoc.bills"].with_user(14).create(
-                        {
-                            'name': kw.get('moc_doc_unique_ref'),
-                            'model':'sale',
-                            'mocdoc_json_values':kw,
-                        })
+
+                    if mocdoc_bill_exist_id:
+                        if not rec.sale_order_id:
+                            rec.unlink()
+                            mocdoc_bill_id = request.env["mocdoc.bills"].with_user(14).create(
+                                {
+                                    'name': kw.get('moc_doc_unique_ref'),
+                                    'model':'sale',
+                                    'mocdoc_json_values':kw,
+                                })
+                        else:
+                            print('mail need to send')
+                    else:
+                        mocdoc_bill_id = request.env["mocdoc.bills"].with_user(14).create(
+                            {
+                                'name': kw.get('moc_doc_unique_ref'),
+                                'model':'sale',
+                                'mocdoc_json_values':kw,
+                            })
+
 
                     return {'Status': 200,'record_id':mocdoc_bill_id.id}
 
