@@ -74,30 +74,30 @@
         <field name="name">Doctor Details Form</field>
         <field name="model">doctor.details</field>
         <field name="arch" type="xml">
-            <form>
+            <form create="false">
                 <header>
                 </header>
                 <sheet>
                     <group>
                         <group>
-                            <field name="doctor"/>
-                            <field name="bill_ref"/>
-                            <field name="name"/>
-                            <field name="patient_name"/>
+                            <field name="doctor" readonly="1"/>
+                            <field name="bill_ref" readonly="1"/>
+                            <field name="name" readonly="1"/>
+                            <field name="patient_name" readonly="1"/>
                             <field name="doc_fee"/>
-                            <field name="doc_status"/>
+                            <field name="doc_status">
                             <field name="doc_paid_date"/>
                         </group>
                         <group>
-                            <field name="doa"/>
-                            <field name="dod"/>
-                            <field name="ins_provider_id"/>
-                            <field name="ins_agreed_amount"/>
-                            <field name="ins_actual_paid"/>
-                            <field name="total_bill_amount"/>
-                            <field name="total_sale_amount"/>
-                            <field name="outstanding_amount"/>
-                            <field name="reason"/>
+                            <field name="doa" readonly="1"/>
+                            <field name="dod" readonly="1"/>
+                            <field name="ins_provider_id" readonly="1"/>
+                            <field name="ins_agreed_amount" readonly="1"/>
+                            <field name="ins_actual_paid" readonly="1"/>
+                            <field name="total_bill_amount" readonly="1"/>
+                            <field name="total_sale_amount" readonly="1"/>
+                            <field name="outstanding_amount" readonly="1"/>
+                            <field name="reason" readonly="1"/>
                         </group>
                     </group>
                 </sheet>
@@ -114,6 +114,35 @@
         <field name="model">doctor.details</field>
         <field name="arch" type="xml">
             <tree editable="top">
+                <field name="name" invisible="1"/>
+                <field name="api_date" readonly="1"/>
+                <field name="bill_date" readonly="1"/>
+                <field name="bill_ref" readonly="1"/>
+                <field name="sale_order_id" readonly="1"/>
+                <!-- <field name="invoice_ids" widget="many2many_tags"/> -->
+                <field name="doctor" readonly="1"/>
+                <field name="patient_name" readonly="1"/>
+                <field name="doa" invisible="1" readonly="1"/>
+                <field name="dod" invisible="1" readonly="1"/>
+                <field name="doc_fee" readonly="0"/>
+                <field name="doc_status" readonly="0"/>
+                <field name="doc_paid_date" readonly="0" attrs="{'required': [('doc_status', '=','paid')]}"/>
+                <field name="ins_provider_id" readonly="1"/>
+                <field name="ins_agreed_amount" readonly="1"/>
+                <field name="ins_actual_paid" readonly="1"/> 
+                <field name="total_sale_amount" readonly="1"/>
+                <field name="total_bill_amount" readonly="1"/>
+                <field name="outstanding_amount" readonly="1"/>
+                <field name="reason" readonly="1"/>
+            </tree>
+        </field>
+    </record>
+
+    <record model="ir.ui.view" id="doctor_details_tree_view_tracking_logs">
+        <field name="name">Doctor Details Tree</field>
+        <field name="model">doctor.details</field>
+        <field name="arch" type="xml">
+            <tree create="false">
                 <field name="name" invisible="1"/>
                 <field name="api_date" readonly="1"/>
                 <field name="bill_date" readonly="1"/>
@@ -161,6 +190,14 @@
         <!-- <field name="search_view_id" ref="view_printing_lccation_filter"/> -->
     </record>
 
+    <record id="action_doctor_details_logs" model="ir.actions.server">
+        <field name="name">Doctor Details Tracking Logs</field>
+        <field name="model_id" ref="la_clinique_extension.model_doctor_details"/>
+        <field name="state">code</field>
+        <field name="code">
+                action = model.action_view_doctor_details_tracking_logs()
+            </field>
+    </record>
 
     <menuitem 
         id="doctor_details"
@@ -168,6 +205,14 @@
         parent="sale.sale_order_menu"
         action="doctor_details_action"
         sequence="3"/>
+
+    <menuitem 
+        id="doctor_details_tracking_logs"
+        name="Doctor Details Tracking logs"
+        parent="sale.menu_sale_config"
+        action="action_doctor_details_logs"
+        groups="base.group_no_one"
+        sequence="15"/>
 
       <record id="model_update_bulk_sale_details" model="ir.actions.server">
         <field name="name">Update Bulk Sale Details</field>

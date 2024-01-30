@@ -132,9 +132,9 @@ class DoctorDetails(models.Model):
 	outstanding_amount = fields.Float(string='Outstanding Amt')
 	bill_date = fields.Date(string='Bill Date')
 	doctor = fields.Char(string='Doctor')
-	doc_fee = fields.Float(string='Doc Fees charged')
-	doc_status = fields.Selection([('paid', 'Paid')], string='Doc Status', default='')
-	doc_paid_date = fields.Datetime(string='Doc Paid Date')
+	doc_fee = fields.Float(string='Doc Fees charged', tracking=2)
+	doc_status = fields.Selection([('paid', 'Paid')], string='Doc Status', default='', tracking=2)
+	doc_paid_date = fields.Datetime(string='Doc Paid Date', tracking=2)
 	doa = fields.Datetime(string='Date Of Admission')
 	dod = fields.Datetime(string='Date Of Discharge')
 	ins_provider_id = fields.Many2one('insurance.provider',string="Ins Prov",copy=False)
@@ -224,5 +224,21 @@ class DoctorDetails(models.Model):
 			count = count+1
 			_logger.info("==============================================>Count=========================================================> {x}".format(x=str(count)))
 			i.update_sale_deatils()
+
+	def action_view_doctor_details_tracking_logs(self):
+		tree_view_id = self.env.ref('la_clinique_extension.doctor_details_tree_view_tracking_logs').id
+		form_view_id = self.env.ref('la_clinique_extension.doctor_details_form_view').id
+
+		return  {
+            'type': 'ir.actions.act_window',
+            'name': 'Doctor Details Tracking Logs',
+            'res_model': 'doctor.details',
+            'view_mode': 'tree',
+            'view_id': False,
+            'views': [(tree_view_id, 'tree'), (form_view_id, 'form')],
+            'target': 'current',
+            'context': {},
+            # 'domain': domain,
+        }
 			
 
