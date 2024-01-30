@@ -85,7 +85,7 @@
                             <field name="name" readonly="1"/>
                             <field name="patient_name" readonly="1"/>
                             <field name="doc_fee"/>
-                            <field name="doc_status">
+                            <field name="doc_status"/>
                             <field name="doc_paid_date"/>
                         </group>
                         <group>
