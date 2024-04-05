@@ -125,6 +125,12 @@ class SaleOrder(models.Model):
                                 payment_id.payment_method_line_id = payment_method_line_id[0].id
                             else:
                                 post =False
+                        elif i.card_name == 'mytmoney':
+                            payment_method_line_id = payment_id.journal_id.inbound_payment_method_line_ids.filtered(lambda m: m.is_my_t_money_payment)
+                            if payment_method_line_id:
+                                payment_id.payment_method_line_id = payment_method_line_id[0].id
+                            else:
+                                post =False
                     if post:
                         payment_id.action_post()
                     i.is_payment_created = True
@@ -172,7 +178,12 @@ class SaleOrder(models.Model):
                                 payment_id.payment_method_line_id = payment_method_line_id[0].id
                             else:
                                 post =False
-                                
+                        elif i.card_name == 'mytmoney':
+                            payment_method_line_id = payment_id.journal_id.inbound_payment_method_line_ids.filtered(lambda m: m.is_my_t_money_payment)
+                            if payment_method_line_id:
+                                payment_id.payment_method_line_id = payment_method_line_id[0].id
+                            else:
+                                post =False
                     if post:
                         payment_id.action_post()
                     i.is_sec_payment_created = True
@@ -265,8 +276,6 @@ class SaleAdvancePaymentInv(models.TransientModel):
         return invoice
 
 
-
-
 class StockMove(models.Model):
     _inherit = "stock.move"
 
@@ -324,12 +333,10 @@ class StockRule(models.Model):
         return res
 
 
-
 class StockMoveLine(models.Model):
     _inherit = "stock.move.line"
 
     move_line_moc_doc_location_id = fields.Many2one('stock.location',related='move_id.move_moc_doc_location_id',string='Moc doc Location')
-
 
 
 
