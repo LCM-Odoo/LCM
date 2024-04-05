@@ -213,13 +213,15 @@ class Authorize2(http.Controller):
             False
 
     def search_journal(self,journal_type=False,from_sale=False):
-        if journal_type in ['MCB-CARDS','SBM-CARDS','JuicebyMCB']:
+        if journal_type in ['MCB-CARDS','SBM-CARDS','JuicebyMCB','mytmoney']:
             if journal_type == 'MCB-CARDS':
                 journal_id = request.env["account.journal"].sudo().search([('is_mcb_journal','=',True)],limit =1)
             elif journal_type == 'SBM-CARDS':
                 journal_id = request.env["account.journal"].sudo().search([('is_sbm_journal','=',True)],limit =1)
             elif journal_type == 'JuicebyMCB':
                 journal_id = request.env["account.journal"].sudo().search([('is_juice_by_journal','=',True)],limit =1)
+            elif journal_type == 'mytmoney':
+                journal_id = request.env["account.journal"].sudo().search([('is_my_t_money','=',True)],limit =1)
         else:
             journal_id = request.env["account.journal"].sudo().search([('name','=',journal_type)],limit =1)
 
@@ -621,8 +623,6 @@ class Authorize2(http.Controller):
             else:
                 return False
 
-
-
     @http.route('/create_sale_order', type='json', auth='none', website=True)
     def create_sale_order(self, **kw):
         _logger.info("Mocdoc Json write_api_valuesues==============================================>"+str(kw))
@@ -749,7 +749,7 @@ class Authorize2(http.Controller):
                         self.create_error_logs(mocdoc_api_values=kw,api_type='create',model='sale',response=str(response))
                         return response
 
-                    if kw.get('journal_type') in ['MCB-CARDS','SBM-CARDS','JuicebyMCB']:
+                    if kw.get('journal_type') in ['MCB-CARDS','SBM-CARDS','JuicebyMCB','mytmoney']:
                         is_cards = True
                         card_name = kw.get('journal_type')
 
@@ -786,7 +786,7 @@ class Authorize2(http.Controller):
 
                         dual_currency_id = dual_currency_id.id
 
-                        if kw.get('dual_journal_type') in ['MCB-CARDS','SBM-CARDS','JuicebyMCB']:
+                        if kw.get('dual_journal_type') in ['MCB-CARDS','SBM-CARDS','JuicebyMCB','mytmoney']:
                             is_card_two = True
                             sec_card_name = kw.get('dual_journal_type')
 
@@ -909,7 +909,6 @@ class Authorize2(http.Controller):
                     response = {'Status': 700,'Reason':'Product_list Is Missing'}
                     self.create_error_logs(mocdoc_api_values=kw,api_type='create',model='sale',response=str(response))
                     return response
-
 
     @http.route('/create_purchase_order', type='json', auth='none', website=True)
     def create_purchase_order(self, **kw):
@@ -1108,7 +1107,7 @@ class Authorize2(http.Controller):
                         payment_list.append(payment_id.id)
 
                         post = True
-                        if journal_type in ['MCB-CARDS','SBM-CARDS','JuicebyMCB']:
+                        if journal_type in ['MCB-CARDS','SBM-CARDS','JuicebyMCB','mytmoney']:
                             if journal_type == 'MCB-CARDS':
                                 payment_method_line_id = payment_id.journal_id.inbound_payment_method_line_ids.filtered(lambda m: m.is_mcb_payment)
                                 if payment_method_line_id:
@@ -1125,6 +1124,12 @@ class Authorize2(http.Controller):
 
                             elif i.card_name == 'JuicebyMCB':
                                 payment_method_line_id = payment_id.journal_id.inbound_payment_method_line_ids.filtered(lambda m: m.is_juice_by_payment)
+                                if payment_method_line_id:
+                                    payment_id.payment_method_line_id = payment_method_line_id[0].id
+                                else:
+                                    post =False
+                            elif i.card_name == 'mytmoney':
+                                payment_method_line_id = payment_id.journal_id.inbound_payment_method_line_ids.filtered(lambda m: m.is_my_t_money_payment)
                                 if payment_method_line_id:
                                     payment_id.payment_method_line_id = payment_method_line_id[0].id
                                 else:
@@ -1334,7 +1339,7 @@ class Authorize2(http.Controller):
                         payment_list.append(payment_id.id)
 
                         post = True
-                        if journal_type in ['MCB-CARDS','SBM-CARDS','JuicebyMCB']:
+                        if journal_type in ['MCB-CARDS','SBM-CARDS','JuicebyMCB','mytmoney']:
                             if journal_type == 'MCB-CARDS':
                                 payment_method_line_id = payment_id.journal_id.inbound_payment_method_line_ids.filtered(lambda m: m.is_mcb_payment)
                                 if payment_method_line_id:
@@ -1351,6 +1356,12 @@ class Authorize2(http.Controller):
 
                             elif i.card_name == 'JuicebyMCB':
                                 payment_method_line_id = payment_id.journal_id.inbound_payment_method_line_ids.filtered(lambda m: m.is_juice_by_payment)
+                                if payment_method_line_id:
+                                    payment_id.payment_method_line_id = payment_method_line_id[0].id
+                                else:
+                                    post =False
+                            elif i.card_name == 'mytmoney':
+                                payment_method_line_id = payment_id.journal_id.inbound_payment_method_line_ids.filtered(lambda m: m.is_my_t_money_payment)
                                 if payment_method_line_id:
                                     payment_id.payment_method_line_id = payment_method_line_id[0].id
                                 else:
