@@ -1273,8 +1273,8 @@ class Authorize2(http.Controller):
                     self.create_error_logs(mocdoc_api_values=kw,api_type='create',model='payment',response=str(response))
                     return response
 
-                if kw.get('amount') < 1.0:
-                    _logger.info("Amount Is lesser than 1.0 ==============================================>")
+                if kw.get('amount') < 0.1:
+                    _logger.info("Amount Is lesser than 0.1 ==============================================>")
                     response = {'Status': 304,'Reason':'Price Is Lesser Than 0.1'}
                     self.create_error_logs(mocdoc_api_values=kw,api_type='create',model='payment',response=str(response))
                     return response
