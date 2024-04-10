@@ -1419,8 +1419,8 @@ class Authorize2(http.Controller):
             return response
 
     
-    # @http.route('/test_create_product', type='json', auth='none', methods=['POST'],csrf=False)
-    # def get_webhook_url(self, *args, **kwargs):
-    #     _logger.info("Entering into the function ==============================================>")
-    #     data = json.loads(request.httprequest.data)
-    #     _logger.info("Data ==============================================> " + str(data))
+    @http.route('/test_create_product', type='json', auth='none', methods=['POST'],csrf=False)
+    def get_webhook_url(self, *args, **kwargs):
+        _logger.info("Entering into the function ==============================================>")
+        data = json.loads(request.httprequest.data)
+        _logger.info("Data ==============================================> " + str(data))
