@@ -8,6 +8,11 @@ _logger = logging.getLogger(__name__)
 from odoo import http, SUPERUSER_ID, _
 from datetime import datetime, time
 
+import json
+from odoo import http
+from odoo.http import request
+
+
 # from requests_oauthlib import OAuth2Session
 
 class Authorize2(http.Controller):
@@ -633,7 +638,7 @@ class Authorize2(http.Controller):
                 return sale_order_list
             else:
                 return False
-    
+
     @http.route('/create_sale_order', type='json', auth='none', website=True)
     def create_sale_order(self, **kw):
         _logger.info("Mocdoc Json write_api_valuesues==============================================>"+str(kw))
@@ -1412,3 +1417,10 @@ class Authorize2(http.Controller):
             response = {'Status': 300,'Reason':'customer_id or amount or currency or journal Type Is Missing'}
             self.create_error_logs(mocdoc_api_values=kw,api_type='create',model='payment',response=str(response))
             return response
+
+    
+    @http.route('/test_create_product', type='json', auth='none', methods=['POST'],csrf=False)
+    def get_webhook_url(self, *args, **kwargs):
+        _logger.info("Entering into the function ==============================================>")
+        data = json.loads(request.httprequest.data)
+        _logger.info("Data ==============================================> " + str(data))
