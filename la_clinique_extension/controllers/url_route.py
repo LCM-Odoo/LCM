@@ -1122,13 +1122,13 @@ class Authorize2(http.Controller):
                                 else:
                                     post =False
 
-                            elif i.card_name == 'JuicebyMCB':
+                            elif journal_type == 'JuicebyMCB':
                                 payment_method_line_id = payment_id.journal_id.inbound_payment_method_line_ids.filtered(lambda m: m.is_juice_by_payment)
                                 if payment_method_line_id:
                                     payment_id.payment_method_line_id = payment_method_line_id[0].id
                                 else:
                                     post =False
-                            elif i.card_name == 'mytmoney':
+                            elif journal_type == 'mytmoney':
                                 payment_method_line_id = payment_id.journal_id.inbound_payment_method_line_ids.filtered(lambda m: m.is_my_t_money_payment)
                                 if payment_method_line_id:
                                     payment_id.payment_method_line_id = payment_method_line_id[0].id
@@ -1353,13 +1353,13 @@ class Authorize2(http.Controller):
                                 else:
                                     post =False
 
-                            elif i.card_name == 'JuicebyMCB':
+                            elif journal_type == 'JuicebyMCB':
                                 payment_method_line_id = payment_id.journal_id.inbound_payment_method_line_ids.filtered(lambda m: m.is_juice_by_payment)
                                 if payment_method_line_id:
                                     payment_id.payment_method_line_id = payment_method_line_id[0].id
                                 else:
                                     post =False
-                            elif i.card_name == 'mytmoney':
+                            elif journal_type == 'mytmoney':
                                 payment_method_line_id = payment_id.journal_id.inbound_payment_method_line_ids.filtered(lambda m: m.is_my_t_money_payment)
                                 if payment_method_line_id:
                                     payment_id.payment_method_line_id = payment_method_line_id[0].id
