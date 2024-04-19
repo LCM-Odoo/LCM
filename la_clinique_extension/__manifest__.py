@@ -12,6 +12,7 @@
     'data': [
         'data/mail_template.xml',
         'data/ir_cron_data.xml',
+        'security/security.xml',
         'security/ir.model.access.csv',
         'views/api_logs.xml',
         'views/doctor_details.xml',
