@@ -50,6 +50,14 @@ class SaleOrder(models.Model):
 
     pharm_loc_ref = fields.Char(string='Pharm Loc Ref',copy=False,readonly=True) 
 
+    is_mocdoc_loc_editable = fields.Boolean(string='Mocdoc Loc Editable', compute='_compute_mocdoc_loc_editable')
+
+    def _compute_mocdoc_loc_editable(self):
+        for rec in self:
+            rec.is_mocdoc_loc_editable = False
+            if rec.env.user.has_group('la_clinique_extension.group_mocdoc_loc_editable'):
+                rec.is_mocdoc_loc_editable = True
+
     @api.model
     def fields_view_get(self, view_id=None, view_type='form', toolbar=False, submenu=False):
         res = super(SaleOrder, self).fields_view_get(view_id=view_id, view_type=view_type, toolbar=toolbar, submenu=submenu)

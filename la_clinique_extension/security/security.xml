@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <record model="ir.module.category" id="module_sale_order">
+        <field name="name">Mocdoc Loc Editable</field>
+        <field name="sequence">2</field>
+    </record>
+
+   <record id="group_mocdoc_loc_editable" model="res.groups">
+        <field name="name">Make Editable</field>
+        <field name="category_id" ref="module_sale_order"/>
+    </record>
+</odoo>

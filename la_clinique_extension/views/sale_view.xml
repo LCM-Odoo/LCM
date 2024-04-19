@@ -23,6 +23,7 @@
             <field name="partner_id" position="after">
                 <field name="patient_type" attrs="{'readonly': [('state', 'in',('done','sale'))]}"/>
                 <field name="moc_doc_ref" attrs="{'readonly': [('state', 'in',('done','sale'))]}"/>
+                <field name="is_mocdoc_loc_editable" invisible="1"/>
                 <field name="sale_bill_amount" readonly="1"/>
                 <field name="sale_bill_type" readonly="1" options="{'no_open':True}"/>
                 <field name="sale_bill_currency" readonly="1" options="{'no_open':True}"/>
@@ -46,7 +47,7 @@
                 <field name="actual_paid" attrs="{'readonly': [('state', 'in',('done','sale'))]}"/>
             </field>
             <xpath expr="//notebook/page[1]/field/tree/field[@name='name']" position="after">
-                <field name="moc_doc_location_id" readonly="1"/>
+                <field name="moc_doc_location_id"  attrs="{'readonly': [('parent.is_mocdoc_loc_editable', '=',False)]}"/>
             </xpath>
 
             <xpath expr="//field[@name='order_line']" position="attributes">
