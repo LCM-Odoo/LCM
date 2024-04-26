@@ -683,12 +683,20 @@ class Authorize2(http.Controller):
                 #         return response
 
                 if patient_type == 'self':
-                    partner_id = self.search_cash_customer_validation()
-                    if not partner_id:
-                        _logger.info("Cash Customer Is Not Configured in odoo==============================================>")
-                        response = {'Status': 713,'Reason':'Cash Customer Is not Configured in Odoo'}
-                        self.create_error_logs(mocdoc_api_values=kw,api_type='create',model='sale',response=str(response))
-                        return response
+                    if not kw.get('customer_id'):
+                        partner_id = self.search_cash_customer_validation()
+                        if not partner_id:
+                            _logger.info("Cash Customer Is Not Configured in odoo ==============================================>")
+                            response = {'Status': 713,'Reason':'Cash Customer Is not Configured in Odoo'}
+                            self.create_error_logs(mocdoc_api_values=kw,api_type='create',model='sale',response=str(response))
+                            return response
+                    else:
+                        partner_id = self.search_customer_id_validation(customer_id=kw.get('customer_id'))
+                        if not partner_id:
+                            _logger.info("Partner ID Does not Exist in odoo==============================================>")
+                            response = {'Status': 705,'Reason':'Partner ID Does not Exist in Odoo, The Patient May Be archived or deleted'}
+                            self.create_error_logs(mocdoc_api_values=kw,api_type='create',model='sale',response=str(response))
+                            return response
                 else:
                     partner_id = self.search_customer_id_validation(customer_id=kw.get('customer_id'))
                     if not partner_id:
