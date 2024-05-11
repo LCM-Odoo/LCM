@@ -114,9 +114,6 @@ class DoctorApiConfig(models.Model):
 			_logger.info("No Configuration has been activated==============================================>")
 
 
-
-
-
 class DoctorDetails(models.Model):
 	_name = 'doctor.details'
 	_description = "Doctor Details"
