@@ -22,9 +22,6 @@ class PickingBackDate(models.TransientModel):
     date =  fields.Datetime('Date', default=fields.Datetime.now)
     picking_ids = fields.Many2many('stock.picking')
     
-
-    
-
     def change_to_backdate_wizard(self):
         active_ids = self.env.context.get('active_ids')
         active_record = self.env[self.env.context.get('active_model')].browse(self.env.context.get('active_id'))

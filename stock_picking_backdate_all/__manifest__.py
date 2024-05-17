@@ -1,5 +1,5 @@
 {
-    'name': 'Stock Picking Backdate',
+    'name': 'Stock Picking Backdate.',
     'version': '15.0.1.0.0',
     'category': 'Extra Tools',
     'author': "10 Orbits",
