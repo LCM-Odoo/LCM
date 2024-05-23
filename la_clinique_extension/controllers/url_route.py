@@ -190,7 +190,7 @@ class Authorize2(http.Controller):
 
     def check_price_validation(self,product_list=False):
         for i in product_list:
-            if i.get('moc_doc_price_unit') <= 0.0:
+            if i.get('moc_doc_price_unit') <= 0.00:
                 return True
             if i.get('product_qty') and '-' in i.get('product_qty'):
                 return True
