@@ -845,31 +845,31 @@ class Authorize2(http.Controller):
                     if sale_order_id.is_dual_mode:
                         sale_order_id.create_second_payment()
 
-                    # picking_id = request.env["stock.picking"].with_user(14).search([('origin','=',sale_order_id.name)])
-                    # if picking_id:
-                    #     picking_id.do_unreserve()
-                    #     picking_id.action_assign()
-                    #     if picking_id.state == 'assigned':
-                    #         picking_id.action_set_quantities_to_reservation()
-                    #         done = True
-                    #         for i in picking_id.move_ids_without_package:
-                    #             if i.product_uom_qty != i.quantity_done:
-                    #                 done = False
-                    #                 break
-                    #         if done:
-                    #             picking_id.button_validate()
-                    #             if self.check_tax_validation(order=sale_order_id):
-                    #                 invoice_id = sale_order_id._create_invoices(final=True)
-                    #                 if invoice_id and len(invoice_id) == 1:
-                    #                     invoice_id.action_post()
-                    #                     sale_order_id.action_unlock()
+                    picking_id = request.env["stock.picking"].with_user(14).search([('origin','=',sale_order_id.name)])
+                    if picking_id:
+                        picking_id.do_unreserve()
+                        picking_id.action_assign()
+                        if picking_id.state == 'assigned':
+                            picking_id.action_set_quantities_to_reservation()
+                            done = True
+                            for i in picking_id.move_ids_without_package:
+                                if i.product_uom_qty != i.quantity_done:
+                                    done = False
+                                    break
+                            if done:
+                                picking_id.button_validate()
+                                if self.check_tax_validation(order=sale_order_id):
+                                    invoice_id = sale_order_id._create_invoices(final=True)
+                                    if invoice_id and len(invoice_id) == 1:
+                                        invoice_id.action_post()
+                                        sale_order_id.action_unlock()
 
-                    # if not picking_id:
-                    #     if self.check_tax_validation(order=sale_order_id):
-                    #         invoice_id = sale_order_id._create_invoices(final=True)
-                    #         if invoice_id and len(invoice_id) == 1:
-                    #             invoice_id.action_post()
-                    #             sale_order_id.action_unlock()
+                    if not picking_id:
+                        if self.check_tax_validation(order=sale_order_id):
+                            invoice_id = sale_order_id._create_invoices(final=True)
+                            if invoice_id and len(invoice_id) == 1:
+                                invoice_id.action_post()
+                                sale_order_id.action_unlock()
 
                     return {'Status': 200,'record_id':sale_order_id.name}
 
