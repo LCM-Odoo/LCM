@@ -15,7 +15,7 @@ from lxml import etree
 class SaleOrder(models.Model):
     _inherit = 'sale.order'
 
-    create_api_values = fields.Char(string='Create API Values',copy=False)
+    create_api_values = fields.Char(string='Create API Values.',copy=False)
     make_so_readonly = fields.Boolean(string='Make SO Readonly',copy=False)
     moc_doc_ref = fields.Char(string="Moc Doc Ref",copy=False)
     patient_type = fields.Selection(selection=[('self', 'Self'),('in', 'In-Patient'),('out', 'Out-Patient')], string='Patient Type',copy=False, tracking=True,default='')
