@@ -241,7 +241,8 @@ class SaleOrder(models.Model):
 class SaleOrderLine(models.Model):
     _inherit = 'sale.order.line'
 
-    moc_doc_location_id = fields.Many2one('stock.location',string='Moc doc Location')
+    moc_doc_location_id = fields.Many2one('stock.location',string='Moc doc Location',copy=False)
+    moc_doc_purchase_price = fields.Float(string='Moc doc Purchase Price',copy=False)
 
     def _prepare_invoice_line(self, **optional_values):
         values = super(SaleOrderLine, self)._prepare_invoice_line(**optional_values)

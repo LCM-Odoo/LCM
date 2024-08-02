@@ -48,6 +48,7 @@
             </field>
             <xpath expr="//notebook/page[1]/field/tree/field[@name='name']" position="after">
                 <field name="moc_doc_location_id"  attrs="{'readonly': [('parent.is_mocdoc_loc_editable', '=',False)]}"/>
+                <field name="moc_doc_purchase_price" readonly="1"/>
             </xpath>
 
             <xpath expr="//field[@name='order_line']" position="attributes">
