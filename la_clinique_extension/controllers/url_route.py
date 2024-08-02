@@ -177,8 +177,8 @@ class Authorize2(http.Controller):
                             location_id = self.search_location(location=i.get('moc_doc_location'))
 
                         purchase_price = 0.0
-                        if i.get('moc_doc_location'):
-                            purchase_price = i.get('moc_doc_location')
+                        if i.get('purchase_price'):
+                            purchase_price = i.get('purchase_price')
 
                         Product_available_list.append(
                             {
