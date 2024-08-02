@@ -15,5 +15,4 @@ class AccountMoveLine(models.Model):
     _inherit = 'account.move.line'
 
     moc_doc_ref = fields.Char(string="Moc Doc Ref",copy=False)
-    moc_doc_purchase_price = fields.Float(string='Moc doc Purchase Price',copy=False)
 

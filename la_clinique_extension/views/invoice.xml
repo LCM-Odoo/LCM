@@ -24,7 +24,6 @@
             </xpath>
             <xpath expr="//notebook/page[1]/field/tree/field[@name='account_id']" position="after">
                 <field name="moc_doc_ref" readonly="1"/>
-                <field name="moc_doc_purchase_price" readonly="1"/>
             </xpath>
         </field>
     </record>
@@ -53,7 +52,6 @@
         <field name="arch" type="xml">
             <field name="move_id" position="after">
                 <field name="moc_doc_ref" readonly="1"/>
-                <field name="moc_doc_purchase_price" readonly="1"/>
             </field>
         </field>
     </record>
