@@ -246,7 +246,8 @@ class SaleOrderLine(models.Model):
 
     def _prepare_invoice_line(self, **optional_values):
         values = super(SaleOrderLine, self)._prepare_invoice_line(**optional_values)
-        values.update({'moc_doc_ref':self.order_id.moc_doc_ref if self.order_id.moc_doc_ref else False})
+        values.update({'moc_doc_ref': self.order_id.moc_doc_ref if self.order_id.moc_doc_ref else False})
+        values.update({'moc_doc_purchase_price': self.moc_doc_purchase_price})
         return values
 
     def update_line_tax(self):
