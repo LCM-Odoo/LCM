@@ -171,11 +171,16 @@ class Authorize2(http.Controller):
                         if i.get('moc_doc_location'):
                             location_id = self.search_location(location=i.get('moc_doc_location'))
 
+                        purchase_price = 0.0
+                        if i.get('purchase_price'):
+                            purchase_price = i.get('purchase_price')
+
                         Product_available_list.append(
                             {
                                 'product_id': product_id.id,
                                 'qty': i.get('product_qty'),
                                 'moc_doc_price_unit': i.get('moc_doc_price_unit'),
+                                'moc_doc_purchase_price': purchase_price ,
                                 'tax_id': [(6, 0,tax_list)],
                                 'disc': i.get('disc') if i.get('disc') else 0.0,
                                 'moc_doc_location_id':location_id.id if location_id else False
@@ -832,6 +837,7 @@ class Authorize2(http.Controller):
                                 'order_id':sale_order_id.id,
                                 'product_uom_qty':i.get('qty'),
                                 'price_unit':i.get('moc_doc_price_unit'),
+                                'moc_doc_purchase_price':i.get('moc_doc_purchase_price'),
                                 'tax_id': i.get('tax_id'),
                                 'discount': i.get('disc'),
                                 'moc_doc_location_id': i.get('moc_doc_location_id'),

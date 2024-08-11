@@ -15,7 +15,7 @@ from lxml import etree
 class SaleOrder(models.Model):
     _inherit = 'sale.order'
 
-    create_api_values = fields.Char(string='Create API Values.',copy=False)
+    create_api_values = fields.Char(string='Create API Values',copy=False)
     make_so_readonly = fields.Boolean(string='Make SO Readonly',copy=False)
     moc_doc_ref = fields.Char(string="Moc Doc Ref",copy=False)
     patient_type = fields.Selection(selection=[('self', 'Self'),('in', 'In-Patient'),('out', 'Out-Patient')], string='Patient Type',copy=False, tracking=True,default='')
@@ -241,7 +241,8 @@ class SaleOrder(models.Model):
 class SaleOrderLine(models.Model):
     _inherit = 'sale.order.line'
 
-    moc_doc_location_id = fields.Many2one('stock.location',string='Moc doc Location')
+    moc_doc_location_id = fields.Many2one('stock.location',string='Moc doc Location',copy=False)
+    moc_doc_purchase_price = fields.Float(string='Moc doc Purchase Price',copy=False)
 
     def _prepare_invoice_line(self, **optional_values):
         values = super(SaleOrderLine, self)._prepare_invoice_line(**optional_values)
