@@ -312,20 +312,20 @@ class StockPicking(models.Model):
     create_api_values = fields.Char(string='Internal Transfer Create API Values',copy=False)
 
 
-    @api.model
-    def fields_view_get(self, view_id=None, view_type='form', toolbar=False, submenu=False):
-        res = super(StockPicking, self).fields_view_get(view_id=view_id, view_type=view_type, toolbar=toolbar, submenu=submenu)
-        doc = etree.XML(res['arch'])
-        if view_type == 'form':
-            fields = ['date_done']
-            for field in fields:
-                for node in doc.xpath("//field[@name='%s']" % field):
-                    node.set("readonly", "0")
-                    modifiers = json.loads(node.get("modifiers"))
-                    modifiers['readonly'] = False
-                    node.set("modifiers", json.dumps(modifiers))
-            res['arch'] = etree.tostring(doc)
-        return res
+    # @api.model
+    # def fields_view_get(self, view_id=None, view_type='form', toolbar=False, submenu=False):
+    #     res = super(StockPicking, self).fields_view_get(view_id=view_id, view_type=view_type, toolbar=toolbar, submenu=submenu)
+    #     doc = etree.XML(res['arch'])
+    #     if view_type == 'form':
+    #         fields = ['date_done']
+    #         for field in fields:
+    #             for node in doc.xpath("//field[@name='%s']" % field):
+    #                 node.set("readonly", "")
+    #                 modifiers = json.loads(node.get("modifiers"))
+    #                 modifiers['readonly'] = False
+    #                 node.set("modifiers", json.dumps(modifiers))
+    #         res['arch'] = etree.tostring(doc)
+    #     return res
     
 
     def action_assign(self):
