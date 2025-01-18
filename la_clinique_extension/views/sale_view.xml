@@ -189,7 +189,7 @@
                                 <field name="product_updatable" invisible="1"/>
                             </group>
                             <group>
-                                <field name="price_unit" readonly="1"/>
+                                <field name="price_unit" readonly="0"/>
                                 <field name="discount" groups="product.group_discount_per_so_line" readonly="1"/>
                                 <field name="price_subtotal" widget="monetary"/>
                                 <field name="tax_id" widget="many2many_tags" readonly="1"/>
@@ -208,15 +208,19 @@
             <field name="name">Sale Order Line</field>
             <field name="type">ir.actions.act_window</field>
             <field name="res_model">sale.order.line</field>
-            <field name="view_id" ref="view_order_line_tree_new"/>
+            <field name="view_ids" eval="[(5, 0, 0),
+                (0, 0, {'view_mode': 'tree', 'view_id': ref('view_order_line_tree_new')}),
+                (0, 0, {'view_mode': 'form', 'view_id': ref('sale_order_line_view_form_readonly_new')})]"/>
+            <!-- <field name="view_id" ref="view_order_line_tree_new"/> -->
             <field name="view_mode">tree,form</field>
         </record>
 
         <menuitem 
-            id="sale_order_line_new"
+            id="sale_order_line_new_updated"
             name="Sale Order Line"
             parent="sale.sale_order_menu"
             action="action_sale_order_line_view"
+            groups="la_clinique_extension.group_mocdoc_unitprice_editable"
             sequence="5"/>
 
 
