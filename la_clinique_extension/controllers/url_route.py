@@ -1056,7 +1056,7 @@ class Authorize2(http.Controller):
                     return response
 
                 if kw.get('amount') <= 0.0:
-                    _logger.info("Amount Is lesser than 0.0 ==============================================>")
+                    _logger.info("Amount Is lesser than or equal to 0.0 ==============================================>")
                     response = {'Status': 304,'Reason':'Price Is Lesser Than or equal to 0.0'}
                     self.create_error_logs(mocdoc_api_values=kw,api_type='create',model='payment',response=str(response))
                     return response
@@ -1071,7 +1071,7 @@ class Authorize2(http.Controller):
 
                 if kw.get('is_dual_mode'):
                     if kw.get('dual_amount') <= 0.0:
-                        _logger.info("Dual Payment Amount Is lesser than 0.0 ==============================================>")
+                        _logger.info("Dual Payment Amount Is lesser than or equal to 0.0 ==============================================>")
                         response = {'Status': 304,'Reason':'Dual Payment Amount Is Lesser Than or equal to 0.0'}
                         self.create_error_logs(mocdoc_api_values=kw,api_type='create',model='payment',response=str(response))
                         return response
@@ -1288,7 +1288,7 @@ class Authorize2(http.Controller):
                     return response
 
                 if kw.get('amount') <= 0.0:
-                    _logger.info("Amount Is lesser than 0.0 ==============================================>")
+                    _logger.info("Amount Is lesser than or equal to 0.0 ==============================================>")
                     response = {'Status': 304,'Reason':'Price Is Lesser Than or equal to 0.0'}
                     self.create_error_logs(mocdoc_api_values=kw,api_type='create',model='payment',response=str(response))
                     return response
@@ -1302,7 +1302,7 @@ class Authorize2(http.Controller):
 
                 if kw.get('is_dual_mode'):
                     if kw.get('dual_amount') <= 0.0:
-                        _logger.info("Dual Payment Amount Is lesser than 0.0 ==============================================>")
+                        _logger.info("Dual Payment Amount Is lesser than or equal to 0.0 ==============================================>")
                         response = {'Status': 304,'Reason':'Dual Payment Amount Is Lesser Than or equal to 0.0'}
                         self.create_error_logs(mocdoc_api_values=kw,api_type='create',model='payment',response=str(response))
                         return response

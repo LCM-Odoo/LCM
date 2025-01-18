@@ -167,6 +167,7 @@
         name="Doctor Details"
         parent="sale.sale_order_menu"
         action="doctor_details_action"
+        groups="la_clinique_extension.group_mocdoc_unitprice_editable"
         sequence="3"/>
 
       <record id="model_update_bulk_sale_details" model="ir.actions.server">
