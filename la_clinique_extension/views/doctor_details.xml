@@ -124,7 +124,8 @@
                 <field name="patient_name" readonly="1"/>
                 <field name="doa" invisible="1" readonly="1"/>
                 <field name="dod" invisible="1" readonly="1"/>
-                <field name="doc_fee" readonly="0"/>
+                <field name="is_unit_price_editable" invisible="1"/>
+                <field name="doc_fee" attrs="{'readonly': [('is_unit_price_editable', '=', False)]}"/>
                 <field name="doc_status" readonly="0"/>
                 <field name="doc_paid_date" readonly="0" attrs="{'required': [('doc_status', '=','paid')]}"/>
                 <field name="ins_provider_id" readonly="1"/>
@@ -167,7 +168,6 @@
         name="Doctor Details"
         parent="sale.sale_order_menu"
         action="doctor_details_action"
-        groups="la_clinique_extension.group_mocdoc_unitprice_editable"
         sequence="3"/>
 
       <record id="model_update_bulk_sale_details" model="ir.actions.server">

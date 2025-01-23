@@ -189,7 +189,8 @@
                                 <field name="product_updatable" invisible="1"/>
                             </group>
                             <group>
-                                <field name="price_unit" readonly="0"/>
+                                <field name="is_unit_price_editable" invisible="1"/>
+                                <field name="price_unit" attrs="{'readonly': [('is_unit_price_editable', '=', False)]}"/>
                                 <field name="discount" groups="product.group_discount_per_so_line" readonly="1"/>
                                 <field name="price_subtotal" widget="monetary"/>
                                 <field name="tax_id" widget="many2many_tags" readonly="1"/>
@@ -220,7 +221,6 @@
             name="Sale Order Line"
             parent="sale.sale_order_menu"
             action="action_sale_order_line_view"
-            groups="la_clinique_extension.group_mocdoc_unitprice_editable"
             sequence="5"/>
 
 

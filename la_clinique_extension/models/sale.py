@@ -243,6 +243,13 @@ class SaleOrderLine(models.Model):
 
     moc_doc_location_id = fields.Many2one('stock.location',string='Moc doc Location',copy=False)
     moc_doc_purchase_price = fields.Float(string='Moc doc Purchase Price',copy=False)
+    is_unit_price_editable = fields.Boolean(string="Is Unit Price Editable",compute="_compute_is_unit_price_editable")
+
+    @api.depends_context('uid')
+    def _compute_is_unit_price_editable(self):
+        group_xml_id = 'la_clinique_extension.group_mocdoc_unitprice_editable'
+        for line in self:
+            line.is_unit_price_editable = self.env.user.has_group(group_xml_id)
 
     def _prepare_invoice_line(self, **optional_values):
         values = super(SaleOrderLine, self)._prepare_invoice_line(**optional_values)
