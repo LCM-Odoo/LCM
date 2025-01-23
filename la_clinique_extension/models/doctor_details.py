@@ -142,6 +142,14 @@ class DoctorDetails(models.Model):
 	api_date = fields.Date(string='API Date',copy=False)
 	# invoice_ids = fields.Many2many('account.move',string='Invoices',related='sale_order_id.invoice_ids',copy=False)
 
+	is_unit_price_editable = fields.Boolean(string="Is Unit Price Editable",compute="_compute_is_unit_price_editable")
+
+	@api.depends_context('uid')
+	def _compute_is_unit_price_editable(self):
+		group_xml_id = 'la_clinique_extension.group_mocdoc_unitprice_editable'
+		for rec in self:
+			rec.is_unit_price_editable = self.env.user.has_group(group_xml_id)
+
 
 	@api.onchange('doc_status')
 	def onchange_doc_status(self):
