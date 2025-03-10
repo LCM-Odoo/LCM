@@ -186,7 +186,7 @@
             <field name="name">Ip Bill Update</field>
             <field name="email_from">satish@sslconsultingservice.com</field>
             <field name="subject">Mocdoc Bill Update In Odoo</field>
-            <field name="email_to">info@sslconsultingservice.com,finance@cliniquemauricienne.com</field>
+            <field name="email_to">info@sslconsultingservice.com,finance@cliniquemauricienne.com,accountant@cliniquemauricienne.com</field>
             <field name="email_cc"></field>
             <field name="model_id" ref="la_clinique_extension.model_sale_order"/>
             <field name="auto_delete" eval="False"/>
