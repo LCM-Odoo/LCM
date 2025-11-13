@@ -215,6 +215,14 @@ class SaleOrder(models.Model):
                 _logger.error("Error in Sending Mail==============================================> " + str(e))
                 return False
 
+    def check_tax_validation(self,order):
+        if order:
+            if order.create_api_values:
+                for line in order.order_line:
+                    if not line.tax_id:
+                        return False
+            return True
+
     def cron_confirm_sale(self):
         sale_order_id = self
 
