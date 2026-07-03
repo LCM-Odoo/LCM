@@ -748,7 +748,7 @@ class Authorize2(http.Controller):
                 sec_card_name = False
                 is_dual_mode = False
 
-                if kw.get('amount') > 0.0:
+                if kw.get('amount') > 0.0 and kw.get('journal_type') != 'Credit':
                     amount = kw.get('amount')
                     if not kw.get('journal_type'):
                         response = {'Status': 710,'Reason':'Journal Not Sent From Mocdoc'}
@@ -773,7 +773,7 @@ class Authorize2(http.Controller):
                         self.create_error_logs(mocdoc_api_values=kw,api_type='create',model='sale',response=str(response))
                         return response
 
-                    if kw.get('dual_amount') > 0.0:
+                    if kw.get('dual_amount') > 0.0 and kw.get('journal_type') != 'Credit':
                         is_dual_mode = True
                         dual_amount = kw.get('dual_amount')
 
