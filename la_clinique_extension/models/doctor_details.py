@@ -165,7 +165,7 @@ class DoctorDetails(models.Model):
 		if json_dict.get('billinglist_detailed'):
 			# _logger.info("Json Dict==============================================>" + str(json_dict.get('billinglist_detailed')))
 			for i in json_dict.get('billinglist_detailed'):
-				if i.get('dept') == 'CONSULTATION':
+				if i.get('dept') == 'Consultation':
 					bill_date = datetime.strptime(i.get('billdate'), "%Y%m%d%H:%M:%S")
 
 					doc_detail_id = self.env['doctor.details'].create(
