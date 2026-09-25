@@ -173,7 +173,7 @@ class DoctorDetails(models.Model):
 							'name': i.get('dept'),
 							'patient_name': i.get('name'),
 							'bill_ref': i.get('bill_no'),
-							'doctor': i.get('consultant'),
+							'doctor': i.get('treatingconsultant'),
 							'doc_fee': i.get('amt'),
 							'bill_date': bill_date.date(),
 							'api_date': api_date,
