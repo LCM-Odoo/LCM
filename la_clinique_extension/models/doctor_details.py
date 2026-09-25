@@ -65,6 +65,7 @@ class DoctorApiConfig(models.Model):
 			_logger.info("Response==============================================>" + str(response))
 			if response and response.status_code == 200:
 				_logger.info("JSON Response==============================================>" + str(response.json()))
+				sssssssss
 				self.send_mail_notifictaion(status_code=str(response.status_code),response=str(response.json()))
 				return response.json()
 			else:
