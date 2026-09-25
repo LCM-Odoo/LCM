@@ -1,3 +1,4 @@
+from logging import config
 from odoo import api, fields, models, SUPERUSER_ID, _
 import logging
 _logger = logging.getLogger(__name__)
@@ -35,6 +36,35 @@ class DoctorApiConfig(models.Model):
 	# def test_connection(self,from_config=True):
 	#   if self.active:
 	
+	def cron_get_doc_bill_details(self):
+		start_date = fields.Date.to_date('2026-08-05')
+		end_date = fields.Date.to_date('2026-09-24')
+		
+		config = self.search([('active', '=', True)], limit=1)
+		if not config:
+			_logger.info("No active Doctor API configuration found.")
+			return
+		# First execution starts from 05-08-2026.
+		if not config.bill_date:
+			config.bill_date = start_date
+
+    # Safety: stop if the configured date is already beyond the range.
+		if config.bill_date > end_date:
+			self.env.ref(
+            'la_clinique_extension.ir_cron_get_doc_bill_details'
+        ).write({'active': False})
+			return
+
+    # Calls get_doc_bill_details() using the current bill_date.
+		config.get_doc_bill_details()
+
+    # 24-09-2026 is processed, then the cron disables itself.
+		if config.bill_date >= end_date:
+			self.env.ref(
+            'la_clinique_extension.ir_cron_get_doc_bill_details'
+        ).write({'active': False})
+		else:
+			config.bill_date += timedelta(days=1)
 
 	def send_mail_notifictaion(self,status_code='',response=''):
 		try:
@@ -65,7 +95,7 @@ class DoctorApiConfig(models.Model):
 			_logger.info("Response==============================================>" + str(response))
 			if response and response.status_code == 200:
 				_logger.info("JSON Response==============================================>" + str(response.json()))
-				sssssssss
+
 				self.send_mail_notifictaion(status_code=str(response.status_code),response=str(response.json()))
 				return response.json()
 			else:

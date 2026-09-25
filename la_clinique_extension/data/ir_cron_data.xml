@@ -33,5 +33,17 @@
         <field name="doall" eval="True"/>
     </record>
 
+     <record id="ir_cron_get_doc_bill_details" model="ir.cron">
+        <field name="name">Doctor Bill Details Import</field>
+        <field name="model_id" ref="model_doctor_api_config"/>
+        <field name="state">code</field>
+        <field name="code">model.cron_get_doc_bill_details()</field>
+        <field name="interval_number">3</field>
+        <field name="interval_type">minutes</field>
+        <field name="numbercall">-1</field>
+        <field name="active">True</field>
+        <field name="user_id" ref="base.user_root"/>
+    </record>
+
     
 </odoo>
