@@ -200,8 +200,6 @@ class Authorize2(http.Controller):
 
     def check_price_validation(self,product_list=False):
         for i in product_list:
-            if i.get('moc_doc_price_unit') <= 0.0:
-                return True
             if i.get('product_qty') and '-' in i.get('product_qty'):
                 return True
 
@@ -686,8 +684,8 @@ class Authorize2(http.Controller):
 
 
                 if self.check_price_validation(product_list=kw.get('product_list')):
-                    _logger.info("Moc Doc Unit Price Is lesser than or equal to 0.0 OR Quantity is in negative ==============================================>")
-                    response = {'Status': 704,'Reason':'Moc Doc Unit Price Is lesser than or equal to 0.0 OR Quantity is in negative'}
+                    _logger.info("Quantity is in negative ==============================================>")
+                    response = {'Status': 704, 'Reason': 'Quantity is in negative'}
                     self.create_error_logs(mocdoc_api_values=kw,api_type='create',model='sale',response=str(response))
                     return response
 
@@ -965,8 +963,8 @@ class Authorize2(http.Controller):
                     return response
 
                 if self.check_price_validation(product_list=kw.get('product_list')):
-                    _logger.info("Moc Doc Unit Price Is lesser than or equal to 0.0 OR Quantity is in negative ==============================================>")
-                    response = {'Status': 704,'Reason':'Moc Doc Unit Price Is lesser than or equal to 0.0 OR Quantity is in negative'}
+                    _logger.info("Quantity is in negative ==============================================>")
+                    response = {'Status': 704, 'Reason': 'Quantity is in negative'}
                     self.create_error_logs(mocdoc_api_values=kw,api_type='create',model='purchase',response=str(response))
                     return response
 
