@@ -51,11 +51,11 @@ class Authorize2(http.Controller):
             return provider_id,True
         else:
             provider_id = request.env["insurance.provider"].with_user(14).with_context(
-                    {'lang': 'en_US', 
-                    'uid': 2, 
-                    'allowed_company_ids': [1], 
+                    {'lang': 'en_US',
+                    'uid': 2,
+                    'allowed_company_ids': [1],
                     }).create({
-                                'name': provider, 
+                                'name': provider,
                             })
             return provider_id,True
             # all_list = [i.name for i in request.env["insurance.provider"].sudo().search([('active','=',True)])]
@@ -93,7 +93,7 @@ class Authorize2(http.Controller):
             else:
                 uom_list = [i.name for i in request.env["uom.uom"].sudo().search([])]
                 return uom_list,False
-        
+
 
     def product_internal_ref_validation(self,default_code=False):
         product_template_id = request.env["product.template"].sudo().search([('active','=',True),('default_code','=',default_code)])
@@ -139,12 +139,12 @@ class Authorize2(http.Controller):
     def product_id_validation(self,product_list=False,internal_transfer=False):
         Product_missing_list =[]
         Product_available_list =[]
-        
+
         for i in product_list:
             location_id = False
             tax_list = []
             product_id = i.get('product_id')
-            
+
             if not product_id and i.get('is_consultant'):
                 product_id = request.env["product.template"].sudo().search([('active','=',True),('id','=',83635)]).id
             if product_id:
@@ -195,8 +195,6 @@ class Authorize2(http.Controller):
 
     def check_price_validation(self,product_list=False):
         for i in product_list:
-            if i.get('moc_doc_price_unit') <= 0.0:
-                return True
             if i.get('product_qty') and '-' in i.get('product_qty'):
                 return True
 
@@ -241,7 +239,7 @@ class Authorize2(http.Controller):
             else:
                 journal_list = [i.name for i in request.env["account.journal"].sudo().search([('type','in',('bank','cash'))])]
                 return journal_list,True
-       
+
 
 
     def search_internal_transfer_operation_type(self):
@@ -263,9 +261,9 @@ class Authorize2(http.Controller):
 
                 api_log_id = request.env["api.logs"].with_user(14).with_context(
                             {
-                               'lang': 'en_US', 
-                                'uid': 2, 
-                                'allowed_company_ids': [1], 
+                               'lang': 'en_US',
+                                'uid': 2,
+                                'allowed_company_ids': [1],
                             }).create({
                                         'name':response,
                                         'mocdoc_api_values':mocdoc_api_values,
@@ -295,7 +293,7 @@ class Authorize2(http.Controller):
                         return False
             return True
 
-      
+
     @http.route('/create_customer', type='json', auth='none', website=True)
     def create_customer(self, **kw):
         _logger.info("==============================================>Entering Customer Creation=========================================================>")
@@ -319,32 +317,32 @@ class Authorize2(http.Controller):
             name = str(kw.get('name')).strip()
             if kw.get('last_name'):
                 name = name + ' '+ str(kw.get('last_name')).strip()
-                
+
             try:
                 customer_rank = supplier_rank = 0
 
-                if kw.get('type') == 'cus':  
+                if kw.get('type') == 'cus':
                     customer_rank = 1
                 else:
                     supplier_rank = 1
 
                 partner_id = request.env["res.partner"].with_user(14).with_context(
-                   {'lang': 'en_US', 
-                    'uid': 2, 
-                    'allowed_company_ids': [1], 
+                   {'lang': 'en_US',
+                    'uid': 2,
+                    'allowed_company_ids': [1],
                     }).create({
-                                'name': name, 
-                                'company_id': 1, 
-                                'street': kw.get('street'), 
+                                'name': name,
+                                'company_id': 1,
+                                'street': kw.get('street'),
                                 'street2': kw.get('street2'),
-                                'city': kw.get('city'), 
+                                'city': kw.get('city'),
                                 'email': kw.get('email'),
-                                'mobile': kw.get('mobile'), 
-                                'national_id': kw.get('national_id'), 
-                                'country_id': self.get_country_id(kw.get('country_id')), 
-                                'active': True, 
-                                'moc_doc_id': kw.get('moc_doc_id'), 
-                                'create_uid':2, 
+                                'mobile': kw.get('mobile'),
+                                'national_id': kw.get('national_id'),
+                                'country_id': self.get_country_id(kw.get('country_id')),
+                                'active': True,
+                                'moc_doc_id': kw.get('moc_doc_id'),
+                                'create_uid':2,
                                 'create_api_values': kw,
                                 'customer_rank': customer_rank,
                                 'supplier_rank': supplier_rank,
@@ -390,7 +388,7 @@ class Authorize2(http.Controller):
                     partner_id.sudo().with_context({'lang': 'en_US','allowed_company_ids': [1]}).mobile = kw.get('mobile')
 
                 if kw.get('name'):
-                    name = str(kw.get('name')).strip() 
+                    name = str(kw.get('name')).strip()
                     if kw.get('last_name'):
                         name = name + ' '+ str(kw.get('last_name')).strip()
 
@@ -411,13 +409,13 @@ class Authorize2(http.Controller):
                     update_list.append(kw.get('email'))
                     partner_id.sudo().with_context({'lang': 'en_US','allowed_company_ids': [1]}).email = kw.get('email')
 
-                
+
                 if kw.get('country_id'):
                     country_id = self.get_country_id(kw.get('country_id'))
                     if country_id:
                         update_list.append(country_id)
                         partner_id.sudo().with_context({'lang': 'en_US','allowed_company_ids': [1]}).country_id = country_id
-                        
+
                 partner_id.sudo().with_context({'lang': 'en_US','allowed_company_ids': [1]}).write_api_values = kw
                 if update_list:
                     return {'Status': 200,'Reason':'Successfully Updated'+'-'+str(update_list)}
@@ -493,7 +491,7 @@ class Authorize2(http.Controller):
                         'name': kw.get('name'),
                         'detailed_type': kw.get('detailed_type'),
                         'invoice_policy': kw.get('invoice_policy'),
-                        'list_price': kw.get('list_price') if kw.get('list_price') else 1, 
+                        'list_price': kw.get('list_price') if kw.get('list_price') else 1,
                         'standard_price': kw.get('standard_price'),
                         'categ_id':  categ_id[0],
                         'default_code': kw.get('default_code'),
@@ -506,12 +504,12 @@ class Authorize2(http.Controller):
                         # 'uom_po_id':uom_po_id[0],
                         'create_api_values': kw
                         }
-                        
+
                 product_template_id = request.env["product.template"].with_user(14).with_context(
                         {
-                           'lang': 'en_US', 
-                            'uid': 2, 
-                            'allowed_company_ids': [1], 
+                           'lang': 'en_US',
+                            'uid': 2,
+                            'allowed_company_ids': [1],
                         }).create(create_vals)
                 if product_template_id:
                     _logger.info("Product Created==============================================> " + str(product_template_id))
@@ -544,7 +542,7 @@ class Authorize2(http.Controller):
             try:
                 # if kw.get('customer_taxes_id'):
                 #     customer_tax_list = self.get_tax_ids(kw.get('customer_taxes_id'),tax_type='sale')
-                #     if not customer_tax_list[1]: 
+                #     if not customer_tax_list[1]:
                 #         return {'Status': 608,'Reason':'Customer Tax Not available in odoo, Kinldy find the List of Sale Taxes in odoo','List':customer_tax_list[0]}
 
                 # if kw.get('vendor_taxes_id'):
@@ -670,15 +668,15 @@ class Authorize2(http.Controller):
 
 
                 if self.check_price_validation(product_list=kw.get('product_list')):
-                    _logger.info("Moc Doc Unit Price Is lesser than or equal to 0.0 OR Quantity is in negative ==============================================>")
-                    response = {'Status': 704,'Reason':'Moc Doc Unit Price Is lesser than or equal to 0.0 OR Quantity is in negative'}
+                    _logger.info("Quantity is in negative ==============================================>")
+                    response = {'Status': 704, 'Reason': 'Quantity is in negative'}
                     self.create_error_logs(mocdoc_api_values=kw,api_type='create',model='sale',response=str(response))
                     return response
 
                 # for i in kw.get('product_list'):
                 #     if i.get('customer_tax'):
                 #         customer_tax_list = self.get_tax_ids(i.get('customer_tax'),tax_type='sale')
-                #         if not customer_tax_list[1]: 
+                #         if not customer_tax_list[1]:
                 #             response = {'Status': 608,'Reason':'Customer Tax Not available in odoo, Kindly find the List of Sale Taxes in odoo','List':customer_tax_list[0]}
                 #             self.create_error_logs(mocdoc_api_values=kw,api_type='create',model='sale',response=str(response))
                 #             return response
@@ -720,7 +718,7 @@ class Authorize2(http.Controller):
                         response = {'Status': 707,'Reason':'Insurance Provider Does not Exist in Odoo, Kindly find the List of Insurance Providers in odoo','List':insurance_provider[0]}
                         self.create_error_logs(mocdoc_api_values=kw,api_type='create',model='sale',response=str(response))
                         return response
-                
+
                 if product_id[1]:
                     _logger.info("Product ID Does not Exist in odoo==============================================>" + str(product_id))
                     response = {'Status': 706,'Reason':'Product ID Does not Exist in Odoo, The product May Be archived or deleted' + str(product_id)}
@@ -732,7 +730,7 @@ class Authorize2(http.Controller):
                     response = {'Status': 709,'Reason':'Currency ID Does not Exist in Odoo, The Currency Be archived or deleted'}
                     self.create_error_logs(mocdoc_api_values=kw,api_type='create',model='sale',response=str(response))
                     return response
-                    
+
                 api_pricelist = False
                 if kw.get('currency_type'):
                     api_pricelist = self.search_pricleist(currency_name=kw.get('currency_type'))
@@ -789,7 +787,7 @@ class Authorize2(http.Controller):
                             self.create_error_logs(mocdoc_api_values=kw,api_type='create',model='sale',response=str(response))
                             return response
 
-                        
+
                         dual_currency_id = self.search_currency_id_validation(currency_id=kw.get('dual_currency_id'))
                         if not dual_currency_id:
                             _logger.info("Second Currency ID Does not Exist in odoo==============================================>")
@@ -824,10 +822,10 @@ class Authorize2(http.Controller):
                         'sec_bill_type': dual_journal_id,
                         'sec_bill_currency': dual_currency_id,
                         'is_card_two': is_card_two,
-                        'sec_card_name': sec_card_name,  
-                        'moc_doc_total': kw.get('moc_doc_bill_amt') if kw.get('moc_doc_bill_amt') else 0.0, 
+                        'sec_card_name': sec_card_name,
+                        'moc_doc_total': kw.get('moc_doc_bill_amt') if kw.get('moc_doc_bill_amt') else 0.0,
                     })
-                
+
                 if sale_order_id:
                     _logger.info("Sale Order Created==============================================> " + str(sale_order_id))
                     for i in product_id[0]:
@@ -905,7 +903,7 @@ class Authorize2(http.Controller):
 
                 if kw.get('bill_type') == 'pharmacy':
                     myobj = {
-                                'customer_id': kw.get('customer_id'), 
+                                'customer_id': kw.get('customer_id'),
                                 'ref': kw.get('moc_doc_ref'),
                                 'amount': kw.get('amount'),
                                 'currency_id': kw.get('currency_type'),
@@ -930,15 +928,15 @@ class Authorize2(http.Controller):
         if kw.get('customer_id') and kw.get('product_list') and kw.get('currency_type'):
             try:
                 if self.check_price_validation(product_list=kw.get('product_list')):
-                    _logger.info("Moc Doc Unit Price Is lesser than or equal to 0.0 OR Quantity is in negative ==============================================>")
-                    response = {'Status': 704,'Reason':'Moc Doc Unit Price Is lesser than or equal to 0.0 OR Quantity is in negative'}
+                    _logger.info("Quantity is in negative ==============================================>")
+                    response = {'Status': 704, 'Reason': 'Quantity is in negative'}
                     self.create_error_logs(mocdoc_api_values=kw,api_type='create',model='purchase',response=str(response))
                     return response
 
                 # for i in kw.get('product_list'):
                 #     if i.get('vendor_tax'):
                 #         vendor_tax_list = self.get_tax_ids(i.get('vendor_tax'),tax_type='purchase')
-                #         if not vendor_tax_list[1]: 
+                #         if not vendor_tax_list[1]:
                 #             response = {'Status': 808,'Reason':'Vendor Tax Not available in odoo, Kinldy find the List of Sale Taxes in odoo','List':vendor_tax_list[0]}
                 #             self.create_error_logs(mocdoc_api_values=kw,api_type='create',model='purchase',response=str(response))
                 #             return response
@@ -982,7 +980,7 @@ class Authorize2(http.Controller):
                             'create_api_values':kw,
                             'make_po_readonly':True
                         })
-                
+
                 if purchase_order_id:
                     _logger.info("Purchase Order Created==============================================> " + str(purchase_order_id))
                     for i in product_id[0]:
@@ -992,7 +990,7 @@ class Authorize2(http.Controller):
                                 'order_id':purchase_order_id.id,
                                 'product_qty':i.get('qty'),
                                 'price_unit':i.get('moc_doc_price_unit'),
-                                'taxes_id': i.get('tax_id') 
+                                'taxes_id': i.get('tax_id')
                             })
                         _logger.info("Purchase Order Line Created==============================================> " + str(purchase_order_line_id))
 
@@ -1003,10 +1001,10 @@ class Authorize2(http.Controller):
                     if picking_id and len(picking_id) == 1:
                         picking_id.action_set_quantities_to_reservation()
                         picking_id.button_validate()
-                        bill_id = purchase_order_id.with_context({ 
-                                                        'lang': 'en_US', 
+                        bill_id = purchase_order_id.with_context({
+                                                        'lang': 'en_US',
                                                         'edit_translations': False,
-                                                        'from_api': True, 
+                                                        'from_api': True,
                         }).action_create_invoice()
                         print(bill_id,'22222222222222222222222222222222222222222222222222')
                         if bill_id and bill_id.get('res_id'):
@@ -1234,7 +1232,7 @@ class Authorize2(http.Controller):
                         if picking_id.state == 'assigned':
                             quant_check = False
                             location_check = False
-                        
+
                             for j in picking_id.move_ids_without_package:
                                 if not j.product_uom_qty == j.reserved_availability:
                                     quant_check = True
